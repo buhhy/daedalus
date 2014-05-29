@@ -4,5 +4,8 @@
 #include "DataStructures.h"
 
 namespace utils {
-	void MarchingCube(TArray<Triangle> & resultTries, const GridCell & grid);
+	void MarchingCube(
+		TArray<Triangle> & resultTries,
+		const float isoThreshold,
+		const GridCell & grid);
 }

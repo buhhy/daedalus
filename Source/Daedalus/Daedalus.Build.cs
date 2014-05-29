@@ -14,9 +14,10 @@ public class Daedalus : ModuleRules
 				"Daedalus",
 				"Daedalus/Characters",
 				"Daedalus/CustomComponents",
-				"Daedalus/TerrainGeneration"
+				"Daedalus/TerrainGeneration",
+				"Daedalus/Utilities"
 			}
-		 );
+		);
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.Add("Slate");

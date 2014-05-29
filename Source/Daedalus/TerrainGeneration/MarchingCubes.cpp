@@ -297,7 +297,9 @@ namespace utils {
 		{ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }
 	};
 
-	FVector VertexLerp(const FVector & p1, const FVector & p2, bool bp1, bool bp2);
+	FVector VertexLerp(
+		const float isoThreshold, const FVector & p1, const FVector & p2,
+		float bp1, float bp2);
 
 	/*
 	Given a grid cell and an calculate the triangular
@@ -307,23 +309,26 @@ namespace utils {
 	0 will be returned if the grid cell is either totally above
 	of totally below the isolevel.
 	*/
-	void MarchingCube(TArray<Triangle> & resultTries, const GridCell & grid) {
+	void MarchingCube(
+		TArray<Triangle> & resultTries,
+		const float isoThreshold,
+		const GridCell & grid
+	) {
 		FVector vertlist[12];
-		int cubeindex;
+		int cubeindex = 0;
 
 		/*
 		Determine the index into the edge table which
 		tells us which vertices are inside of the surface
 		*/
-		cubeindex = 0;
-		if (!grid.values[0]) cubeindex |= 1;
-		if (!grid.values[1]) cubeindex |= 2;
-		if (!grid.values[2]) cubeindex |= 4;
-		if (!grid.values[3]) cubeindex |= 8;
-		if (!grid.values[4]) cubeindex |= 16;
-		if (!grid.values[5]) cubeindex |= 32;
-		if (!grid.values[6]) cubeindex |= 64;
-		if (!grid.values[7]) cubeindex |= 128;
+		if (grid.values[0] < isoThreshold) cubeindex |= 1;
+		if (grid.values[1] < isoThreshold) cubeindex |= 2;
+		if (grid.values[2] < isoThreshold) cubeindex |= 4;
+		if (grid.values[3] < isoThreshold) cubeindex |= 8;
+		if (grid.values[4] < isoThreshold) cubeindex |= 16;
+		if (grid.values[5] < isoThreshold) cubeindex |= 32;
+		if (grid.values[6] < isoThreshold) cubeindex |= 64;
+		if (grid.values[7] < isoThreshold) cubeindex |= 128;
 
 		/* Cube is entirely in/out of the surface */
 		if (EdgeTable[cubeindex] == 0)
@@ -332,40 +337,40 @@ namespace utils {
 		/* Find the vertices where the surface intersects the cube */
 		if (EdgeTable[cubeindex] & 1)
 			vertlist[0] = VertexLerp(
-				grid.points[0], grid.points[1], grid.values[0], grid.values[1]);
+				isoThreshold, grid.points[0], grid.points[1], grid.values[0], grid.values[1]);
 		if (EdgeTable[cubeindex] & 2)
 			vertlist[1] = VertexLerp(
-				grid.points[1], grid.points[2], grid.values[1], grid.values[2]);
+				isoThreshold, grid.points[1], grid.points[2], grid.values[1], grid.values[2]);
 		if (EdgeTable[cubeindex] & 4)
 			vertlist[2] = VertexLerp(
-				grid.points[2], grid.points[3], grid.values[2], grid.values[3]);
+				isoThreshold, grid.points[2], grid.points[3], grid.values[2], grid.values[3]);
 		if (EdgeTable[cubeindex] & 8)
 			vertlist[3] = VertexLerp(
-				grid.points[3], grid.points[0], grid.values[3], grid.values[0]);
+				isoThreshold, grid.points[3], grid.points[0], grid.values[3], grid.values[0]);
 		if (EdgeTable[cubeindex] & 16)
 			vertlist[4] = VertexLerp(
-				grid.points[4], grid.points[5], grid.values[4], grid.values[5]);
+				isoThreshold, grid.points[4], grid.points[5], grid.values[4], grid.values[5]);
 		if (EdgeTable[cubeindex] & 32)
 			vertlist[5] = VertexLerp(
-				grid.points[5], grid.points[6], grid.values[5], grid.values[6]);
+				isoThreshold, grid.points[5], grid.points[6], grid.values[5], grid.values[6]);
 		if (EdgeTable[cubeindex] & 64)
 			vertlist[6] = VertexLerp(
-				grid.points[6], grid.points[7], grid.values[6], grid.values[7]);
+				isoThreshold, grid.points[6], grid.points[7], grid.values[6], grid.values[7]);
 		if (EdgeTable[cubeindex] & 128)
 			vertlist[7] = VertexLerp(
-				grid.points[7], grid.points[4], grid.values[7], grid.values[4]);
+				isoThreshold, grid.points[7], grid.points[4], grid.values[7], grid.values[4]);
 		if (EdgeTable[cubeindex] & 256)
 			vertlist[8] = VertexLerp(
-				grid.points[0], grid.points[4], grid.values[0], grid.values[4]);
+				isoThreshold, grid.points[0], grid.points[4], grid.values[0], grid.values[4]);
 		if (EdgeTable[cubeindex] & 512)
 			vertlist[9] = VertexLerp(
-				grid.points[1], grid.points[5], grid.values[1], grid.values[5]);
+				isoThreshold, grid.points[1], grid.points[5], grid.values[1], grid.values[5]);
 		if (EdgeTable[cubeindex] & 1024)
 			vertlist[10] = VertexLerp(
-				grid.points[2], grid.points[6], grid.values[2], grid.values[6]);
+				isoThreshold, grid.points[2], grid.points[6], grid.values[2], grid.values[6]);
 		if (EdgeTable[cubeindex] & 2048)
 			vertlist[11] = VertexLerp(
-				grid.points[3], grid.points[7], grid.values[3], grid.values[7]);
+				isoThreshold, grid.points[3], grid.points[7], grid.values[3], grid.values[7]);
 
 		/* Create the triangle */
 		for (uint32 i = 0; TriTable[cubeindex][i] != -1; i += 3) {
@@ -380,18 +385,21 @@ namespace utils {
 	Linearly interpolate the position where an isosurface cuts
 	an edge between two vertices, each with their own scalar value
 	*/
-	FVector VertexLerp(const FVector & p1, const FVector & p2, bool bp1, bool bp2) {
-		float valp1 = bp1 ? 1.0 : -1.0;
-		float valp2 = bp2 ? 1.0 : -1.0;
-
-		if (FMath::Abs(valp1) < ERROR)
+	FVector VertexLerp(
+		const float isoThreshold,
+		const FVector & p1,
+		const FVector & p2,
+		float valp1,
+		float valp2
+	) {
+		if (FMath::Abs(isoThreshold - valp1) < ERROR)
 			return p1;
-		if (FMath::Abs(valp2) < ERROR)
+		if (FMath::Abs(isoThreshold - valp2) < ERROR)
 			return p2;
-		if (FMath::Abs(valp2) < ERROR)
+		if (FMath::Abs(valp1 - valp2) < ERROR)
 			return p1;
 
-		double mu = valp1 / (valp1 - valp2);
+		double mu = (isoThreshold - valp1) / (valp2 - valp1);
 
 		return p1 + (p2 - p1) * mu;
 	}

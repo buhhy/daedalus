@@ -1,70 +1,53 @@
 #include "Daedalus.h"
 #include "Chunk.h"
 #include "MarchingCubes.h"
+#include "Random.h"
 
-AChunk::AChunk(const class FPostConstructInitializeProperties & PCIP)
-	: Super(PCIP) {
-
-	Mesh = PCIP.CreateDefaultSubobject<UGeneratedMeshComponent>(this, TEXT("GeneratedMesh"));
-
+Chunk::Chunk() {
 	uint32 Size = FMath::Pow(2, 6) + 1;
 	uint32 Seed = 123456;
 
-	Densities.Init(Size, Size, Size);
-	InitializeChunk(Size, Size, Size, 0, 0, 0, Seed);
-	/*for (int i = 0; i < 2; i++)
-		for (int j = 0; j < 2; j++)
-			for (int k = 0; k < 2; k++)
-				Densities.SetDensityAt(3 + i, 3 + j, 3 + k, 1);*/
+	DensityData.Init(Size, Size, Size);
+	MaterialData.Init(Size, Size, Size);
+	InitializeChunk(
+		utils::Vector3<uint64>(Size, Size, Size),
+		utils::Vector3<int64>(0, 0, 0), Seed);
 	RunDiamondSquare();
-	TestRender();
-	RootComponent = Mesh;
 }
 
-double AChunk::GenerateRandomNumber(
-	uint16 relativeX,
-	uint16 relativeY,
-	uint16 relativeZ
-) {
-	uint64 collapsed = ((relativeX + OffsetX) * 6151 +
-		(relativeY + OffsetY) * 3079 +
-		(relativeZ + OffsetZ) * 1543 + 769) ^ Seed * 389;
+Chunk::~Chunk() { }
 
-	// FNV-1a hashing
-	uint64 hash = 14695981039346656037;
-	for (auto i = 0; i < 8; i++) {
-		hash *= 1099511628211;
-		hash ^= collapsed & 0xff;
-		collapsed >>= 8;
-	}
-
-	return (double)hash / (double)MAX_uint64;
-}
-
-void AChunk::InitializeChunk(
-	uint16 chunkWidth, uint16 chunkDepth, uint16 chunkHeight,
-	uint64 offsetX, uint64 offsetY, uint64 offsetZ,
+void Chunk::InitializeChunk(
+	const utils::Vector3<uint64> & chunkSize,
+	const utils::Vector3<int64> & chunkOffset,
 	uint64 seed
 ) {
-	OffsetX = offsetX;
-	OffsetY = offsetY;
-	OffsetZ = offsetZ;
-	Seed = seed;
+	this->ChunkSize = chunkSize;
+	this->ChunkOffset = chunkOffset;
+	this->Seed = seed;
 }
 
-void AChunk::SetDefaultHeight(uint32 height) {
-	for (uint32 x = 0; x < Densities.Width; x++) {
-		for (uint32 y = 0; y < Densities.Depth; y++) {
-			//for (uint32 z = 0; z < Densities.Height && z <= height; z++)
-				Densities.SetDensityAt(x, y, height, 1);
+void Chunk::SetDefaultHeight(uint32 height) {
+	for (uint32 x = 0; x < DensityData.Width; x++) {
+		for (uint32 y = 0; y < DensityData.Depth; y++) {
+			//for (uint32 z = 0; z < DensityData.Height && z <= height; z++)
+			DensityData.Set(x, y, height, 1);
 		}
 	}
 }
 
-void AChunk::RunDiamondSquare() {
-	uint32 w = Densities.Width;
-	uint32 h = Densities.Height;
-	uint32 d = Densities.Depth;
+const utils::Vector3<uint64> & Chunk::Size() const {
+	return ChunkSize;
+}
+
+const utils::Tensor3<float> & Chunk::Density() const {
+	return DensityData;
+}
+
+void Chunk::RunDiamondSquare() {
+	uint32 w = DensityData.Width;
+	uint32 h = DensityData.Height;
+	uint32 d = DensityData.Depth;
 	float ** heightMap = new float *[w];
 
 	// Initialization
@@ -88,7 +71,8 @@ void AChunk::RunDiamondSquare() {
 				auto botl = heightMap[x - halfInterval][y + halfInterval];
 				auto botr = heightMap[x + halfInterval][y + halfInterval];
 				auto avg = (topl + topr + botl + botr) / 4;
-				auto rand = (GenerateRandomNumber(x, y, FMath::Round(avg)) * 2.0 - 1.0) * perturb;
+
+				auto rand = (utils::generateRandomNumber(Seed, ChunkSize * ChunkOffset + utils::Vector3<uint64>(x, y, FMath::Round(avg))) * 2.0 - 1.0) * perturb;
 				heightMap[x][y] = avg + rand;
 			}
 		}
@@ -102,7 +86,8 @@ void AChunk::RunDiamondSquare() {
 					auto left = x == 0 ? 0.0 : heightMap[x - halfInterval][y];
 					auto right = x == w - 1 ? 0.0 : heightMap[x + halfInterval][y];
 					auto avg = (top + bottom + left + right) / 4;
-					auto rand = (GenerateRandomNumber(x, y, FMath::Round(avg)) * 2.0 - 1.0) * perturb;
+
+					auto rand = (utils::generateRandomNumber(Seed, ChunkSize * ChunkOffset + utils::Vector3<uint64>(x, y, FMath::Round(avg))) * 2.0 - 1.0) * perturb;
 					heightMap[x][y] = avg + rand;
 				}
 			}
@@ -113,79 +98,10 @@ void AChunk::RunDiamondSquare() {
 
 	for (uint32 x = 0; x < w; x++) {
 		for (uint32 y = 0; y < d; y++) {
-			uint32 height = FMath::Round(heightMap[x][y] * 5.5 + h / 2);
-			for (uint32 z = 0; z <= height; z++)
-				Densities.SetDensityAt(x, y, z, 1);
+			float height = heightMap[x][y] * 5.5 + h / 2;
+			height = FMath::Round(height * 2.0) / 2.0; // Round to nearest .5
+			for (uint64 z = 0; height > 0; height -= 1, z++)
+				DensityData.Set(x, y, z, 1.0);
 		}
 	}
-}
-
-void AChunk::TestRender() {
-	uint32 w = Densities.Width;
-	uint32 h = Densities.Height;
-	uint32 d = Densities.Depth;
-
-	float unitSize = 40.0;
-
-	TArray<FGeneratedMeshTriangle> triangles;
-	TArray<utils::Triangle> tempTris;
-	FVector multiplyVector(unitSize, unitSize, unitSize);
-	FVector displacementVector;
-
-	utils::GridCell gridCell;
-
-	for (uint32 x = 0; x < w - 1; x++) {
-		for (uint32 y = 0; y < d - 1; y++) {
-			for (uint32 z = 0; z < h - 1; z++) {
-				gridCell.Initialize(
-					Densities.GetDensityAt(x, y, z) > 0,
-					Densities.GetDensityAt(x, y, z + 1) > 0,
-					Densities.GetDensityAt(x, y + 1, z) > 0,
-					Densities.GetDensityAt(x, y + 1, z + 1) > 0,
-					Densities.GetDensityAt(x + 1, y, z) > 0,
-					Densities.GetDensityAt(x + 1, y, z + 1) > 0,
-					Densities.GetDensityAt(x + 1, y + 1, z) > 0,
-					Densities.GetDensityAt(x + 1, y + 1, z + 1) > 0);
-
-				tempTris.Reset();
-				utils::MarchingCube(tempTris, gridCell);
-
-				displacementVector.Set(x, y, z);
-
-				for (auto it = tempTris.CreateConstIterator(); it; ++it) {
-					FGeneratedMeshTriangle tri;
-					tri.Vertex0 = (it->points[0] + displacementVector) * multiplyVector;
-					tri.Vertex1 = (it->points[1] + displacementVector) * multiplyVector;
-					tri.Vertex2 = (it->points[2] + displacementVector) * multiplyVector;
-					triangles.Add(tri);
-				}
-			}
-
-			/*uint32 height = 0;
-			for (height; height < h; height++) {
-				if (Densities.GetDensityAt(x, height, z) == 0)
-					break;
-			}
-
-			FVector tl(x * unitSize, z * unitSize, height * unitSize);
-			FVector tr((x + 1) * unitSize, z * unitSize, height * unitSize);
-			FVector bl(x * unitSize, (z + 1) * unitSize, height * unitSize);
-			FVector br((x + 1) * unitSize, (z + 1) * unitSize, height * unitSize);
-
-			FGeneratedMeshTriangle tri1;
-			tri1.Vertex0 = bl;
-			tri1.Vertex1 = tr;
-			tri1.Vertex2 = tl;
-
-			FGeneratedMeshTriangle tri2;
-			tri2.Vertex0 = bl;
-			tri2.Vertex1 = br;
-			tri2.Vertex2 = tr;
-
-			triangles.Add(tri1);
-			triangles.Add(tri2);*/
-		}
-	}
-
-	Mesh->SetGeneratedMeshTriangles(triangles);
 }
