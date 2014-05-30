@@ -12,9 +12,11 @@ public class Daedalus : ModuleRules
 		PrivateIncludePaths.AddRange(new string[]
 			{
 				"Daedalus",
-				"Daedalus/Characters",
-				"Daedalus/CustomComponents",
-				"Daedalus/Terrain",
+				"Daedalus/Actors/Characters",
+				"Daedalus/Actors/CustomComponents",
+				"Daedalus/Actors/Terrain",
+				"Daedalus/Controllers/EventBus",
+				"Daedalus/Models/Terrain",
 				"Daedalus/Utilities"
 			}
 		);

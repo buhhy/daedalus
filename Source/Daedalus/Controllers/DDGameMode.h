@@ -1,13 +1,13 @@
 #pragma once
 
 #include "GameFramework/GameMode.h"
-#include "DefaultGameMode.generated.h"
+#include "DDGameMode.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class ADefaultGameMode : public AGameMode
+class ADDGameMode : public AGameMode
 {
 	GENERATED_UCLASS_BODY()
 

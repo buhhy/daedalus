@@ -1,9 +1,10 @@
 #include "Daedalus.h"
 #include "PlayerCharacter.h"
 #include "Constants.h"
+#include "string"
 
 APlayerCharacter::APlayerCharacter(const class FPostConstructInitializeProperties& PCIP)
-: Super(PCIP), bHoldingJump(false) {
+: Super(PCIP), bHoldingJump(false), TickDeltaCount(0) {
 	auto & movement = this->CharacterMovement;
 	movement->SetWalkableFloorAngle(60.0);
 	movement->JumpZVelocity = 400;
@@ -62,4 +63,15 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent * InputCo
 	InputComponent->BindAxis("LookRight", this, &APlayerCharacter::LookRight);
 	InputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::HoldJump);
 	InputComponent->BindAction("Jump", IE_Released, this, &APlayerCharacter::ReleaseJump);
+}
+
+void APlayerCharacter::Tick(float delta) {
+	Super::Tick(delta);
+	TickDeltaCount += delta;
+
+	// Tick once every second
+	if (TickDeltaCount >= 1.0) {
+		TickDeltaCount -= 1.0;
+		GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Blue, FString(std::to_string(delta).c_str()));
+	}
 }
