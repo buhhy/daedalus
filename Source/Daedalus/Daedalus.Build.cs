@@ -14,7 +14,7 @@ public class Daedalus : ModuleRules
 				"Daedalus",
 				"Daedalus/Characters",
 				"Daedalus/CustomComponents",
-				"Daedalus/TerrainGeneration",
+				"Daedalus/Terrain",
 				"Daedalus/Utilities"
 			}
 		);
