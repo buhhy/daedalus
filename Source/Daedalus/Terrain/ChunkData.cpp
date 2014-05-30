@@ -1,9 +1,9 @@
 #include "Daedalus.h"
-#include "Chunk.h"
+#include "ChunkData.h"
 #include "MarchingCubes.h"
 #include "Random.h"
 
-Chunk::Chunk() {
+ChunkData::ChunkData() {
 	uint32 Size = FMath::Pow(2, 6) + 1;
 	uint32 Seed = 123456;
 
@@ -15,9 +15,9 @@ Chunk::Chunk() {
 	RunDiamondSquare();
 }
 
-Chunk::~Chunk() { }
+ChunkData::~ChunkData() { }
 
-void Chunk::InitializeChunk(
+void ChunkData::InitializeChunk(
 	const utils::Vector3<uint64> & chunkSize,
 	const utils::Vector3<int64> & chunkOffset,
 	uint64 seed
@@ -27,7 +27,7 @@ void Chunk::InitializeChunk(
 	this->Seed = seed;
 }
 
-void Chunk::SetDefaultHeight(uint32 height) {
+void ChunkData::SetDefaultHeight(uint32 height) {
 	for (uint32 x = 0; x < DensityData.Width; x++) {
 		for (uint32 y = 0; y < DensityData.Depth; y++) {
 			//for (uint32 z = 0; z < DensityData.Height && z <= height; z++)
@@ -36,15 +36,15 @@ void Chunk::SetDefaultHeight(uint32 height) {
 	}
 }
 
-const utils::Vector3<uint64> & Chunk::Size() const {
+const utils::Vector3<uint64> & ChunkData::Size() const {
 	return ChunkSize;
 }
 
-const utils::Tensor3<float> & Chunk::Density() const {
+const utils::Tensor3<float> & ChunkData::Density() const {
 	return DensityData;
 }
 
-void Chunk::RunDiamondSquare() {
+void ChunkData::RunDiamondSquare() {
 	uint32 w = DensityData.Width;
 	uint32 h = DensityData.Height;
 	uint32 d = DensityData.Depth;

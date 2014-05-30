@@ -2,7 +2,7 @@
 
 #include "GameFramework/Actor.h"
 #include "GeneratedMeshComponent.h"
-#include "Chunk.h"
+#include "ChunkData.h"
 #include "DataStructures.h"
 #include "ChunkActor.generated.h"
 
@@ -10,11 +10,10 @@
 * In-game actor that renders the chunk and the collision mesh.
 */
 UCLASS()
-class AChunkActor : public AActor
-{
-	GENERATED_UCLASS_BODY()
+class AChunkActor : public AActor {
+GENERATED_UCLASS_BODY()
 
-	Chunk ChunkData;
+	ChunkData ChunkData;
 
 	void TestRender();
 

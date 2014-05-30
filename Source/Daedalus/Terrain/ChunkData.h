@@ -9,7 +9,7 @@
 * all 3 dimensions, allowing for infinite worlds in height, depth and width. The axes
 * are set up as follows: X -> width, Y -> depth, Z -> height.
 */
-class Chunk {
+class ChunkData {
 private:
 	utils::Tensor3<float> DensityData;
 	utils::Tensor3<uint64> MaterialData;
@@ -23,8 +23,8 @@ private:
 	void SetDefaultHeight(uint32 height);
 
 public:
-	Chunk();
-	~Chunk();
+	ChunkData();
+	~ChunkData();
 
 	void InitializeChunk(
 		const utils::Vector3<uint64> & chunkSize,
