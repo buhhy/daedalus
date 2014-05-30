@@ -1,8 +1,8 @@
 #include "Daedalus.h"
-#include "ChunkActor.h"
+#include "Chunk.h"
 #include "MarchingCubes.h"
 
-AChunkActor::AChunkActor(const class FPostConstructInitializeProperties & PCIP)
+AChunk::AChunk(const class FPostConstructInitializeProperties & PCIP)
 : Super(PCIP) {
 
 	Mesh = PCIP.CreateDefaultSubobject<UGeneratedMeshComponent>(this, TEXT("GeneratedMesh"));
@@ -18,7 +18,7 @@ AChunkActor::AChunkActor(const class FPostConstructInitializeProperties & PCIP)
 	RootComponent = Mesh;
 }
 
-void AChunkActor::InitializeChunk(
+void AChunk::InitializeChunk(
 	const utils::Vector3<uint64> & chunkSize,
 	const utils::Vector3<int64> & chunkOffset,
 	uint64 seed
@@ -26,7 +26,7 @@ void AChunkActor::InitializeChunk(
 	ChunkData.InitializeChunk(chunkSize, chunkOffset, seed);
 }
 
-void AChunkActor::TestRender() {
+void AChunk::TestRender() {
 	auto size = ChunkData.Size();
 	uint32 w = size.X;
 	uint32 h = size.Y;
