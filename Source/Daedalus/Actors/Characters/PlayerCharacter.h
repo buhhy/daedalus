@@ -4,7 +4,7 @@
 #include "PlayerCharacter.generated.h"
 
 /**
- * 
+ * Default player character.
  */
 UCLASS()
 class APlayerCharacter : public ACharacter

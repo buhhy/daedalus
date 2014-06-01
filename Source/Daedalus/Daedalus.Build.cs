@@ -15,6 +15,7 @@ public class Daedalus : ModuleRules
 				"Daedalus/Actors/Characters",
 				"Daedalus/Actors/CustomComponents",
 				"Daedalus/Actors/Terrain",
+				"Daedalus/Controllers",
 				"Daedalus/Controllers/EventBus",
 				"Daedalus/Models/Terrain",
 				"Daedalus/Utilities"

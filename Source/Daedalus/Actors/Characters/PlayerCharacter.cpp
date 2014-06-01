@@ -1,7 +1,7 @@
 #include "Daedalus.h"
 #include "PlayerCharacter.h"
+#include "DDGameState.h"
 #include "Constants.h"
-#include "string"
 
 APlayerCharacter::APlayerCharacter(const class FPostConstructInitializeProperties& PCIP)
 : Super(PCIP), bHoldingJump(false), TickDeltaCount(0) {
@@ -72,6 +72,11 @@ void APlayerCharacter::Tick(float delta) {
 	// Tick once every second
 	if (TickDeltaCount >= 1.0) {
 		TickDeltaCount -= 1.0;
-		GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Blue, FString(std::to_string(delta).c_str()));
+		//auto count = GetWorld()->GetGameState<ADDGameState>()->EventBus->Count(events::E_PlayerMovement);
+		//UE_LOG(LogTemp, Warning, TEXT("Character tick: %d"), count);
+		
+		GetWorld()->GetGameState<ADDGameState>()->EventBus->BroadcastEvent(
+			events::E_PlayerMovement,
+			TSharedRef<events::EventData>(new events::EPlayerMovement(this)));
 	}
 }
