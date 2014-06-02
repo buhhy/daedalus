@@ -12,7 +12,7 @@ namespace utils {
 			absolutePos.Z * 1543 + 769) ^ seed * 389;
 
 		// FNV-1a hashing
-		uint64 hash = 14695981039346656037;
+		uint64 hash = 14695981039346656037u;
 		for (auto i = 0; i < 8; i++) {
 			hash *= 1099511628211;
 			hash ^= collapsed & 0xff;

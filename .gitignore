@@ -2,6 +2,8 @@
 *.sln
 *.suo
 *.opensdf
+*.xcodeproj
+/build
 /Binaries
 /DerivedDataCache
 /Intermediate

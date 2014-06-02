@@ -1,6 +1,8 @@
 #include "Daedalus.h"
 #include "EventBus.h"
 
+#include <algorithm>
+
 UEventBus::UEventBus(const class FPostConstructInitializeProperties& PCIP)
 	: Super(PCIP) {
 	Listeners.clear();
@@ -14,30 +16,26 @@ void UEventBus::AddListener(
 	if (Listeners.count(type) == 0) {
 		Listeners.insert({
 			type,
-			TUniquePtr<events::ListenerList>(new events::ListenerList())
+			TSharedRef<events::ListenerList>(new events::ListenerList())
 		});
 	}
 
-	TUniquePtr<events::ListenerList> & listeners = Listeners.at(type);
+	TSharedRef<events::ListenerList> & listeners = Listeners.at(type);
 
 	bool found = false;
 
 	// Look for duplicates and remove invalid pointers
 	for (auto it = listeners->cbegin(); it != listeners->cend();) {
-		if (*it == NULL) {
-			it = listeners->erase(it);
-		} else {
-			if (*it == listener)
-				found = true;
-			++it;
-		}
+        if (*it == listener)
+			found = true;
+		++it;
 	}
 
 	if (!found)
 		listeners->push_back(listener);
 }
 
-bool UEventBus::RemoveListener(
+void UEventBus::RemoveListener(
 	const events::EventType type,
 	IEventListener * const listener
 ) {
@@ -46,21 +44,11 @@ bool UEventBus::RemoveListener(
 
 		auto & listeners = Listeners.at(type);
 
-		for (auto it = listeners->cbegin(); it != listeners->cend();) {
-			if (*it == NULL) {
-				it = listeners->erase(it);
-			} else if (*it == listener) {
-				it = listeners->erase(it);
-				found = true;
-			} else {
-				++it;
-			}
-		}
-
-		return found;
+        std::remove_if(
+            listeners->begin(),
+            listeners->end(),
+            [&] (IEventListener *& x) { return x == listener; });
 	}
-
-	return false;
 }
 
 uint32 UEventBus::Count(const events::EventType type) {
@@ -76,16 +64,12 @@ uint32 UEventBus::BroadcastEvent(
 	uint32 broadcastCount = 0;
 
 	if (Listeners.count(type) > 0) {
-		auto & listeners = Listeners.at(type);
+        auto & listeners = Listeners.at(type);
 
 		for (auto it = listeners->cbegin(); it != listeners->cend();) {
-			if (*it == NULL) {
-				it = listeners->erase(it);
-			} else {
-				(*it)->HandleEvent(type, data);
-				++broadcastCount;
-				++it;
-			}
+			(*it)->HandleEvent(type, data);
+			++broadcastCount;
+			++it;
 		}
 	}
 
@@ -93,14 +77,8 @@ uint32 UEventBus::BroadcastEvent(
 }
 
 void UEventBus::BeginDestroy() {
-	Super::BeginDestroy();
-
-	for (auto it = Listeners.begin(); it != Listeners.end(); ++it) {
-		for (uint64 i = 0; i < it->second->size(); i++)
-			(*it->second)[i] = NULL;
-		(it->second)->clear();
-		it->second.Reset();
-	}
+	for (auto it = Listeners.begin(); it != Listeners.end(); ++it)
+		it->second->clear();
 
 	Listeners.clear();
 }
