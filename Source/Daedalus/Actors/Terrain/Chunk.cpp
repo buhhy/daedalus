@@ -7,7 +7,7 @@ AChunk::AChunk(const class FPostConstructInitializeProperties & PCIP)
 
 	Mesh = PCIP.CreateDefaultSubobject<UGeneratedMeshComponent>(this, TEXT("GeneratedMesh"));
 
-	uint32 Size = FMath::Pow(2, 6) + 1;
+	uint32 Size = FMath::Pow(2, 4) + 1;
 	uint32 Seed = 123456;
 
 	InitializeChunk(
@@ -41,6 +41,8 @@ void AChunk::TestRender() {
 
 	utils::GridCell gridCell;
 	auto & density = ChunkData.Density();
+
+	UE_LOG(LogTemp, Error, TEXT(" %d %d %d"), w, d, h)
 
 	for (uint32 x = 0; x < w - 1; x++) {
 		for (uint32 y = 0; y < d - 1; y++) {

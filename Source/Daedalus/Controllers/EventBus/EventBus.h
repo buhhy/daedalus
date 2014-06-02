@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <unordered_map>
 #include <vector>
 #include "Object.h"
@@ -8,8 +9,8 @@
 #include "EventBus.generated.h"
 
 namespace events {
-	typedef std::vector<IEventListener * const> ListenerList;
-	typedef std::unordered_map <EventType, TUniquePtr<ListenerList> > ListenerMap;
+	typedef std::vector<IEventListener *> ListenerList;
+	typedef std::unordered_map <events::EventType, TSharedRef<ListenerList> > ListenerMap;
 }
 
 /**
@@ -30,7 +31,7 @@ public:
 		const events::EventType type,
 		IEventListener * const listener);
 
-	bool RemoveListener(
+	void RemoveListener(
 		const events::EventType type,
 		IEventListener * const listener);
 
