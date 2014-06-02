@@ -40,12 +40,11 @@ void AChunk::TestRender() {
 	FVector displacementVector;
 
 	utils::GridCell gridCell;
+	auto & density = ChunkData.Density();
 
 	for (uint32 x = 0; x < w - 1; x++) {
 		for (uint32 y = 0; y < d - 1; y++) {
 			for (uint32 z = 0; z < h - 1; z++) {
-				auto density = ChunkData.Density();
-
 				gridCell.Initialize(
 					density.Get(x, y, z),
 					density.Get(x, y, z + 1),

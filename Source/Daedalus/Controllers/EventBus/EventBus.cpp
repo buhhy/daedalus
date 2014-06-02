@@ -78,7 +78,7 @@ uint32 UEventBus::BroadcastEvent(
 	if (Listeners.count(type) > 0) {
 		auto & listeners = Listeners.at(type);
 
-		for (auto it = listeners->cbegin(); it != listeners->cend();) {
+		for (auto it = listeners->begin(); it != listeners->end();) {
 			if (*it == NULL) {
 				it = listeners->erase(it);
 			} else {

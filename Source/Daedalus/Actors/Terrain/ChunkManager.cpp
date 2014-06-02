@@ -3,7 +3,8 @@
 #include "ChunkManager.h"
 
 AChunkManager::AChunkManager(const class FPostConstructInitializeProperties & PCIP)
-	: Super(PCIP) {
+	: Super(PCIP), Seed(12345678), ChunkSize(17, 17, 17)
+{
 }
 
 void AChunkManager::BeginPlay() {

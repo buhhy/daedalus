@@ -1,10 +1,12 @@
-#include "Daedalus.h"
-#include "Random.h"
+#pragma once
+
+#include "DataStructures.h"
 
 namespace utils {
-	double generateRandomNumber(
+	template <typename T>
+	double hashFromVector(
 		const uint64 seed,
-		const Vector3<int64> & absolutePos
+		const Vector3<T> & absolutePos
 	) {
 		uint64 collapsed = (
 			absolutePos.X * 6151 +
@@ -19,6 +21,6 @@ namespace utils {
 			collapsed >>= 8;
 		}
 
-		return (double)hash / (double)MAX_uint64;
+		return (double) hash / (double) MAX_uint64;
 	}
 }

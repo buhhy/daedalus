@@ -11,10 +11,10 @@
 */
 UCLASS()
 class AChunk : public AActor {
-GENERATED_UCLASS_BODY()
+	GENERATED_UCLASS_BODY()
 
+private:
 	ChunkData ChunkData;
-
 	void TestRender();
 
 public:
@@ -22,8 +22,8 @@ public:
 		TSubobjectPtr<UGeneratedMeshComponent> Mesh;
 
 	void InitializeChunk(
-			const utils::Vector3<uint64> & chunkSize,
-			const utils::Vector3<int64> & chunkOffset,
-			uint64 seed);
+		const utils::Vector3<uint64> & chunkSize,
+		const utils::Vector3<int64> & chunkOffset,
+		uint64 seed);
 };
 

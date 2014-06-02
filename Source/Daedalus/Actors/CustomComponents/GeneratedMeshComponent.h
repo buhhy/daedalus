@@ -30,6 +30,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Components|GeneratedMesh")
 		bool SetGeneratedMeshTriangles(const TArray<FGeneratedMeshTriangle>& Triangles);
 
+	/** Set the geometry to use on this triangle mesh */
+	UFUNCTION(BlueprintCallable, Category = "Components|GeneratedMesh")
+		void ClearMeshTriangles();
+
 	/** Description of collision */
 	UPROPERTY(BlueprintReadOnly, Category = "Collision")
 		class UBodySetup* ModelBodySetup;
@@ -51,10 +55,8 @@ public:
 
 	void UpdateBodySetup();
 	void UpdateCollision();
+
 private:
-
-
-
 	// Begin USceneComponent interface.
 	virtual FBoxSphereBounds CalcBounds(const FTransform & LocalToWorld) const OVERRIDE;
 	// Begin USceneComponent interface.

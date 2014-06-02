@@ -3,7 +3,27 @@
 #include "Engine.h"
 #include <vector>
 
+// TODO: Wat do with this?
+namespace std {
+//	template <> struct hash<uint64> {
+//		size_t operator()(const uint64 & v) const {
+//			return std::hash<unsigned long long>(v);
+//		}
+//	};
+	//template <> struct hash<__int64> {
+	//	size_t operator()(const __int64 & v) const {
+	//		return std::hash<long long>()(v);
+	//	}
+	//};
+}
+
 namespace utils {
+	template <class T>
+	void hashCombine(std::size_t & seed, T & v) {
+		std::hash<T> hasher;
+		seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	}
+
 	struct Triangle {
 		FVector points[3];
 
@@ -37,6 +57,9 @@ namespace utils {
 		}
 	};
 
+	/**
+	 * A standard XYZ vector that can be used as a hashmap key.
+	 */
 	template<typename T>
 	struct Vector3 {
 		T X;
@@ -55,8 +78,28 @@ namespace utils {
 
 			return *this;
 		}
+
+		template<typename T1>
+		Vector3<T> operator - (const Vector3<T1> & rhs) const {
+			return Vector3(X - rhs.X, Y - rhs.Y, Z - rhs.Z);
+		}
+
+		template<typename T1>
+		Vector3<T> operator * (const Vector3<T1> & rhs) const {
+			return Vector3(X * rhs.X, Y * rhs.Y, Z * rhs.Z);
+		}
+
+		template<typename T1>
+		Vector3<T> operator + (const Vector3<T1> & rhs) const {
+			return Vector3(X + rhs.X, Y + rhs.Y, Z + rhs.Z);
+		}
 	};
 
+	template<typename T1, typename T2>
+	bool operator == (const Vector3<T1> & lhs, const Vector3<T2> & rhs) {
+		return lhs.X == rhs.X && lhs.Y == rhs.Y && lhs.Z == rhs.Z;
+	}
+/*
 	Vector3<uint64> operator * (const Vector3<uint64> & v1, const Vector3<uint64> & v2);
 	Vector3<int64> operator * (const Vector3<uint64> & v1, const Vector3<int64> & v2);
 	Vector3<int64> operator * (const Vector3<int64> & v1, const Vector3<uint64> & v2);
@@ -65,7 +108,7 @@ namespace utils {
 	Vector3<int64> operator + (const Vector3<uint64> & v1, const Vector3<int64> & v2);
 	Vector3<int64> operator + (const Vector3<int64> & v1, const Vector3<uint64> & v2);
 	Vector3<int64> operator + (const Vector3<int64> & v1, const Vector3<int64> & v2);
-
+*/
 	template<typename T>
 	struct Tensor3 {
 		std::vector<T> Data;
@@ -90,6 +133,19 @@ namespace utils {
 
 		void Set(const uint32 & x, const uint32 & y, const uint32 & z, T value) {
 			Data[(x * Width + y) * Height + z] = value;
+		}
+	};
+}
+
+namespace std {
+	template <typename T>
+	struct hash<utils::Vector3<T> > {
+		size_t operator()(const utils::Vector3<T> & v) const {
+			uint64 seed = 0;
+			utils::hashCombine(seed, v.X);
+			utils::hashCombine(seed, v.Y);
+			utils::hashCombine(seed, v.Z);
+			return seed;
 		}
 	};
 }

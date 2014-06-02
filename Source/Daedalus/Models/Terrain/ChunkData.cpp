@@ -1,7 +1,7 @@
 #include "Daedalus.h"
 #include "ChunkData.h"
 #include "MarchingCubes.h"
-#include "Random.h"
+#include "Hash.h"
 
 ChunkData::ChunkData() {
 	uint32 Size = FMath::Pow(2, 6) + 1;
@@ -72,7 +72,7 @@ void ChunkData::RunDiamondSquare() {
 				auto botr = heightMap[x + halfInterval][y + halfInterval];
 				auto avg = (topl + topr + botl + botr) / 4;
 
-				auto rand = (utils::generateRandomNumber(Seed, ChunkSize * ChunkOffset + utils::Vector3<uint64>(x, y, FMath::Round(avg))) * 2.0 - 1.0) * perturb;
+				auto rand = (utils::hashFromVector(Seed, ChunkOffset * ChunkSize + utils::Vector3<int64>(x, y, FMath::Round(avg))) * 2.0 - 1.0) * perturb;
 				heightMap[x][y] = avg + rand;
 			}
 		}
@@ -87,7 +87,7 @@ void ChunkData::RunDiamondSquare() {
 					auto right = x == w - 1 ? 0.0 : heightMap[x + halfInterval][y];
 					auto avg = (top + bottom + left + right) / 4;
 
-					auto rand = (utils::generateRandomNumber(Seed, ChunkSize * ChunkOffset + utils::Vector3<uint64>(x, y, FMath::Round(avg))) * 2.0 - 1.0) * perturb;
+					auto rand = (utils::hashFromVector(Seed, ChunkOffset * ChunkSize + utils::Vector3<int64>(x, y, FMath::Round(avg))) * 2.0 - 1.0) * perturb;
 					heightMap[x][y] = avg + rand;
 				}
 			}

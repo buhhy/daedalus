@@ -79,8 +79,9 @@ public:
 class FGeneratedMeshSceneProxy : public FPrimitiveSceneProxy {
 public:
 	FGeneratedMeshSceneProxy(UGeneratedMeshComponent* Component)
-		: FPrimitiveSceneProxy(Component) , MaterialRelevance(Component->GetMaterialRelevance()
-	) {
+		: FPrimitiveSceneProxy(Component),
+		MaterialRelevance(Component->GetMaterialRelevance())
+	{
 		const FColor VertexColor(255, 255, 255);
 
 		// Add each triangle to the vertex/index buffer
@@ -227,6 +228,21 @@ bool UGeneratedMeshComponent::SetGeneratedMeshTriangles(
 	MarkRenderStateDirty();
 
 	return true;
+}
+
+void UGeneratedMeshComponent::ClearMeshTriangles() {
+	GeneratedMeshTris.Empty();
+
+#if WITH_EDITOR
+	// This is required for the first time after creation
+	if (ModelBodySetup)
+		ModelBodySetup->InvalidatePhysicsData();
+#endif
+
+	UpdateCollision();
+
+	// Need to recreate scene proxy to send it over
+	MarkRenderStateDirty();
 }
 
 
