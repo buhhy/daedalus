@@ -18,12 +18,6 @@ namespace std {
 }
 
 namespace utils {
-	template <class T>
-	void hashCombine(std::size_t & seed, T & v) {
-		std::hash<T> hasher;
-		seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-	}
-
 	struct Triangle {
 		FVector points[3];
 
@@ -139,12 +133,16 @@ namespace utils {
 
 namespace std {
 	template <typename T>
+	void hashCombine(uint64 & seed, const T & v) {
+		std::hash<T> hasher;
+		seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	}
+
+	template <typename T>
 	struct hash<utils::Vector3<T> > {
 		size_t operator()(const utils::Vector3<T> & v) const {
 			uint64 seed = 0;
-			utils::hashCombine(seed, v.X);
-			utils::hashCombine(seed, v.Y);
-			utils::hashCombine(seed, v.Z);
+            std::hashCombine(seed, v.X);
 			return seed;
 		}
 	};
