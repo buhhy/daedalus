@@ -4,9 +4,7 @@
 
 AChunkManager::AChunkManager(
 	const class FPostConstructInitializeProperties & PCIP
-) : Super(PCIP) {
-	RenderDistance = 3;
-}
+) : Super(PCIP), RenderDistance(2) {}
 
 ADDGameState * AChunkManager::GetGameState() {
 	return GetWorld()->GetGameState<ADDGameState>();
@@ -30,6 +28,18 @@ void AChunkManager::UpdateChunksAt(const FVector & playerPosition) {
 	int64 toY = playerChunkPos.Y + RenderDistance;
 	int64 toZ = playerChunkPos.Z + RenderDistance;
 
+	// Once the player leaves an area, the chunks are cleared
+	for (auto chunkKey = LocalCache.begin(); chunkKey != LocalCache.end(); ) {
+		if (chunkKey->first.X > toX || chunkKey->first.Y > toY || chunkKey->first.Z > toZ ||
+			chunkKey->first.X < fromX || chunkKey->first.Y < fromY || chunkKey->first.Z < fromZ) {
+			chunkKey->second->Destroy();
+			chunkKey = LocalCache.erase(chunkKey);
+		} else {
+			++chunkKey;
+		}
+	}
+
+	// Begin preloading chunks for the area the player is near
 	for (int64 x = fromX; x <= toX; x++) {
 		for (int64 y = fromY; y <= toY; y++) {
 			for (int64 z = fromZ; z <= toZ; z++) {

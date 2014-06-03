@@ -20,7 +20,7 @@ namespace terrain {
 		const utils::Vector3<int64> & offset
 	) {
 		auto data = new ChunkData(TerrainGenParams.ChunkPolygonSize, offset);
-		SetDefaultHeight(*data, 5);
+		SetDefaultHeight(*data, 2);
 		return TSharedRef<ChunkData>(data);
 	}
 
