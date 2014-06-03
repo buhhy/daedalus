@@ -2,20 +2,31 @@
 
 #include "EventListener.h"
 #include "DataStructures.h"
+#include "DDGameState.h"
+#include "TerrainDataStructures.h"
 #include "Chunk.h"
 #include "ChunkManager.generated.h"
 
 /**
- * 
+ * This class takes data fetched from the ChunkLoader and renders it. It is
+ * responsible for knowing when to load and dispose of rendered chunks. This
+ * will most likely run on the client-side.
  */
 UCLASS()
 class AChunkManager : public AActor, public IEventListener {
 	GENERATED_UCLASS_BODY()
 
 private:
-	uint64 Seed;
-	utils::Vector3<uint64> ChunkSize;
-	//std::unordered_map<utils::Vector3<int64>, TWeakObjectPtr<Chunk> > 
+	typedef utils::Vector3<int64> ChunkOffset;
+	typedef std::unordered_map <
+		ChunkOffset, AChunk *
+	> ChunkCache;
+
+	ChunkCache LocalCache;
+	uint64 RenderDistance;
+
+	ADDGameState * GetGameState();
+	void UpdateChunksAt(const FVector & playerPosition);
 
 public:
 	virtual void HandleEvent(

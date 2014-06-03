@@ -3,20 +3,6 @@
 #include "Engine.h"
 #include <vector>
 
-// TODO: Wat do with this?
-namespace std {
-//	template <> struct hash<uint64> {
-//		size_t operator()(const uint64 & v) const {
-//			return std::hash<unsigned long long>(v);
-//		}
-//	};
-	//template <> struct hash<__int64> {
-	//	size_t operator()(const __int64 & v) const {
-	//		return std::hash<long long>()(v);
-	//	}
-	//};
-}
-
 namespace utils {
 	struct Triangle {
 		FVector points[3];
@@ -62,10 +48,10 @@ namespace utils {
 
 		Vector3() {}
 		Vector3(T X, T Y, T Z) {
-			Init(X, Y, Z);
+			Reset(X, Y, Z);
 		}
 
-		Vector3 & Init(T X, T Y, T Z) {
+		Vector3 & Reset(T X, T Y, T Z) {
 			this->X = X;
 			this->Y = Y;
 			this->Z = Z;
@@ -87,32 +73,37 @@ namespace utils {
 		Vector3<T> operator + (const Vector3<T1> & rhs) const {
 			return Vector3(X + rhs.X, Y + rhs.Y, Z + rhs.Z);
 		}
+
+		Vector3<T> operator + (const int & rhs) const {
+			return Vector3(X + rhs, Y + rhs, Z + rhs);
+		}
+
+		Vector3<T> operator + (const uint64 & rhs) const {
+			return Vector3(X + rhs, Y + rhs, Z + rhs);
+		}
+
+		Vector3<T> operator + (const int64 & rhs) const {
+			return Vector3(X + rhs, Y + rhs, Z + rhs);
+		}
 	};
 
 	template<typename T1, typename T2>
 	bool operator == (const Vector3<T1> & lhs, const Vector3<T2> & rhs) {
 		return lhs.X == rhs.X && lhs.Y == rhs.Y && lhs.Z == rhs.Z;
 	}
-/*
-	Vector3<uint64> operator * (const Vector3<uint64> & v1, const Vector3<uint64> & v2);
-	Vector3<int64> operator * (const Vector3<uint64> & v1, const Vector3<int64> & v2);
-	Vector3<int64> operator * (const Vector3<int64> & v1, const Vector3<uint64> & v2);
-	Vector3<int64> operator * (const Vector3<int64> & v1, const Vector3<int64> & v2);
-	Vector3<uint64> operator + (const Vector3<uint64> & v1, const Vector3<uint64> & v2);
-	Vector3<int64> operator + (const Vector3<uint64> & v1, const Vector3<int64> & v2);
-	Vector3<int64> operator + (const Vector3<int64> & v1, const Vector3<uint64> & v2);
-	Vector3<int64> operator + (const Vector3<int64> & v1, const Vector3<int64> & v2);
-*/
+
 	template<typename T>
 	struct Tensor3 {
 		std::vector<T> Data;
 		uint32 Width;		// X
-		uint32 Depth;		// Y
-		uint32 Height;		// Z
+		uint32 Height;		// Y
+		uint32 Depth;		// Z
 
 		Tensor3() : Width(0), Height(0), Depth(0) {}
+		Tensor3(uint64 width, uint64 height, uint64 depth) :
+			Width(width), Height(height), Depth(depth), Data(width * height * depth, 0) {}
 
-		Tensor3 & Init(uint32 Width, uint32 Height, uint32 Depth) {
+		Tensor3 & Reset(uint32 Width, uint32 Height, uint32 Depth) {
 			this->Width = Width;
 			this->Height = Height;
 			this->Depth = Depth;
@@ -125,8 +116,12 @@ namespace utils {
 			return Data[(x * Width + y) * Height + z];
 		}
 
-		void Set(const uint32 & x, const uint32 & y, const uint32 & z, T value) {
+		void Set(const uint32 & x, const uint32 & y, const uint32 & z, const T & value) {
 			Data[(x * Width + y) * Height + z] = value;
+		}
+
+		void Fill(const T & value) {
+			Data.assign(Width * Height * Depth, value);
 		}
 	};
 }
@@ -142,7 +137,7 @@ namespace std {
 	struct hash<utils::Vector3<T> > {
 		size_t operator()(const utils::Vector3<T> & v) const {
 			uint64 seed = 0;
-            std::hashCombine(seed, v.X);
+			std::hashCombine(seed, v.X);
 			return seed;
 		}
 	};

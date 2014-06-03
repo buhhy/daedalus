@@ -9,6 +9,7 @@ APlayerCharacter::APlayerCharacter(const class FPostConstructInitializePropertie
 	movement->SetWalkableFloorAngle(60.0);
 	movement->JumpZVelocity = 400;
 	movement->AirControl = 0.4;
+	movement->GravityScale = 0;
 }
 
 void APlayerCharacter::MoveForward(float amount) {
@@ -72,8 +73,6 @@ void APlayerCharacter::Tick(float delta) {
 	// Tick once every second
 	if (TickDeltaCount >= 1.0) {
 		TickDeltaCount -= 1.0;
-		//auto count = GetWorld()->GetGameState<ADDGameState>()->EventBus->Count(events::E_PlayerMovement);
-		//UE_LOG(LogTemp, Warning, TEXT("Character tick: %d"), count);
 		
 		GetWorld()->GetGameState<ADDGameState>()->EventBus->BroadcastEvent(
 			events::E_PlayerMovement,

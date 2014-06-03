@@ -3,36 +3,28 @@
 #include "MarchingCubes.h"
 
 AChunk::AChunk(const class FPostConstructInitializeProperties & PCIP)
-: Super(PCIP) {
+	: Super(PCIP) {
 
 	Mesh = PCIP.CreateDefaultSubobject<UGeneratedMeshComponent>(this, TEXT("GeneratedMesh"));
-
-	uint32 Size = FMath::Pow(2, 4) + 1;
-	uint32 Seed = 123456;
-
-	InitializeChunk(
-		utils::Vector3<uint64>(Size, Size, Size),
-		utils::Vector3<int64>(0, 0, 0),
-		Seed);
-	TestRender();
 	RootComponent = Mesh;
 }
 
-void AChunk::InitializeChunk(
-	const utils::Vector3<uint64> & chunkSize,
-	const utils::Vector3<int64> & chunkOffset,
-	uint64 seed
-) {
-	ChunkData.InitializeChunk(chunkSize, chunkOffset, seed);
+void AChunk::InitializeChunk(const terrain::TerrainGeneratorParameters & params) {
+	TerrainGenParams = params;
 }
 
-void AChunk::TestRender() {
-	auto size = ChunkData.Size();
-	uint32 w = size.X;
-	uint32 h = size.Y;
-	uint32 d = size.Z;
+void AChunk::SetChunkData(const TSharedPtr<terrain::ChunkData> & chunkData) {
+	ChunkData = NULL;
+	ChunkData = chunkData;
+	GenerateChunkMesh();
+}
 
-	float unitSize = 40.0;
+void AChunk::GenerateChunkMesh() {
+	uint32 w = TerrainGenParams.ChunkPolygonSize.X;
+	uint32 h = TerrainGenParams.ChunkPolygonSize.Y;
+	uint32 d = TerrainGenParams.ChunkPolygonSize.Z;
+
+	float unitSize = TerrainGenParams.ChunkScale;
 
 	TArray<FGeneratedMeshTriangle> triangles;
 	TArray<utils::Triangle> tempTris;
@@ -40,13 +32,11 @@ void AChunk::TestRender() {
 	FVector displacementVector;
 
 	utils::GridCell gridCell;
-	auto & density = ChunkData.Density();
+	auto & density = ChunkData->DensityData;
 
-	UE_LOG(LogTemp, Error, TEXT(" %d %d %d"), w, d, h)
-
-	for (uint32 x = 0; x < w - 1; x++) {
-		for (uint32 y = 0; y < d - 1; y++) {
-			for (uint32 z = 0; z < h - 1; z++) {
+	for (uint32 x = 0; x < w; x++) {
+		for (uint32 y = 0; y < d; y++) {
+			for (uint32 z = 0; z < h; z++) {
 				gridCell.Initialize(
 					density.Get(x, y, z),
 					density.Get(x, y, z + 1),

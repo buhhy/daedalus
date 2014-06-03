@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include "ChunkData.h"
+#include "TerrainDataStructures.h"
 #include "DataStructures.h"
 
 namespace terrain {
@@ -13,26 +14,28 @@ namespace terrain {
 	/**
 	 * This class will load data related to a particular chunk, or serve it from
 	 * memory if it has been cached. It will also invoke the terrain generator if
-	 * the chunk hasn't be generated yet.
+	 * the chunk hasn't be generated yet. This class will most likely run on
+	 * the server-side.
 	 */
 	class ChunkLoader {
 	private:
 		ChunkCache LoadedChunkCache;
 
-		uint64 Seed;
-		utils::Vector3<int64> ChunkSize;
+		TerrainGeneratorParameters TerrainGenParams;
 
 		TSharedPtr<ChunkData> LoadChunkFromDisk(
 			const utils::Vector3<int64> & offset);
 		TSharedRef<ChunkData> GenerateMissingChunk(
 			const utils::Vector3<int64> & offset);
 
+		//void RunDiamondSquare(ChunkData & data);
+		void SetDefaultHeight(ChunkData & data, int32 height);
+
 	public:
-		ChunkLoader();
+		ChunkLoader(const TerrainGeneratorParameters & params);
 		~ChunkLoader();
 
-		void InitializeChunkLoader(
-			const utils::Vector3<uint64> & chunkSize, uint64 seed);
+		const TerrainGeneratorParameters & GetGeneratorParameters() const;
 		TSharedRef<ChunkData> GetChunkAt(const utils::Vector3<int64> & offset);
 	};
 }

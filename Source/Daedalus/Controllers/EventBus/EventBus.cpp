@@ -77,7 +77,7 @@ uint32 UEventBus::BroadcastEvent(
 }
 
 void UEventBus::BeginDestroy() {
-    Super::BeginDestroy();
+	Super::BeginDestroy();
 
 	for (auto it = Listeners.begin(); it != Listeners.end(); ++it)
 		it->second->clear();

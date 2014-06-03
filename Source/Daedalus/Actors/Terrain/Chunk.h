@@ -3,6 +3,7 @@
 #include "GameFramework/Actor.h"
 #include "GeneratedMeshComponent.h"
 #include "ChunkData.h"
+#include "TerrainDataStructures.h"
 #include "DataStructures.h"
 #include "Chunk.generated.h"
 
@@ -14,16 +15,14 @@ class AChunk : public AActor {
 	GENERATED_UCLASS_BODY()
 
 private:
-	ChunkData ChunkData;
-	void TestRender();
+	TSharedPtr<terrain::ChunkData> ChunkData;
+	terrain::TerrainGeneratorParameters TerrainGenParams;
+	void GenerateChunkMesh();
 
 public:
 	UPROPERTY()
 		TSubobjectPtr<UGeneratedMeshComponent> Mesh;
 
-	void InitializeChunk(
-		const utils::Vector3<uint64> & chunkSize,
-		const utils::Vector3<int64> & chunkOffset,
-		uint64 seed);
+	void InitializeChunk(const terrain::TerrainGeneratorParameters & params);
+	void SetChunkData(const TSharedPtr<terrain::ChunkData> & chunkData);
 };
-
