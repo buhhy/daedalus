@@ -73,7 +73,7 @@ class UGeneratedMeshComponent :
 public:
 	/** Set the geometry to use on this triangle mesh */
 	UFUNCTION(BlueprintCallable, Category = "Components|GeneratedMesh")
-		bool SetGeneratedMeshTriangles(const TArray<FMeshTriangle>& Triangles);
+		bool SetGeneratedMeshTriangles(const TArray<FMeshTriangle> & Triangles);
 
 	/** Set the geometry to use on this triangle mesh */
 	UFUNCTION(BlueprintCallable, Category = "Components|GeneratedMesh")
@@ -85,6 +85,7 @@ public:
 
 	// Begin UMeshComponent interface.
 	virtual int32 GetNumMaterials() const OVERRIDE;
+	virtual UMaterialInterface * GetMaterial(int32 ElementIndex) const OVERRIDE;
 	// End UMeshComponent interface.
 
 	// Begin Interface_CollisionDataProvider Interface
@@ -106,8 +107,16 @@ private:
 	virtual FBoxSphereBounds CalcBounds(const FTransform & LocalToWorld) const OVERRIDE;
 	// Begin USceneComponent interface.
 
-	/** */
-	TArray<FMeshTriangle> GeneratedMeshTris;
+	// Mesh triangles mapped by material IDs, since only 1 material can be applied to
+	// each mesh group, we need to create a mesh group for every material present in
+	// the entire mesh.
+	TMap<uint32, TArray<FMeshTriangle> > MeshTriangles;
+
+	// Materials mapped by material IDs
+	TArray<UMaterialInterface *> MeshMaterials;
+
+	// Cache count of the contents of MeshTriangles
+	uint64 MeshTriangleCount;
 
 	friend class FGeneratedMeshSceneProxy;
 };
