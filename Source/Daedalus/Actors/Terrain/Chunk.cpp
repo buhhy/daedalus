@@ -6,6 +6,10 @@ AChunk::AChunk(const class FPostConstructInitializeProperties & PCIP)
 	: Super(PCIP) {
 
 	Mesh = PCIP.CreateDefaultSubobject<UGeneratedMeshComponent>(this, TEXT("GeneratedMesh"));
+	static ConstructorHelpers::FObjectFinder<UMaterial> wut(TEXT("Material'/Game/TestMaterial.TestMaterial'"));
+	auto material = UMaterialInstanceDynamic::Create((UMaterial *) wut.Object, this);
+	material->SetVectorParameterValue(FName(TEXT("TestProperty")), FLinearColor(1.0, 0.0, 0.0, 1.0));
+	Mesh->SetMaterial(0, material);
 	RootComponent = Mesh;
 }
 
@@ -26,7 +30,7 @@ void AChunk::GenerateChunkMesh() {
 
 	float unitSize = TerrainGenParams.ChunkScale;
 
-	TArray<FGeneratedMeshTriangle> triangles;
+	TArray<FMeshTriangle> triangles;
 	TArray<utils::Triangle> tempTris;
 	FVector multiplyVector(unitSize, unitSize, unitSize);
 	FVector displacementVector;
@@ -53,7 +57,7 @@ void AChunk::GenerateChunkMesh() {
 				displacementVector.Set(x, y, z);
 
 				for (auto it = tempTris.CreateConstIterator(); it; ++it) {
-					FGeneratedMeshTriangle tri;
+					FMeshTriangle tri;
 					tri.Vertex0 = (it->points[0] + displacementVector) * multiplyVector;
 					tri.Vertex1 = (it->points[1] + displacementVector) * multiplyVector;
 					tri.Vertex2 = (it->points[2] + displacementVector) * multiplyVector;

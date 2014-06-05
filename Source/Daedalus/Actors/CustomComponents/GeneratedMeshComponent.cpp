@@ -2,6 +2,10 @@
 #include "Daedalus.h"
 #include "GeneratedMeshComponent.h"
 
+/////////////////////////////////////////////////////////////////////////////
+// Private Classes
+/////////////////////////////////////////////////////////////////////////////
+
 /** Vertex Buffer */
 class FGeneratedMeshVertexBuffer : public FVertexBuffer {
 public:
@@ -75,46 +79,63 @@ public:
 	}
 };
 
+struct FMeshGroup {
+	UMaterialInterface * Material;
+	FGeneratedMeshVertexBuffer VertexBuffer;
+	FGeneratedMeshIndexBuffer IndexBuffer;
+	FGeneratedMeshVertexFactory VertexFactory;
+
+	~FMeshGroup() {
+		VertexBuffer.ReleaseResource();
+		IndexBuffer.ReleaseResource();
+		VertexFactory.ReleaseResource();
+		Material = NULL;
+	}
+};
+
 /** Scene proxy */
 class FGeneratedMeshSceneProxy : public FPrimitiveSceneProxy {
+private:
+	UMaterialInterface* Material;
+	FGeneratedMeshVertexBuffer VertexBuffer;
+	FGeneratedMeshIndexBuffer IndexBuffer;
+	FGeneratedMeshVertexFactory VertexFactory;
+
+	FMaterialRelevance MaterialRelevance;
+
+	inline void BuildVertex(
+		const FMeshTriangleVertex & vertex,
+		const FVector & tangentX,
+		const FVector & tangentY,
+		const FVector & tangentZ
+	) {
+		FDynamicMeshVertex dmVert;
+		dmVert.Position = vertex.Position;
+		dmVert.Color = vertex.VertexColor;
+		dmVert.SetTangents(tangentX, tangentY, tangentZ);
+		int32 vindex = VertexBuffer.Vertices.Add(dmVert);
+		IndexBuffer.Indices.Add(vindex);
+	}
+
 public:
 	FGeneratedMeshSceneProxy(UGeneratedMeshComponent* Component)
 		: FPrimitiveSceneProxy(Component),
 		MaterialRelevance(Component->GetMaterialRelevance())
 	{
-		const FColor VertexColor(255, 255, 255);
-
 		// Add each triangle to the vertex/index buffer
-		for (int TriIdx = 0; TriIdx<Component->GeneratedMeshTris.Num(); TriIdx++) {
-			FGeneratedMeshTriangle& Tri = Component->GeneratedMeshTris[TriIdx];
+		for (int TriIdx = 0; TriIdx < Component->GeneratedMeshTris.Num(); TriIdx++) {
+			FMeshTriangle& Tri = Component->GeneratedMeshTris[TriIdx];
 
-			const FVector Edge01 = (Tri.Vertex1 - Tri.Vertex0);
-			const FVector Edge02 = (Tri.Vertex2 - Tri.Vertex0);
+			const FVector Edge01 = (Tri.Vertex1.Position - Tri.Vertex0.Position);
+			const FVector Edge02 = (Tri.Vertex2.Position - Tri.Vertex0.Position);
 
-			const FVector TangentX = Edge01.SafeNormal();
-			const FVector TangentZ = (Edge02 ^ Edge01).SafeNormal();
-			const FVector TangentY = (TangentX ^ TangentZ).SafeNormal();
+			const FVector tangentX = Edge01.SafeNormal();
+			const FVector tangentZ = (Edge02 ^ Edge01).SafeNormal();
+			const FVector tangentY = (tangentX ^ tangentZ).SafeNormal();
 
-			FDynamicMeshVertex Vert0;
-			Vert0.Position = Tri.Vertex0;
-			Vert0.Color = VertexColor;
-			Vert0.SetTangents(TangentX, TangentY, TangentZ);
-			int32 VIndex = VertexBuffer.Vertices.Add(Vert0);
-			IndexBuffer.Indices.Add(VIndex);
-
-			FDynamicMeshVertex Vert1;
-			Vert1.Position = Tri.Vertex1;
-			Vert1.Color = VertexColor;
-			Vert1.SetTangents(TangentX, TangentY, TangentZ);
-			VIndex = VertexBuffer.Vertices.Add(Vert1);
-			IndexBuffer.Indices.Add(VIndex);
-
-			FDynamicMeshVertex Vert2;
-			Vert2.Position = Tri.Vertex2;
-			Vert2.Color = VertexColor;
-			Vert2.SetTangents(TangentX, TangentY, TangentZ);
-			VIndex = VertexBuffer.Vertices.Add(Vert2);
-			IndexBuffer.Indices.Add(VIndex);
+			BuildVertex(Tri.Vertex0, tangentX, tangentY, tangentZ);
+			BuildVertex(Tri.Vertex1, tangentX, tangentY, tangentZ);
+			BuildVertex(Tri.Vertex2, tangentX, tangentY, tangentZ);
 		}
 
 		// Init vertex factory
@@ -187,23 +208,21 @@ public:
 	}
 
 	virtual uint32 GetMemoryFootprint(void) const {
-		return(sizeof(*this) + GetAllocatedSize());
+		return sizeof(*this) + GetAllocatedSize();
 	}
 
 	uint32 GetAllocatedSize(void) const {
-		return(FPrimitiveSceneProxy::GetAllocatedSize());
+		return FPrimitiveSceneProxy::GetAllocatedSize();
 	}
-
-private:
-	UMaterialInterface* Material;
-	FGeneratedMeshVertexBuffer VertexBuffer;
-	FGeneratedMeshIndexBuffer IndexBuffer;
-	FGeneratedMeshVertexFactory VertexFactory;
-
-	FMaterialRelevance MaterialRelevance;
 };
 
-//////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// GeneratedMeshComponent Implementation
+/////////////////////////////////////////////////////////////////////////////
+
+
 
 UGeneratedMeshComponent::UGeneratedMeshComponent(
 	const FPostConstructInitializeProperties & PCIP
@@ -212,7 +231,7 @@ UGeneratedMeshComponent::UGeneratedMeshComponent(
 }
 
 bool UGeneratedMeshComponent::SetGeneratedMeshTriangles(
-	const TArray<FGeneratedMeshTriangle>& Triangles
+	const TArray<FMeshTriangle>& Triangles
 ) {
 	GeneratedMeshTris = Triangles;
 
@@ -274,11 +293,11 @@ bool UGeneratedMeshComponent::GetPhysicsTriMeshData(
 	FTriIndices Triangle;
 
 	for (int32 i = 0; i < GeneratedMeshTris.Num(); i++) {
-		const FGeneratedMeshTriangle& tri = GeneratedMeshTris[i];
+		const FMeshTriangle& tri = GeneratedMeshTris[i];
 
-		Triangle.v0 = CollisionData->Vertices.Add(tri.Vertex0);
-		Triangle.v1 = CollisionData->Vertices.Add(tri.Vertex1);
-		Triangle.v2 = CollisionData->Vertices.Add(tri.Vertex2);
+		Triangle.v0 = CollisionData->Vertices.Add(tri.Vertex0.Position);
+		Triangle.v1 = CollisionData->Vertices.Add(tri.Vertex1.Position);
+		Triangle.v2 = CollisionData->Vertices.Add(tri.Vertex2.Position);
 
 		CollisionData->Indices.Add(Triangle);
 		CollisionData->MaterialIndices.Add(i);

@@ -5,30 +5,75 @@
 #include "GeneratedMeshComponent.generated.h"
 
 USTRUCT(BlueprintType)
-struct FGeneratedMeshTriangle
-{
+struct FMeshTriangleVertex {
 	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(EditAnywhere, Category = Triangle)
-		FVector Vertex0;
+public:
+	// Index of the material stored in the generated mesh
+	UPROPERTY(EditAnywhere, Category = Vertex) uint32 MaterialIndex;
+	UPROPERTY(EditAnywhere, Category = Vertex) FVector Position;
+	UPROPERTY(EditAnywhere, Category = Vertex) UMaterialInterface * Material;
+	UPROPERTY(EditAnywhere, Category = Vertex) FColor VertexColor;
 
-	UPROPERTY(EditAnywhere, Category = Triangle)
-		FVector Vertex1;
+	FMeshTriangleVertex() :
+		Position(0.0), Material(NULL), VertexColor({ 255, 255, 255 }), MaterialIndex(0) {}
 
-	UPROPERTY(EditAnywhere, Category = Triangle)
-		FVector Vertex2;
+	FMeshTriangleVertex(const FVector & position) :
+		Position(position),
+		Material(NULL),
+		VertexColor({ 255, 255, 255 }),
+		MaterialIndex(0) {}
+
+	FMeshTriangleVertex(
+		const FVector & position,
+		UMaterialInterface * const material
+	) : Position(position),
+		Material(material),
+		VertexColor({ 255, 255, 255 }),
+		MaterialIndex(0) {}
+
+	FMeshTriangleVertex(
+		const FVector & position,
+		UMaterialInterface * const material,
+		const FColor & vertexColor
+	) : Position(position),
+		Material(material),
+		VertexColor(vertexColor),
+		MaterialIndex(0) {}
+
+};
+
+USTRUCT(BlueprintType)
+struct FMeshTriangle {
+	GENERATED_USTRUCT_BODY()
+
+public:
+	// This property is set by the generated mesh component depending on the materials
+	// present on the 3 vertices on the face
+	UPROPERTY(EditAnywhere, Category = Materials) uint32 MaterialIndex;
+	UPROPERTY(EditAnywhere, Category = Vertex) FMeshTriangleVertex Vertex0;
+	UPROPERTY(EditAnywhere, Category = Vertex) FMeshTriangleVertex Vertex1;
+	UPROPERTY(EditAnywhere, Category = Vertex) FMeshTriangleVertex Vertex2;
+
+	FMeshTriangle() {}
+	FMeshTriangle(
+		const FMeshTriangleVertex & vertex0,
+		const FMeshTriangleVertex & vertex1,
+		const FMeshTriangleVertex & vertex2
+	): Vertex0(vertex0), Vertex1(vertex1), Vertex2(vertex2) {}
 };
 
 /** Component that allows you to specify custom triangle mesh geometry */
 UCLASS(editinlinenew, meta = (BlueprintSpawnableComponent), ClassGroup = Rendering)
-class UGeneratedMeshComponent : public UMeshComponent, public IInterface_CollisionDataProvider
-{
+class UGeneratedMeshComponent :
+	public UMeshComponent, public IInterface_CollisionDataProvider {
+
 	GENERATED_UCLASS_BODY()
 
 public:
 	/** Set the geometry to use on this triangle mesh */
 	UFUNCTION(BlueprintCallable, Category = "Components|GeneratedMesh")
-		bool SetGeneratedMeshTriangles(const TArray<FGeneratedMeshTriangle>& Triangles);
+		bool SetGeneratedMeshTriangles(const TArray<FMeshTriangle>& Triangles);
 
 	/** Set the geometry to use on this triangle mesh */
 	UFUNCTION(BlueprintCallable, Category = "Components|GeneratedMesh")
@@ -62,7 +107,7 @@ private:
 	// Begin USceneComponent interface.
 
 	/** */
-	TArray<FGeneratedMeshTriangle> GeneratedMeshTris;
+	TArray<FMeshTriangle> GeneratedMeshTris;
 
 	friend class FGeneratedMeshSceneProxy;
 };
