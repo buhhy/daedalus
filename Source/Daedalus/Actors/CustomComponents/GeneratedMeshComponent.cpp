@@ -121,7 +121,7 @@ struct FMeshGroup {
 class FGeneratedMeshSceneProxy : public FPrimitiveSceneProxy {
 private:
 	// Maps mesh grouping to materials
-	TMap<uint32, FMeshGroup> MeshGroups;
+	TMap<uint32, FMeshGroup *> MeshGroups;
 
 	FMaterialRelevance MaterialRelevance;
 
@@ -131,8 +131,12 @@ public:
 		MaterialRelevance(Component->GetMaterialRelevance())
 	{
 		for (auto it : Component->MeshTriangles) {
-			MeshGroups.Add(it.Key, FMeshGroup());
-			FMeshGroup * const meshGroup = MeshGroups.Find(it.Key);
+			// Make sure VertexFactory -> FMeshGroup never goes out of scope after
+			// calling the FVertexFactory.Init method, otherwise an out-of-scope
+			// exception occurs because ENQUEUE_UNIQUE_RENDER_COMMAND_TWOPARAMETER
+			// makes a callback at a later time.
+			FMeshGroup * meshGroup = new FMeshGroup();
+			MeshGroups.Add(it.Key, meshGroup);
 			for (auto it2 = it.Value.CreateConstIterator(); it2; ++it2) {
 				const FMeshTriangle & Tri = *it2;
 
@@ -148,14 +152,19 @@ public:
 				meshGroup->BuildVertex(Tri.Vertex2, tangentX, tangentY, tangentZ);
 			}
 
-			meshGroup->Material = Component->GetMaterial(it.Key);
+			if (it.Key < (uint32) Component->GetNumMaterials())
+				meshGroup->Material = Component->GetMaterial(it.Key);
+			else
+				meshGroup->Material = NULL;
 			meshGroup->InitializeResources();
 		}
 	}
 
 	virtual ~FGeneratedMeshSceneProxy() {
-		for (auto it = MeshGroups.CreateIterator(); it; ++it)
-			it->Value.ReleaseResources();
+		for (auto it = MeshGroups.CreateIterator(); it; ++it) {
+			it->Value->ReleaseResources();
+			delete it->Value;
+		}
 	}
 
 	virtual void DrawDynamicElements(FPrimitiveDrawInterface * PDI, const FSceneView * View) {
@@ -169,31 +178,39 @@ public:
 			FLinearColor(0, 0.5f, 1.f)
 		);
 
-		FMaterialRenderProxy * MaterialProxy = &WireframeMaterialInstance;
-
-		FMeshBatch Mesh;
-		FMeshBatchElement & BatchElement = Mesh.Elements[0];
-
 		// For-range loops don't seem to work here, I get an `FRenderResource was
 		// deleted without being released first!` error
 		for (auto it = MeshGroups.CreateConstIterator(); it; ++it) {
-			if (!bWireframe)
-				MaterialProxy = it->Value.Material->GetRenderProxy(IsSelected());
+			FMaterialRenderProxy * MaterialProxy = &WireframeMaterialInstance;
+
+			auto & value = it->Value;
+
+			if (!bWireframe) {
+				if (value->Material && value->Material->IsValidLowLevel())
+					MaterialProxy = value->Material->GetRenderProxy(IsSelected());
+				else
+					MaterialProxy = UMaterial::GetDefaultMaterial(MD_Surface)
+							->GetRenderProxy(IsSelected());
+			}
+
+			FMeshBatch Mesh;
+			FMeshBatchElement & BatchElement = Mesh.Elements[0];
 
 			// Draw the mesh.
-			BatchElement.IndexBuffer = &it->Value.IndexBuffer;
+			BatchElement.IndexBuffer = &value->IndexBuffer;
 			Mesh.bWireframe = bWireframe;
-			Mesh.VertexFactory = &it->Value.VertexFactory;
+			Mesh.VertexFactory = &value->VertexFactory;
 			Mesh.MaterialRenderProxy = MaterialProxy;
 			BatchElement.PrimitiveUniformBuffer = CreatePrimitiveUniformBufferImmediate(
 				GetLocalToWorld(), GetBounds(), GetLocalBounds(), true);
 			BatchElement.FirstIndex = 0;
-			BatchElement.NumPrimitives = it->Value.IndexBuffer.Indices.Num() / 3;
+			BatchElement.NumPrimitives = value->IndexBuffer.Indices.Num() / 3;
 			BatchElement.MinVertexIndex = 0;
-			BatchElement.MaxVertexIndex = it->Value.VertexBuffer.Vertices.Num() - 1;
+			BatchElement.MaxVertexIndex = value->VertexBuffer.Vertices.Num() - 1;
 			Mesh.ReverseCulling = IsLocalToWorldDeterminantNegative();
 			Mesh.Type = PT_TriangleList;
 			Mesh.DepthPriorityGroup = SDPG_World;
+
 			PDI->DrawMesh(Mesh);
 		}
 	}
@@ -240,7 +257,6 @@ bool UGeneratedMeshComponent::SetGeneratedMeshTriangles(
 	MeshTriangleCount = triangles.Num();
 
 	MeshTriangles.Empty();
-	MeshMaterials.Empty();
 
 	for (auto it = triangles.CreateConstIterator(); it; ++it) {
 		UMaterialInterface * mat = NULL;
@@ -257,12 +273,13 @@ bool UGeneratedMeshComponent::SetGeneratedMeshTriangles(
 			mat = UMaterial::GetDefaultMaterial(MD_Surface);
 
 		// Search for index of material
-		int32 index = MeshMaterials.IndexOfByKey(mat);
-		if (index == INDEX_NONE)
-			index = MeshMaterials.Add(mat);
+		int32 index = Materials.IndexOfByKey(mat);
+		if (index == INDEX_NONE) {
+			index = Materials.Num();
+			SetMaterial(index, mat);
+		}
 
 		FMeshTriangle tri(*it);
-		tri.MaterialIndex = index;
 
 		// Get array of triangles from map
 		if (!MeshTriangles.Contains(index))
@@ -287,7 +304,7 @@ bool UGeneratedMeshComponent::SetGeneratedMeshTriangles(
 
 void UGeneratedMeshComponent::ClearMeshTriangles() {
 	MeshTriangles.Empty();
-	MeshMaterials.Empty();
+	Materials.Empty();
 	MeshTriangleCount = 0;
 
 #if WITH_EDITOR
@@ -311,11 +328,11 @@ FPrimitiveSceneProxy* UGeneratedMeshComponent::CreateSceneProxy() {
 }
 
 int32 UGeneratedMeshComponent::GetNumMaterials() const {
-	return MeshMaterials.Num();
+	return Materials.Num();
 }
 
 UMaterialInterface * UGeneratedMeshComponent::GetMaterial(int32 ElementIndex) const {
-	return MeshMaterials[ElementIndex];
+	return Materials[ElementIndex];
 }
 
 

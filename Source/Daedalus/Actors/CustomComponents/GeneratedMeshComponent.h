@@ -4,33 +4,33 @@
 
 #include "GeneratedMeshComponent.generated.h"
 
+/**
+ * This data structure contains all the information for a vertex including position, vertex
+ * color as well as material information.
+ */
 USTRUCT(BlueprintType)
 struct FMeshTriangleVertex {
 	GENERATED_USTRUCT_BODY()
 
 public:
-	// Index of the material stored in the generated mesh
-	UPROPERTY(EditAnywhere, Category = Vertex) uint32 MaterialIndex;
 	UPROPERTY(EditAnywhere, Category = Vertex) FVector Position;
 	UPROPERTY(EditAnywhere, Category = Vertex) UMaterialInterface * Material;
 	UPROPERTY(EditAnywhere, Category = Vertex) FColor VertexColor;
 
 	FMeshTriangleVertex() :
-		Position(0.0), Material(NULL), VertexColor({ 255, 255, 255 }), MaterialIndex(0) {}
+		Position(0.0), Material(NULL), VertexColor({ 255, 255, 255 }) {}
 
 	FMeshTriangleVertex(const FVector & position) :
 		Position(position),
 		Material(NULL),
-		VertexColor({ 255, 255, 255 }),
-		MaterialIndex(0) {}
+		VertexColor({ 255, 255, 255 }) {}
 
 	FMeshTriangleVertex(
 		const FVector & position,
 		UMaterialInterface * const material
 	) : Position(position),
 		Material(material),
-		VertexColor({ 255, 255, 255 }),
-		MaterialIndex(0) {}
+		VertexColor({ 255, 255, 255 }) {}
 
 	FMeshTriangleVertex(
 		const FVector & position,
@@ -38,8 +38,7 @@ public:
 		const FColor & vertexColor
 	) : Position(position),
 		Material(material),
-		VertexColor(vertexColor),
-		MaterialIndex(0) {}
+		VertexColor(vertexColor) {}
 
 };
 
@@ -48,9 +47,6 @@ struct FMeshTriangle {
 	GENERATED_USTRUCT_BODY()
 
 public:
-	// This property is set by the generated mesh component depending on the materials
-	// present on the 3 vertices on the face
-	UPROPERTY(EditAnywhere, Category = Materials) uint32 MaterialIndex;
 	UPROPERTY(EditAnywhere, Category = Vertex) FMeshTriangleVertex Vertex0;
 	UPROPERTY(EditAnywhere, Category = Vertex) FMeshTriangleVertex Vertex1;
 	UPROPERTY(EditAnywhere, Category = Vertex) FMeshTriangleVertex Vertex2;
@@ -60,7 +56,7 @@ public:
 		const FMeshTriangleVertex & vertex0,
 		const FMeshTriangleVertex & vertex1,
 		const FMeshTriangleVertex & vertex2
-	): Vertex0(vertex0), Vertex1(vertex1), Vertex2(vertex2) {}
+	) : Vertex0(vertex0), Vertex1(vertex1), Vertex2(vertex2) {}
 };
 
 /** Component that allows you to specify custom triangle mesh geometry */
@@ -81,7 +77,7 @@ public:
 
 	/** Description of collision */
 	UPROPERTY(BlueprintReadOnly, Category = "Collision")
-		class UBodySetup* ModelBodySetup;
+	class UBodySetup* ModelBodySetup;
 
 	// Begin UMeshComponent interface.
 	virtual int32 GetNumMaterials() const OVERRIDE;
@@ -111,9 +107,6 @@ private:
 	// each mesh group, we need to create a mesh group for every material present in
 	// the entire mesh.
 	TMap<uint32, TArray<FMeshTriangle> > MeshTriangles;
-
-	// Materials mapped by material IDs
-	TArray<UMaterialInterface *> MeshMaterials;
 
 	// Cache count of the contents of MeshTriangles
 	uint64 MeshTriangleCount;

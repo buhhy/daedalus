@@ -7,9 +7,9 @@ AChunk::AChunk(const class FPostConstructInitializeProperties & PCIP)
 
 	Mesh = PCIP.CreateDefaultSubobject<UGeneratedMeshComponent>(this, TEXT("GeneratedMesh"));
 	static ConstructorHelpers::FObjectFinder<UMaterial> wut(TEXT("Material'/Game/TestMaterial.TestMaterial'"));
-	auto material = UMaterialInstanceDynamic::Create((UMaterial *) wut.Object, this);
-	material->SetVectorParameterValue(FName(TEXT("TestProperty")), FLinearColor(1.0, 0.0, 0.0, 1.0));
-	Mesh->SetMaterial(0, material);
+	//auto material = UMaterialInstanceDynamic::Create((UMaterial *) wut.Object, this);
+	//material->SetVectorParameterValue(FName(TEXT("TestProperty")), FLinearColor(1.0, 0.0, 0.0, 1.0));
+	//Mesh->SetMaterial(0, material);
 	RootComponent = Mesh;
 }
 
