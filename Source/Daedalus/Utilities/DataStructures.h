@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine.h"
+#include "Vector3.h"
 #include <vector>
 
 namespace utils {
@@ -37,61 +38,6 @@ namespace utils {
 		}
 	};
 
-	/**
-	 * A standard XYZ vector that can be used as a hashmap key.
-	 */
-	template<typename T>
-	struct Vector3 {
-		T X;
-		T Y;
-		T Z;
-
-		Vector3() {}
-		Vector3(T X, T Y, T Z) {
-			Reset(X, Y, Z);
-		}
-
-		Vector3 & Reset(T X, T Y, T Z) {
-			this->X = X;
-			this->Y = Y;
-			this->Z = Z;
-
-			return *this;
-		}
-
-		template<typename T1>
-		Vector3<T> operator - (const Vector3<T1> & rhs) const {
-			return Vector3(X - rhs.X, Y - rhs.Y, Z - rhs.Z);
-		}
-
-		template<typename T1>
-		Vector3<T> operator * (const Vector3<T1> & rhs) const {
-			return Vector3(X * rhs.X, Y * rhs.Y, Z * rhs.Z);
-		}
-
-		template<typename T1>
-		Vector3<T> operator + (const Vector3<T1> & rhs) const {
-			return Vector3(X + rhs.X, Y + rhs.Y, Z + rhs.Z);
-		}
-
-		Vector3<T> operator + (const int & rhs) const {
-			return Vector3(X + rhs, Y + rhs, Z + rhs);
-		}
-
-		Vector3<T> operator + (const uint64 & rhs) const {
-			return Vector3(X + rhs, Y + rhs, Z + rhs);
-		}
-
-		Vector3<T> operator + (const int64 & rhs) const {
-			return Vector3(X + rhs, Y + rhs, Z + rhs);
-		}
-	};
-
-	template<typename T1, typename T2>
-	bool operator == (const Vector3<T1> & lhs, const Vector3<T2> & rhs) {
-		return lhs.X == rhs.X && lhs.Y == rhs.Y && lhs.Z == rhs.Z;
-	}
-
 	template<typename T>
 	struct Tensor3 {
 		std::vector<T> Data;
@@ -122,23 +68,6 @@ namespace utils {
 
 		void Fill(const T & value) {
 			Data.assign(Width * Height * Depth, value);
-		}
-	};
-}
-
-namespace std {
-	template <typename T>
-	void hashCombine(uint64 & seed, const T & v) {
-		std::hash<T> hasher;
-		seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-	}
-
-	template <typename T>
-	struct hash<utils::Vector3<T> > {
-		size_t operator()(const utils::Vector3<T> & v) const {
-			uint64 seed = 0;
-			std::hashCombine(seed, v.X);
-			return seed;
 		}
 	};
 }
