@@ -25,7 +25,7 @@ namespace terrain {
 		) : DensityData({ chunkSize.X + 1, chunkSize.Y + 1, chunkSize.Z + 1 }),
 			MaterialData({ chunkSize.X + 1, chunkSize.Y + 1, chunkSize.Z + 1 }),
 			ChunkPolygonSize(chunkSize),
-			ChunkFieldSize(chunkSize + 1),
+			ChunkFieldSize(chunkSize + uint64(1)),
 			ChunkOffset(chunkOffset) {}
 
 		~ChunkData() {}

@@ -9,7 +9,6 @@ APlayerCharacter::APlayerCharacter(const class FPostConstructInitializePropertie
 	movement->SetWalkableFloorAngle(60.0);
 	movement->JumpZVelocity = 400;
 	movement->AirControl = 0.4;
-	movement->GravityScale = 0;
 }
 
 void APlayerCharacter::MoveForward(float amount) {
@@ -54,7 +53,7 @@ void APlayerCharacter::BeginPlay() {
 	Super::BeginPlay();
 
 	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Green, TEXT("USING CHARACTER!"));
+		GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Green, TEXT("Using standard game character."));
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent * InputComponent) {

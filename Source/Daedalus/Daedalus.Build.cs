@@ -18,7 +18,9 @@ public class Daedalus : ModuleRules
 				"Daedalus/Controllers",
 				"Daedalus/Controllers/EventBus",
 				"Daedalus/Models/Terrain",
-				"Daedalus/Utilities"
+				"Daedalus/Utilities",
+				"Daedalus/Utilities/Graph",
+				"Daedalus/Utilities/Algebra"
 			}
 		);
 
