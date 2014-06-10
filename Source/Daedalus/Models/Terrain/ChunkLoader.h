@@ -23,10 +23,8 @@ namespace terrain {
 
 		TerrainGeneratorParameters TerrainGenParams;
 
-		TSharedPtr<ChunkData> LoadChunkFromDisk(
-			const utils::Vector3<int64> & offset);
-		TSharedRef<ChunkData> GenerateMissingChunk(
-			const utils::Vector3<int64> & offset);
+		TSharedPtr<ChunkData> LoadChunkFromDisk(const ChunkOffsetVector & offset);
+		TSharedRef<ChunkData> GenerateMissingChunk(const ChunkOffsetVector & offset);
 
 		//void RunDiamondSquare(ChunkData & data);
 		void SetDefaultHeight(ChunkData & data, int32 height);
@@ -36,6 +34,6 @@ namespace terrain {
 		~ChunkLoader();
 
 		const TerrainGeneratorParameters & GetGeneratorParameters() const;
-		TSharedRef<ChunkData> GetChunkAt(const utils::Vector3<int64> & offset);
+		TSharedRef<ChunkData> GetChunkAt(const ChunkOffsetVector & offset);
 	};
 }

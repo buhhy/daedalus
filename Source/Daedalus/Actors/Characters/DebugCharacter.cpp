@@ -63,15 +63,15 @@ void ADebugCharacter::SetupPlayerInputComponent(class UInputComponent * InputCom
 }
 
 void ADebugCharacter::Tick(float delta) {
-	//Super::Tick(delta);
-	//TickDeltaCount += delta;
+	Super::Tick(delta);
+	TickDeltaCount += delta;
 
 	// Tick once every second
-	/*if (TickDeltaCount >= 1.0) {
+	if (TickDeltaCount >= 1.0) {
 		TickDeltaCount -= 1.0;
 		
 		GetWorld()->GetGameState<ADDGameState>()->EventBus->BroadcastEvent(
 			events::E_PlayerMovement,
 			TSharedRef<events::EventData>(new events::EPlayerMovement(this)));
-	}*/
+	}
 }

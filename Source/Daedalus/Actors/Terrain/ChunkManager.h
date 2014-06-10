@@ -17,9 +17,8 @@ class AChunkManager : public AActor, public IEventListener {
 	GENERATED_UCLASS_BODY()
 
 private:
-	typedef utils::Vector3<int64> ChunkOffset;
 	typedef std::unordered_map <
-		ChunkOffset, AChunk *
+		terrain::ChunkOffsetVector, AChunk *
 	> ChunkCache;
 
 	ChunkCache LocalCache;

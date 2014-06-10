@@ -24,7 +24,7 @@ namespace utils {
 			const float blb, const float tlb,
 			const float brf, const float trf,
 			const float brb, const float trb
-			) {
+		) {
 			values[0] = blf; values[1] = brf; values[2] = brb; values[3] = blb;
 			values[4] = tlf; values[5] = trf; values[6] = trb; values[7] = tlb;
 			points[0] = FVector(0, 0, 0);
@@ -39,14 +39,47 @@ namespace utils {
 	};
 
 	template<typename T>
+	struct Tensor2 {
+		std::vector<T> Data;
+		uint32 Width;		// X
+		uint32 Depth;		// Y
+
+		Tensor2() : Tensor2(0, 0) {}
+		Tensor2(const Vector2<uint64> & size) : Tensor2(size.X, size.Y) {}
+		Tensor2(uint64 width, uint64 depth) :
+			Width(width), Depth(depth), Data(width * depth, 0) {}
+
+		Tensor2 & Reset(uint32 Width, uint32 Depth) {
+			this->Width = Width;
+			this->Depth = Depth;
+			Data.resize(Width * Depth, 0);
+
+			return *this;
+		}
+
+		const T & Get(const uint32 & x, const uint32 & y) const {
+			return Data[x * Width + y];
+		}
+
+		void Set(const uint32 & x, const uint32 & y, const T & value) {
+			Data[x * Width + y] = value;
+		}
+
+		void Fill(const T & value) {
+			Data.assign(Width * Depth, value);
+		}
+	};
+
+	template<typename T>
 	struct Tensor3 {
 		std::vector<T> Data;
 		uint32 Width;		// X
-		uint32 Height;		// Y
-		uint32 Depth;		// Z
+		uint32 Depth;		// Y
+		uint32 Height;		// Z
 
-		Tensor3() : Width(0), Height(0), Depth(0) {}
-		Tensor3(uint64 width, uint64 height, uint64 depth) :
+		Tensor3() : Tensor3(0, 0, 0) {}
+		Tensor3(const Vector3<uint64> & size) : Tensor3(size.X, size.Y, size.Z) {}
+		Tensor3(uint64 width, uint64 depth, uint64 height) :
 			Width(width), Height(height), Depth(depth), Data(width * height * depth, 0) {}
 
 		Tensor3 & Reset(uint32 Width, uint32 Height, uint32 Depth) {

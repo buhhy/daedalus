@@ -7,25 +7,25 @@
 
 namespace terrain {
 	/**
-	* This struct holds all the relevant data for a terrain chunk. Chunks are tileable in
-	* all 3 dimensions, allowing for infinite worlds in height, depth and width. The axes
-	* are set up as follows: X -> width, Y -> depth, Z -> height.
-	*/
+	 * This struct holds all the relevant data for a terrain chunk. Chunks are tileable in
+	 * all 3 dimensions, allowing for infinite worlds in height, depth and width. The axes
+	 * are set up as follows: X -> width, Y -> depth, Z -> height.
+	 */
 	struct ChunkData {
 		utils::Tensor3<float> DensityData;
 		utils::Tensor3<uint64> MaterialData;
 
-		ChunkSizeVector ChunkPolygonSize;		// Size of the chunk in polygons
+		ChunkSizeVector ChunkGridSize;			// Size of the chunk in polygons
 		ChunkSizeVector ChunkFieldSize;			// Size of the chunk scalar field
 		ChunkOffsetVector ChunkOffset;
 
 		ChunkData(
 			const ChunkSizeVector & chunkSize,
 			const ChunkOffsetVector & chunkOffset
-		) : DensityData({ chunkSize.X + 1, chunkSize.Y + 1, chunkSize.Z + 1 }),
-			MaterialData({ chunkSize.X + 1, chunkSize.Y + 1, chunkSize.Z + 1 }),
-			ChunkPolygonSize(chunkSize),
+		) : ChunkGridSize(chunkSize),
 			ChunkFieldSize(chunkSize + uint64(1)),
+			DensityData(chunkSize + uint64(1)),
+			MaterialData(chunkSize + uint64(1)),
 			ChunkOffset(chunkOffset) {}
 
 		~ChunkData() {}

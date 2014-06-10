@@ -24,9 +24,9 @@ void AChunk::SetChunkData(const TSharedPtr<terrain::ChunkData> & chunkData) {
 }
 
 void AChunk::GenerateChunkMesh() {
-	uint32 w = TerrainGenParams.ChunkPolygonSize.X;
-	uint32 h = TerrainGenParams.ChunkPolygonSize.Y;
-	uint32 d = TerrainGenParams.ChunkPolygonSize.Z;
+	uint32 w = TerrainGenParams.ChunkGridCellSize.X;
+	uint32 h = TerrainGenParams.ChunkGridCellSize.Y;
+	uint32 d = TerrainGenParams.ChunkGridCellSize.Z;
 
 	float unitSize = TerrainGenParams.ChunkScale;
 

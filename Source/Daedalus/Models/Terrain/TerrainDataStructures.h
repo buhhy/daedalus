@@ -7,22 +7,44 @@ namespace terrain {
 	typedef utils::Vector3<int64> ChunkOffsetVector;
 
 	struct TerrainGeneratorParameters {
-		ChunkSizeVector ChunkPolygonSize;
-		uint64 Seed;
+		ChunkSizeVector ChunkGridCellSize;
+		int64 Seed;
 		double ChunkScale;			// Maps chunk grid to real world coordinates
 
 		const FVector ToRealCoordinates(const ChunkOffsetVector & offset) const {
 			return FVector(
-				(int64) ChunkPolygonSize.X * offset.X * ChunkScale,
-				(int64) ChunkPolygonSize.Y * offset.Y * ChunkScale,
-				(int64) ChunkPolygonSize.Z * offset.Z * ChunkScale);
+				(int64) ChunkGridCellSize.X * offset.X * ChunkScale,
+				(int64) ChunkGridCellSize.Y * offset.Y * ChunkScale,
+				(int64) ChunkGridCellSize.Z * offset.Z * ChunkScale);
 		}
 
 		const ChunkOffsetVector ToChunkCoordinates(const FVector & position) const {
 			return ChunkOffsetVector(
-				FMath::Floor(position.X / (ChunkScale * (int64) ChunkPolygonSize.X)),
-				FMath::Floor(position.Y / (ChunkScale * (int64) ChunkPolygonSize.Y)),
-				FMath::Floor(position.Z / (ChunkScale * (int64) ChunkPolygonSize.Z)));
+				FMath::Floor(position.X / (ChunkScale * (int64) ChunkGridCellSize.X)),
+				FMath::Floor(position.Y / (ChunkScale * (int64) ChunkGridCellSize.Y)),
+				FMath::Floor(position.Z / (ChunkScale * (int64) ChunkGridCellSize.Z)));
+		}
+	};
+
+
+	typedef utils::Vector2<int64> BiomeOffsetVector;
+	typedef utils::Vector2<uint64> BiomeSizeVector;
+
+	struct BiomeGeneratorParameters {
+		BiomeSizeVector BiomeGridCellSize;
+		int64 Seed;
+		double BiomeScale;			// Maps biome grid to real world coordinates
+
+		const FVector2D ToRealCoordinates(const BiomeOffsetVector & offset) const {
+			return FVector2D(
+				(int64) BiomeGridCellSize.X * offset.X * BiomeScale,
+				(int64) BiomeGridCellSize.Y * offset.Y * BiomeScale);
+		}
+
+		const BiomeOffsetVector ToChunkCoordinates(const FVector2D & position) const {
+			return BiomeOffsetVector(
+				FMath::Floor(position.X / (BiomeScale * (int64) BiomeGridCellSize.X)),
+				FMath::Floor(position.Y / (BiomeScale * (int64) BiomeGridCellSize.Y)));
 		}
 	};
 }

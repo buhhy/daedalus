@@ -11,7 +11,7 @@ ADDGameState * AChunkManager::GetGameState() {
 }
 
 void AChunkManager::UpdateChunksAt(const FVector & playerPosition) {
-	ChunkOffset offset;
+	terrain::ChunkOffsetVector offset;
 	FRotator defaultRotation(0, 0, 0);
 	FActorSpawnParameters defaultParameters;
 	auto chunkLoader = GetGameState()->ChunkLoader;

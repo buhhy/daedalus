@@ -19,7 +19,7 @@ namespace terrain {
 	TSharedRef<ChunkData> ChunkLoader::GenerateMissingChunk(
 		const utils::Vector3<int64> & offset
 	) {
-		auto data = new ChunkData(TerrainGenParams.ChunkPolygonSize, offset);
+		auto data = new ChunkData(TerrainGenParams.ChunkGridCellSize, offset);
 		SetDefaultHeight(*data, 2);
 		return TSharedRef<ChunkData>(data);
 	}
@@ -43,7 +43,7 @@ namespace terrain {
 	}
 
 	void ChunkLoader::SetDefaultHeight(ChunkData & data, int32 height) {
-		auto chunkHeight = TerrainGenParams.ChunkPolygonSize.Z;
+		auto chunkHeight = TerrainGenParams.ChunkGridCellSize.Z;
 		if (((data.ChunkOffset.Z + 1) * (int64) chunkHeight) < height) {
 			data.DensityData.Fill(1.0);			// Completely filled block
 			//UE_LOG(LogTemp, Error, TEXT("Ground chunk"));
