@@ -297,8 +297,8 @@ namespace utils {
 		{ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }
 	};
 
-	FVector VertexLerp(
-		const float isoThreshold, const FVector & p1, const FVector & p2,
+	Vector3<> VertexLerp(
+		const float isoThreshold, const Vector3<> & p1, const Vector3<> & p2,
 		float bp1, float bp2);
 
 	/*
@@ -314,7 +314,7 @@ namespace utils {
 		const float isoThreshold,
 		const GridCell & grid
 	) {
-		FVector vertlist[12];
+		Vector3<> vertlist[12];
 		int cubeindex = 0;
 
 		/*
@@ -385,18 +385,18 @@ namespace utils {
 	Linearly interpolate the position where an isosurface cuts
 	an edge between two vertices, each with their own scalar value
 	*/
-	FVector VertexLerp(
+	Vector3<> VertexLerp(
 		const float isoThreshold,
-		const FVector & p1,
-		const FVector & p2,
+		const Vector3<> & p1,
+		const Vector3<> & p2,
 		float valp1,
 		float valp2
 	) {
-		if (FMath::Abs(isoThreshold - valp1) < ERROR)
+		if (FMath::Abs(isoThreshold - valp1) < FLOAT_ERROR)
 			return p1;
-		if (FMath::Abs(isoThreshold - valp2) < ERROR)
+		if (FMath::Abs(isoThreshold - valp2) < FLOAT_ERROR)
 			return p2;
-		if (FMath::Abs(valp1 - valp2) < ERROR)
+		if (FMath::Abs(valp1 - valp2) < FLOAT_ERROR)
 			return p1;
 
 		double mu = (isoThreshold - valp1) / (valp2 - valp1);

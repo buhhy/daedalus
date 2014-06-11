@@ -43,5 +43,3 @@ namespace std {
 		}
 	};
 }
-
-#include "Algebra2.h"

@@ -52,7 +52,7 @@ void ABiomeRegionManager::UpdateBiomesAt(const FVector & playerPosition) {
 				auto data = chunkLoader->GetBiomeRegionAt(offset);
 				auto position = To3D(genParams.ToRealCoordinates(data->BiomeOffset), RenderHeight);
 
-				//UE_LOG(LogTemp, Error, TEXT("Placing chunk at %f %f %f"), position.X, position.Y, position.Z)
+				UE_LOG(LogTemp, Error, TEXT("Placing biome at %f %f %f"), position.X, position.Y, position.Z)
 				ABiomeRegion * newRegion = GetWorld()->SpawnActor<ABiomeRegion>(
 					ABiomeRegion::StaticClass(), position, defaultRotation, defaultParameters);
 				newRegion->InitializeBiomeRegion(genParams.BiomeScale);

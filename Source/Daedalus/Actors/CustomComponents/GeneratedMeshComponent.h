@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "DataStructures.h"
 #include "GeneratedMeshComponent.generated.h"
 
 /**
@@ -24,6 +25,9 @@ public:
 		Position(position),
 		Material(NULL),
 		VertexColor({ 255, 255, 255 }) {}
+
+	FMeshTriangleVertex(const utils::Vector3<> & position) :
+		FMeshTriangleVertex(position.ToFVector()) {}
 
 	FMeshTriangleVertex(
 		const FVector & position,
@@ -57,6 +61,8 @@ public:
 		const FMeshTriangleVertex & vertex1,
 		const FMeshTriangleVertex & vertex2
 	) : Vertex0(vertex0), Vertex1(vertex1), Vertex2(vertex2) {}
+	FMeshTriangle(const utils::Triangle & tri) :
+		FMeshTriangle(FMeshTriangleVertex(tri.Point1), FMeshTriangleVertex(tri.Point2), FMeshTriangleVertex(tri.Point3)) {}
 };
 
 /** Component that allows you to specify custom triangle mesh geometry */

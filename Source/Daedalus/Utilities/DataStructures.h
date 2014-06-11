@@ -1,23 +1,28 @@
 #pragma once
 
 #include "Engine.h"
+#include "Vector2.h"
 #include "Vector3.h"
+#include "Vector4.h"
+#include "Matrix4.h"
+#include "Algebra2.h"
+#include "Algebra3.h"
 #include <vector>
 
 namespace utils {
 	struct Triangle {
-		FVector points[3];
+		Vector3<> Point1, Point2, Point3;
 
-		Triangle(const FVector & p1, const FVector & p2, const FVector & p3) {
-			points[0] = p1;
-			points[1] = p2;
-			points[2] = p3;
-		}
+		Triangle(
+			const Vector3<> & p1,
+			const Vector3<> & p2,
+			const Vector3<> & p3
+		) : Point1(p1), Point2(p2), Point3(p3) {}
 	};
 
 	struct GridCell {
 		float values[8];
-		FVector points[8];
+		Vector3<> points[8];
 
 		void Initialize(
 			const float blf, const float tlf,
@@ -27,14 +32,14 @@ namespace utils {
 		) {
 			values[0] = blf; values[1] = brf; values[2] = brb; values[3] = blb;
 			values[4] = tlf; values[5] = trf; values[6] = trb; values[7] = tlb;
-			points[0] = FVector(0, 0, 0);
-			points[1] = FVector(1, 0, 0);
-			points[2] = FVector(1, 1, 0);
-			points[3] = FVector(0, 1, 0);
-			points[4] = FVector(0, 0, 1);
-			points[5] = FVector(1, 0, 1);
-			points[6] = FVector(1, 1, 1);
-			points[7] = FVector(0, 1, 1);
+			points[0] = Vector3<>(0, 0, 0);
+			points[1] = Vector3<>(1, 0, 0);
+			points[2] = Vector3<>(1, 1, 0);
+			points[3] = Vector3<>(0, 1, 0);
+			points[4] = Vector3<>(0, 0, 1);
+			points[5] = Vector3<>(1, 0, 1);
+			points[6] = Vector3<>(1, 1, 1);
+			points[7] = Vector3<>(0, 1, 1);
 		}
 	};
 

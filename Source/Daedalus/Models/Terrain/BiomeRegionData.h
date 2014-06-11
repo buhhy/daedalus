@@ -60,9 +60,11 @@ namespace terrain {
 			BiomeOffset(biomeOffset),
 			PointDistribution(biomeSize)
 		{
+			auto toY = PointDistribution.Depth - buffer - 1;
+			auto toX = PointDistribution.Width - buffer - 1;
 			// Create buffer border around biome region
-			for (auto y = PointDistribution.Depth - buffer - 1; y >= buffer; y--) {
-				for (auto x = PointDistribution.Width - buffer - 1; x >= buffer; x--)
+			for (auto y = buffer; y <= toY; y++) {
+				for (auto x = buffer; x <= toX; x++)
 					PointDistribution.Get(x, y).IsFinalized = true;
 			}
 		}
@@ -74,7 +76,8 @@ namespace terrain {
 			const uint64 y,
 			const utils::Vector2<> & point
 		) {
-			return PointDistribution.Get(x, y).AddPoint(point);
+			auto & d = PointDistribution.Get(x, y);
+			return d.AddPoint(point);
 		}
 	};
 }

@@ -44,18 +44,18 @@ namespace terrain {
 		std::vector<utils::delaunay::Vertex *> vertexList;
 		
 		// Create uniform random point distribution, and insert vertices into aggregate list
-		for (auto y = BiomeGenParams.BiomeGridCellSize.Y - 1; y >= 0; y--) {
-			for (auto x = BiomeGenParams.BiomeGridCellSize.X - 1; x >= 0; x--) {
+		for (auto y = 0; y < BiomeGenParams.BiomeGridCellSize.Y; y++) {
+			for (auto x = 0; x < BiomeGenParams.BiomeGridCellSize.X; x++) {
 				numPoints = randNumPoints();
 				offset.Reset(x, y);
 				for (auto n = numPoints - 1; n >= 0; n--) {
 					// Set point X, Y to random point within cell
 					point.Reset(randPosition(), randPosition());
-					auto vtxCpy = new utils::delaunay::Vertex(*data->InsertPoint(x, y, point));
+					//auto vtxCpy = new utils::delaunay::Vertex(*data->InsertPoint(x, y, point));
 
 					// Align X, Y relative to entire region
-					vtxCpy->Point = (vtxCpy->Point + offset) / biomeRegionSize;
-					vertexList.push_back(vtxCpy);
+					//vtxCpy->Point = (vtxCpy->Point + offset) / biomeRegionSize;
+					//vertexList.push_back(vtxCpy);
 				}
 			}
 		}

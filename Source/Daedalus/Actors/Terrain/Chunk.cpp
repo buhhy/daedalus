@@ -58,9 +58,9 @@ void AChunk::GenerateChunkMesh() {
 
 				for (auto it = tempTris.CreateConstIterator(); it; ++it) {
 					FMeshTriangle tri;
-					tri.Vertex0 = (it->points[0] + displacementVector) * multiplyVector;
-					tri.Vertex1 = (it->points[1] + displacementVector) * multiplyVector;
-					tri.Vertex2 = (it->points[2] + displacementVector) * multiplyVector;
+					tri.Vertex0 = (it->Point1.ToFVector() + displacementVector) * multiplyVector;
+					tri.Vertex1 = (it->Point2.ToFVector() + displacementVector) * multiplyVector;
+					tri.Vertex2 = (it->Point3.ToFVector() + displacementVector) * multiplyVector;
 					triangles.Add(tri);
 				}
 			}

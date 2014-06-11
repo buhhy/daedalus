@@ -1,5 +1,6 @@
 #include "Daedalus.h"
 #include "BiomeRegion.h"
+#include "DebugMeshHelpers.h"
 #include "MarchingCubes.h"
 
 ABiomeRegion::ABiomeRegion(const class FPostConstructInitializeProperties & PCIP)
@@ -33,12 +34,20 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	FMeshTriangle tempTri;
 
 	auto & graph = RegionData->DelaunayGraph;
-
-	for (auto x = w - 1; x >= 0; x--) {
-		for (auto y = d - 1; d >= 0; y--) {
+	
+	for (auto y = 0u; y < d; y++) {
+		for (auto x = 0u; x < w; x++) {
 		}
 	}
 	displacementVector.Set(RegionData->BiomeOffset.X, RegionData->BiomeOffset.Y, 0);
+
+	auto pointTries = utils::CreatePoint({ 0, 0, 50 }, 10);
+	for (auto it : pointTries)
+		triangles.Add(FMeshTriangle(it));
+	
+	pointTries = utils::CreateLine({ 0, 0, 50 }, { 0, 0, 150 }, 5);
+	for (auto it : pointTries)
+		triangles.Add(FMeshTriangle(it));
 
 	for (auto f : graph.Faces) {
 		// Loop through each edge in face, the face will always be convex in both

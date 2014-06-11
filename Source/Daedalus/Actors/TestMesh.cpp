@@ -52,14 +52,14 @@ ATestMesh::ATestMesh(const class FPostConstructInitializeProperties & PCIP)
 	};
 
 	FMeshTriangleVertex verts[] = {
-		{ { -50, -50, -50 } },
-		{ { 50, -50, -50 } },
-		{ { 50, 50, -50 } },
-		{ { -50, 50, -50 } },
-		{ { -50, -50, 50 } },
-		{ { 50, -50, 50 } },
-		{ { 50, 50, 50 } },
-		{ { -50, 50, 50 } }
+		{ FVector(-50, -50, -50) },
+		{ FVector(50, -50, -50) },
+		{ FVector(50, 50, -50) },
+		{ FVector(-50, 50, -50) },
+		{ FVector(-50, -50, 50) },
+		{ FVector(50, -50, 50) },
+		{ FVector(50, 50, 50) },
+		{ FVector(-50, 50, 50) }
 	};
 
 	TArray<FMeshTriangle> triangles;

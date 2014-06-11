@@ -1,7 +1,8 @@
 #pragma once
 
-namespace utils {
+#include "Constants.h"
 
+namespace utils {
 }
 
 namespace std {

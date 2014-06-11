@@ -1,5 +1,5 @@
 #include "Daedalus.h"
-#include "Vector3.h"
+#include "DataStructures.h"
 
 namespace utils {
 	template <typename T>
@@ -51,6 +51,14 @@ namespace utils {
 			return Vector3<double>((double) X * denom, (double) Y * denom, (double) Z * denom);
 
 		return Vector3<double>((double) X, (double) Y, (double) Z);
+	}
+	
+	template <typename T>
+	Vector3<T> & Vector3<T>::operator = (const Vector4<T> & other) {
+		// Assignment swap principle
+		T x = other.X, y = other.Y, z = other.Z;
+		Reset(x, y, z);
+		return *this;
 	}
 
 	template Vector3<float>;
