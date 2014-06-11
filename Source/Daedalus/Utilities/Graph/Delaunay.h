@@ -122,6 +122,7 @@ namespace utils {
 		};
 	}
 
-	delaunay::DelaunayGraph BuildDelaunay2D(
-		const std::vector<delaunay::Vertex *> & inputVertices);
+	void BuildDelaunay2D(
+		delaunay::DelaunayGraph & graph,
+		const std::vector<Vector2<> > & inputPoints);
 }

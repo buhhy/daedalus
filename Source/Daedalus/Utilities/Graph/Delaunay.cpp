@@ -42,9 +42,11 @@ namespace utils {
 		}
 	}
 
-	DelaunayGraph BuildDelaunay2D(const std::vector<Vertex *> & inputVertices) {
-		std::vector<Vertex *> copiedVertices = inputVertices;
-		DelaunayGraph graph;
+	void BuildDelaunay2D(DelaunayGraph & graph, const std::vector<Vector2<> > & inputPoints) {
+		std::vector<Vertex *> copiedVertices;
+
+		for (auto i = 0u; i < inputPoints.size(); i++)
+			copiedVertices.push_back(new Vertex(inputPoints[i], i));
 
 		// Sort by X from left to right, then Y from top down to resolve conflicts
 		std::sort(
@@ -60,7 +62,5 @@ namespace utils {
 		// Run if at least 2 vertex
 		if (graph.Vertices.size() > 1)
 			Divide(graph, 0, graph.Vertices.size() - 1);
-
-		return graph;
 	}
 }

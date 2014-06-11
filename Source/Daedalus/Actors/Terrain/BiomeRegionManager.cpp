@@ -8,7 +8,7 @@ inline FVector To3D(const FVector2D & in, const float z) { return { in.X, in.Y, 
 
 ABiomeRegionManager::ABiomeRegionManager(
 	const class FPostConstructInitializeProperties & PCIP
-) : Super(PCIP), RenderDistance(2), RenderHeight(100.0) {}
+) : Super(PCIP), RenderDistance(0), RenderHeight(100.0) {}
 
 ADDGameState * ABiomeRegionManager::GetGameState() {
 	return GetWorld()->GetGameState<ADDGameState>();

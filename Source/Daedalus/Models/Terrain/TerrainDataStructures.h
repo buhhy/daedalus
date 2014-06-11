@@ -40,14 +40,14 @@ namespace terrain {
 
 		const FVector2D ToRealCoordinates(const BiomeOffsetVector & offset) const {
 			return FVector2D(
-				(int64) BiomeGridCellSize.X * offset.X * BiomeScale,
-				(int64) BiomeGridCellSize.Y * offset.Y * BiomeScale);
+				(int64) offset.X * BiomeScale,
+				(int64) offset.Y * BiomeScale);
 		}
 
 		const BiomeOffsetVector ToChunkCoordinates(const FVector2D & position) const {
 			return BiomeOffsetVector(
-				FMath::Floor(position.X / (BiomeScale * (int64) BiomeGridCellSize.X)),
-				FMath::Floor(position.Y / (BiomeScale * (int64) BiomeGridCellSize.Y)));
+				FMath::Floor(position.X / BiomeScale),
+				FMath::Floor(position.Y / BiomeScale));
 		}
 	};
 }

@@ -4,10 +4,10 @@
 #include "DataStructures.h"
 #include "Delaunay.h"
 
-#include <unordered_map>
+#include <vector>
 
 namespace terrain {
-	typedef std::unordered_map<uint16, utils::delaunay::Vertex *> PointSet;
+	typedef std::vector<utils::Vector2<>> PointSet;
 
 	/**
 	 * Each biome cell contains a list of 2D points that will be used in a Delaunay
@@ -16,24 +16,16 @@ namespace terrain {
 	 * border has been used in an adjacent region merge.
 	 */
 	struct BiomeCellData {
-	private:
-		uint16 VertexIdCount;
 	public:
 		PointSet Points;
 		bool IsFinalized;
 
-		BiomeCellData(): VertexIdCount(0), IsFinalized(false) {}
+		BiomeCellData(): IsFinalized(false) {}
 
-		~BiomeCellData() {
-			for (auto it : Points)
-				delete it.second;
-		}
+		~BiomeCellData() {}
 
-		utils::delaunay::Vertex * AddPoint(const utils::Vector2<> & point) {
-			auto id = VertexIdCount ++;
-			auto newVertex = new utils::delaunay::Vertex(point, id);
-			Points.insert({ id, newVertex });
-			return newVertex;
+		void AddPoint(const utils::Vector2<> & point) {
+			Points.push_back(point);
 		}
 	};
 
@@ -71,13 +63,12 @@ namespace terrain {
 
 		~BiomeRegionData() {}
 
-		utils::delaunay::Vertex * InsertPoint(
+		void InsertPoint(
 			const uint64 x,
 			const uint64 y,
 			const utils::Vector2<> & point
 		) {
-			auto & d = PointDistribution.Get(x, y);
-			return d.AddPoint(point);
+			PointDistribution.Get(x, y).AddPoint(point);
 		}
 	};
 }

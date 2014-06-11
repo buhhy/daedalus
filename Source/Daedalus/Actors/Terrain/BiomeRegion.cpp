@@ -25,11 +25,13 @@ void ABiomeRegion::SetBiomeRegionData(const TSharedPtr<terrain::BiomeRegionData>
 }
 
 void ABiomeRegion::GenerateBiomeRegionMesh() {
+	double scale = BiomeGridScale;
+
 	uint32 w = RegionData->BiomeGridSize.X;
 	uint32 d = RegionData->BiomeGridSize.Y;
 
 	TArray<FMeshTriangle> triangles;
-	FVector multiplyVector(BiomeGridScale, BiomeGridScale, BiomeGridScale);
+	FVector multiplyVector(scale, scale, scale);
 	FVector displacementVector;
 	FMeshTriangle tempTri;
 
@@ -41,13 +43,15 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	}
 	displacementVector.Set(RegionData->BiomeOffset.X, RegionData->BiomeOffset.Y, 0);
 
-	auto pointTries = utils::CreatePoint({ 0, 0, 50 }, 10);
-	for (auto it : pointTries)
-		triangles.Add(FMeshTriangle(it));
-	
-	pointTries = utils::CreateLine({ 0, 0, 50 }, { 0, 0, 150 }, 5);
-	for (auto it : pointTries)
-		triangles.Add(FMeshTriangle(it));
+	// Draw points at every Delaunay point
+	std::vector<utils::Triangle> pointTries;
+	utils::Vector3<> tempVector3;
+	for (auto v : graph.Vertices) {
+		tempVector3.Reset(v->Point * scale, 0);
+		pointTries = utils::CreatePoint(tempVector3, 10);
+		for (auto it : pointTries)
+			triangles.Add(FMeshTriangle(it));
+	}
 
 	for (auto f : graph.Faces) {
 		// Loop through each edge in face, the face will always be convex in both

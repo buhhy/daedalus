@@ -7,7 +7,7 @@ namespace utils {
 		T Y;
 
 		Vector2() {}
-		Vector2(T x, T y): X(y), Y(y) {}
+		Vector2(T x, T y): X(x), Y(y) {}
 
 		inline void Reset(T x, T y) { X = x; Y = y; }
 

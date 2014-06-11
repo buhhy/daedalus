@@ -41,7 +41,7 @@ namespace terrain {
 		utils::Vector2<> biomeRegionSize = BiomeGenParams.BiomeGridCellSize.Cast<double>();
 
 		// Run Delaunay triangulation algorithm
-		std::vector<utils::delaunay::Vertex *> vertexList;
+		std::vector<utils::Vector2<> > vertexList;
 		
 		// Create uniform random point distribution, and insert vertices into aggregate list
 		for (auto y = 0; y < BiomeGenParams.BiomeGridCellSize.Y; y++) {
@@ -51,16 +51,16 @@ namespace terrain {
 				for (auto n = numPoints - 1; n >= 0; n--) {
 					// Set point X, Y to random point within cell
 					point.Reset(randPosition(), randPosition());
-					//auto vtxCpy = new utils::delaunay::Vertex(*data->InsertPoint(x, y, point));
+					data->InsertPoint(x, y, point);
 
 					// Align X, Y relative to entire region
-					//vtxCpy->Point = (vtxCpy->Point + offset) / biomeRegionSize;
-					//vertexList.push_back(vtxCpy);
+					point = (point + offset) / biomeRegionSize;
+					vertexList.push_back(point);
 				}
 			}
 		}
 
-		data->DelaunayGraph = utils::BuildDelaunay2D(vertexList);
+		utils::BuildDelaunay2D(data->DelaunayGraph, vertexList);
 
 		return TSharedRef<BiomeRegionData>(data);
 	}

@@ -39,6 +39,7 @@ namespace utils {
 		}
 		
 		inline void Reset(T x, T y, T z) { X = x; Y = y; Z = z; }
+		inline void Reset(const Vector2<T> & vec, T z) { X = vec.X; Y = vec.Y; Z = z; }
 
 		/** Length squared. */
 		inline T Length2() const { return X * X + Y * Y + Z * Z; }
