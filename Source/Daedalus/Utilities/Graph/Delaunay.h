@@ -51,11 +51,12 @@ namespace utils {
 		};
 
 		struct Vertex {
-			Vector2<double> Point;
+			Vector2<> Point;
 			Edge * Edge;
+			uint64 VertexId;
 
-			Vertex(const Vector2<double> & point) :
-				Point(point), Edge(NULL) {}
+			Vertex(const Vector2<> & point, uint64 id) :
+				Point(point), Edge(NULL), VertexId(id) {}
 		};
 
 		struct Face {
@@ -76,12 +77,11 @@ namespace utils {
 				Faces.clear();
 			}
 
-			Vertex * CreateVertex(
-				const Vector2<double> & point
+			Vertex * AddVertex(
+				Vertex * const vertex
 			) {
-				Vertex * newVertex = new Vertex(point);
-				Vertices.push_back(newVertex);
-				return newVertex;
+				Vertices.push_back(vertex);
+				return vertex;
 			}
 
 			Edge * CreateEdge(
@@ -123,6 +123,5 @@ namespace utils {
 	}
 
 	delaunay::DelaunayGraph BuildDelaunay2D(
-		std::vector<double> & results,
-		const std::vector<Vector2<double> *> & inputPoints);
+		const std::vector<delaunay::Vertex *> & inputVertices);
 }

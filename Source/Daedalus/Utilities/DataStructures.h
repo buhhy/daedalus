@@ -46,18 +46,27 @@ namespace utils {
 
 		Tensor2() : Tensor2(0, 0) {}
 		Tensor2(const Vector2<uint64> & size) : Tensor2(size.X, size.Y) {}
-		Tensor2(uint64 width, uint64 depth) :
-			Width(width), Depth(depth), Data(width * depth, 0) {}
+		Tensor2(const Vector2<uint64> & size, const T & value) :
+			Tensor2(size.X, size.Y, value) {}
 
-		Tensor2 & Reset(uint32 Width, uint32 Depth) {
+		Tensor2(uint64 width, uint64 depth) :
+			Width(width), Depth(depth), Data(width * depth) {}
+		Tensor2(uint64 width, uint64 depth, const T & value) :
+			Width(width), Depth(depth), Data(width * depth, value) {}
+
+		Tensor2 & Reset(uint32 Width, uint32 Depth, const T & value) {
 			this->Width = Width;
 			this->Depth = Depth;
-			Data.resize(Width * Depth, 0);
+			Data.resize(Width * Depth, value);
 
 			return *this;
 		}
 
 		const T & Get(const uint32 & x, const uint32 & y) const {
+			return Data[x * Width + y];
+		}
+
+		T & Get(const uint32 & x, const uint32 & y) {
 			return Data[x * Width + y];
 		}
 
@@ -79,19 +88,28 @@ namespace utils {
 
 		Tensor3() : Tensor3(0, 0, 0) {}
 		Tensor3(const Vector3<uint64> & size) : Tensor3(size.X, size.Y, size.Z) {}
-		Tensor3(uint64 width, uint64 depth, uint64 height) :
-			Width(width), Height(height), Depth(depth), Data(width * height * depth, 0) {}
+		Tensor3(const Vector3<uint64> & size, const T & value) :
+			Tensor3(size.X, size.Y, size.Z, value) {}
 
-		Tensor3 & Reset(uint32 Width, uint32 Height, uint32 Depth) {
+		Tensor3(uint64 width, uint64 depth, uint64 height) :
+			Width(width), Height(height), Depth(depth), Data(width * height * depth) {}
+		Tensor3(uint64 width, uint64 depth, uint64 height, const T & value) :
+			Width(width), Height(height), Depth(depth), Data(width * height * depth, value) {}
+
+		Tensor3 & Reset(uint32 Width, uint32 Height, uint32 Depth, const T & value) {
 			this->Width = Width;
 			this->Height = Height;
 			this->Depth = Depth;
-			Data.resize(Width * Height * Depth, 0);
+			Data.resize(Width * Height * Depth, value);
 
 			return *this;
 		}
 
 		const T & Get(const uint32 & x, const uint32 & y, const uint32 & z) const {
+			return Data[(x * Width + y) * Height + z];
+		}
+
+		T & GetMutable(const uint32 & x, const uint32 & y, const uint32 & z) {
 			return Data[(x * Width + y) * Height + z];
 		}
 

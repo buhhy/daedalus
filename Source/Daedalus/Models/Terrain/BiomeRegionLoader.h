@@ -32,6 +32,6 @@ namespace terrain {
 		~BiomeRegionLoader();
 
 		const BiomeGeneratorParameters & GetGeneratorParameters() const;
-		TSharedRef<BiomeRegionData> GetChunkAt(const BiomeOffsetVector & offset);
+		TSharedRef<BiomeRegionData> GetBiomeRegionAt(const BiomeOffsetVector & offset);
 	};
 }

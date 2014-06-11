@@ -42,14 +42,14 @@ void ABiomeRegionManager::UpdateBiomesAt(const FVector & playerPosition) {
 		}
 	}
 
-	// Begin preloading chunks for the area the player is near
+	// Begin preloading biomes for the area the player is near
 	for (int64 x = fromX; x <= toX; x++) {
 		for (int64 y = fromY; y <= toY; y++) {
 			offset.Reset(x, y);
-			// Chunk is cached already
+			// Biome is cached already
 			if (LocalCache.count(offset) > 0) {
 			} else {
-				auto data = chunkLoader->GetChunkAt(offset);
+				auto data = chunkLoader->GetBiomeRegionAt(offset);
 				auto position = To3D(genParams.ToRealCoordinates(data->BiomeOffset), RenderHeight);
 
 				//UE_LOG(LogTemp, Error, TEXT("Placing chunk at %f %f %f"), position.X, position.Y, position.Z)

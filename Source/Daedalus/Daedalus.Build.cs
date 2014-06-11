@@ -20,7 +20,8 @@ public class Daedalus : ModuleRules
 				"Daedalus/Models/Terrain",
 				"Daedalus/Utilities",
 				"Daedalus/Utilities/Graph",
-				"Daedalus/Utilities/Algebra"
+				"Daedalus/Utilities/Algebra",
+				"Daedalus/Utilities/Mesh"
 			}
 		);
 

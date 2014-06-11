@@ -33,6 +33,9 @@ namespace terrain {
 	struct BiomeGeneratorParameters {
 		BiomeSizeVector BiomeGridCellSize;
 		int64 Seed;
+		uint64 BufferSize;			// Number of buffer cells for Delaunay graph merging
+		uint16 MinPointsPerCell;
+		uint16 MaxPointsPerCell;
 		double BiomeScale;			// Maps biome grid to real world coordinates
 
 		const FVector2D ToRealCoordinates(const BiomeOffsetVector & offset) const {

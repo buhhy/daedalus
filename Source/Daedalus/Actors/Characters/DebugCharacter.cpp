@@ -26,7 +26,6 @@ void ADebugCharacter::MoveRight(float amount) {
 	if (Controller != NULL && FMath::Abs(amount) > ERROR) {
 		FRotator rotator = Controller->GetControlRotation();
 		const FVector direction = FRotationMatrix(rotator).GetScaledAxis(EAxis::Y);
-		UE_LOG(LogTemp, Error, TEXT("Strafing: %f %f %f"), direction.X, direction.Y, direction.Z)
 		AddMovementInput(direction, amount);
 	}
 }
@@ -34,7 +33,6 @@ void ADebugCharacter::MoveRight(float amount) {
 void ADebugCharacter::MoveUp(float amount) {
 	if (Controller != NULL && FMath::Abs(amount) > ERROR) {
 		const FVector direction(0, 0, 1.0);
-		UE_LOG(LogTemp, Error, TEXT("Floating: %f %f %f"), direction.X, direction.Y, direction.Z)
 		AddMovementInput(direction, amount);
 	}
 }

@@ -48,7 +48,7 @@ namespace utils {
 
 		// Vector isn't (0, 0, 0)
 		if (1.0 + x + y + z > 1.0)
-			return Vector3<double>((double) X / denom, (double) Y / denom, (double) Z / denom);
+			return Vector3<double>((double) X * denom, (double) Y * denom, (double) Z * denom);
 
 		return Vector3<double>((double) X, (double) Y, (double) Z);
 	}

@@ -1,7 +1,7 @@
 #pragma once
 
 namespace utils {
-	template<typename T>
+	template <typename T = double>
 	struct Vector2 {
 		T X;
 		T Y;
@@ -22,6 +22,11 @@ namespace utils {
 		/** Length squared. */
 		inline double Length2() const { return X * X + Y * Y; }
 		inline double Length() const { return FMath::Sqrt(Length2()); }
+
+		inline FVector ToFVector(float z = 0.0) const { return FVector(X, Y, z); }
+
+		template <typename T1>
+		inline Vector2<T1> Cast() const { return Vector2<T1>(this->X, this->Y); }
 
 		Vector2<double> Normalize() const;
 	};

@@ -29,7 +29,7 @@ namespace utils {
 
 		// Vector isn't (0, 0)
 		if (1.0 + x + y > 1.0)
-			return Vector2<double>((double) X / denom, (double) Y / denom);
+			return Vector2<double>((double) X * denom, (double) Y * denom);
 
 		return Vector2<double>((double) X, (double) Y);
 	}

@@ -18,12 +18,13 @@ class ABiomeRegion : public AActor {
 private:
 	TSharedPtr<terrain::BiomeRegionData> RegionData;
 	float BiomeGridScale;
+	float RenderHeight;
 	void GenerateBiomeRegionMesh();
 
 public:
 	UPROPERTY()
 		TSubobjectPtr<UGeneratedMeshComponent> Mesh;
 
-	void InitializeBiomeRegion(const double scale);
+	void InitializeBiomeRegion(const float scale);
 	void SetBiomeRegionData(const TSharedPtr<terrain::BiomeRegionData> & BiomeRegionData);
 };

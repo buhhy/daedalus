@@ -6,15 +6,16 @@ namespace utils {
 	/**
 	* A standard XYZ vector that can be used as a hashmap key.
 	*/
-	template<typename T>
+	template<typename T = double>
 	struct Vector3 {
 		T X;
 		T Y;
 		T Z;
 
 		Vector3() {}
+		Vector3(const FVector & vec) : Vector3(vec.X, vec.Y, vec.Z) {}
 		Vector3(const T x, const T y, const T z) : X(x), Y(y), Z(z) {}
-		Vector3(const Vector2<T> & vec, const T z) : X(vec.X), Y(vec.Y), Z(z) {}
+		Vector3(const Vector2<T> & vec, const T z) : Vector3(vec.X, vec.Y, z) {}
 
 		inline void Reset(T x, T y, T z) { X = x; Y = y; Z = z; }
 
@@ -40,6 +41,8 @@ namespace utils {
 		/** Length squared. */
 		inline double Length2() const { return X * X + Y * Y + Z * Z; }
 		inline double Length() const { return FMath::Sqrt(Length2()); }
+
+		inline FVector ToFVector() const { return FVector(X, Y, Z); }
 
 		Vector3<double> Normalize() const;
 	};
