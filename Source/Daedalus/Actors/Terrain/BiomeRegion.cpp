@@ -34,24 +34,39 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	FVector multiplyVector(scale, scale, scale);
 	FVector displacementVector;
 	FMeshTriangle tempTri;
+	displacementVector.Set(RegionData->BiomeOffset.X, RegionData->BiomeOffset.Y, 0);
+	
+	// Draw grid lines
+	std::vector<utils::Triangle> gridTries;
+	utils::Vector3<> tempVector31;
+	utils::Vector3<> tempVector32;
+	// Y lines
+	for (auto y = 0u; y < d; y++) {
+		double lineY = (scale * y) / d;
+		tempVector31.Reset(0, lineY, 0);
+		tempVector32.Reset(scale, lineY, 0);
+		utils::CreateLine(gridTries, tempVector31, tempVector32, 5);
+	}
+	// X lines
+	for (auto x = 0u; x < w; x++) {
+		double lineX = (scale * x) / d;
+		tempVector31.Reset(lineX, 0, 0);
+		tempVector32.Reset(lineX, scale, 0);
+		utils::CreateLine(gridTries, tempVector31, tempVector32, 5);
+	}
+	for (auto it : gridTries)
+		triangles.Add(FMeshTriangle(it));
 
 	auto & graph = RegionData->DelaunayGraph;
-	
-	for (auto y = 0u; y < d; y++) {
-		for (auto x = 0u; x < w; x++) {
-		}
-	}
-	displacementVector.Set(RegionData->BiomeOffset.X, RegionData->BiomeOffset.Y, 0);
 
 	// Draw points at every Delaunay point
 	std::vector<utils::Triangle> pointTries;
-	utils::Vector3<> tempVector3;
 	for (auto v : graph.Vertices) {
-		tempVector3.Reset(v->Point * scale, 0);
-		pointTries = utils::CreatePoint(tempVector3, 10);
-		for (auto it : pointTries)
-			triangles.Add(FMeshTriangle(it));
+		tempVector31.Reset(v->Point * scale, 0);
+		utils::CreatePoint(pointTries, tempVector31, 10);
 	}
+	for (auto it : pointTries)
+		triangles.Add(FMeshTriangle(it));
 
 	for (auto f : graph.Faces) {
 		// Loop through each edge in face, the face will always be convex in both

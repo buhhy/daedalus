@@ -13,7 +13,7 @@ namespace utils {
 		output.push_back({ f1, f2, f3 });
 	}
 
-	void CreatePrism(
+	uint16 CreatePrism(
 		std::vector<Triangle> & output,
 		Vector3<> * const input
 	) {
@@ -23,6 +23,8 @@ namespace utils {
 		AddFace(output, input[7], input[6], input[5], input[4]);
 		AddFace(output, input[6], input[7], input[3], input[2]);
 		AddFace(output, input[7], input[4], input[0], input[3]);
+
+		return 12;
 	}
 
 	Vector3<> CubeVertices[] = {
@@ -36,8 +38,9 @@ namespace utils {
 		{ { -1, 1, 1 } }
 	};
 
-	std::vector<Triangle> CreatePoint(const Vector3<> & position, const float radius) {
-		std::vector<Triangle> output;
+	uint16 CreatePoint(
+		std::vector<Triangle> & results, const Vector3<> & position, const float radius
+	) {
 		
 		Matrix4<> transform =
 			CreateTranslation(position) * CreateScaling({ radius, radius, radius });
@@ -47,16 +50,13 @@ namespace utils {
 		for (uint16 i = 0; i < 8; i++)
 			transformedVertices[i] = transform * Vector4<>(CubeVertices[i], 1);
 
-		CreatePrism(output, transformedVertices);
-
-		return output;
+		return CreatePrism(results, transformedVertices);
 	}
 
-	std::vector<Triangle> CreateLine(
-		const Vector3<> & startPoint, const Vector3<> & endPoint, const float radius
+	uint16 CreateLine(
+		std::vector<Triangle> & results, const Vector3<> & startPoint,
+		const Vector3<> & endPoint, const float radius
 	) {
-		std::vector<Triangle> output;
-
 		Vector3<> u1 = endPoint - startPoint;
 		Vector3<> u2, u3;
 		BuildBasis(u1, u2, u3);
@@ -75,8 +75,6 @@ namespace utils {
 				transformedVertices[i] = endTransform * Vector4<>(CubeVertices[i], 1);
 		}
 		
-		CreatePrism(output, transformedVertices);
-
-		return output;
+		return CreatePrism(results, transformedVertices);
 	}
 }
