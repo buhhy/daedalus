@@ -43,12 +43,12 @@ ATestMesh::ATestMesh(const class FPostConstructInitializeProperties & PCIP)
 	redMat->SetVectorParameterValue(FName(TEXT("TestProperty")), FLinearColor(1.0, 0.0, 0.0, 1.0));
 
 	UMaterialInstanceDynamic * colors[] = {
-		ColoredMaterial(testMaterial.Object, this, FLinearColor(1.0, 0.0, 0.0, 1.0)),
-		ColoredMaterial(testMaterial.Object, this, FLinearColor(0.0, 1.0, 0.0, 1.0)),
-		ColoredMaterial(testMaterial.Object, this, FLinearColor(0.0, 0.0, 1.0, 1.0)),
-		ColoredMaterial(testMaterial.Object, this, FLinearColor(1.0, 1.0, 0.0, 1.0)),
-		ColoredMaterial(testMaterial.Object, this, FLinearColor(0.0, 1.0, 1.0, 1.0)),
-		ColoredMaterial(testMaterial.Object, this, FLinearColor(1.0, 0.0, 1.0, 1.0)),
+		ColoredMaterial(testMaterial.Object, this, FLinearColor(0.5, 0.0, 0.0, 1.0)),
+		ColoredMaterial(testMaterial.Object, this, FLinearColor(0.0, 0.5, 0.0, 1.0)),
+		ColoredMaterial(testMaterial.Object, this, FLinearColor(0.0, 0.0, 0.5, 1.0)),
+		ColoredMaterial(testMaterial.Object, this, FLinearColor(0.5, 0.5, 0.0, 1.0)),
+		ColoredMaterial(testMaterial.Object, this, FLinearColor(0.0, 0.5, 0.5, 1.0)),
+		ColoredMaterial(testMaterial.Object, this, FLinearColor(0.5, 0.0, 0.5, 1.0)),
 	};
 
 	FMeshTriangleVertex verts[] = {

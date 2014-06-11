@@ -24,6 +24,8 @@ private:
 public:
 	UPROPERTY()
 		TSubobjectPtr<UGeneratedMeshComponent> Mesh;
+	UPROPERTY()
+		UMaterial * TestMaterial;
 
 	void InitializeBiomeRegion(const float scale);
 	void SetBiomeRegionData(const TSharedPtr<terrain::BiomeRegionData> & BiomeRegionData);
