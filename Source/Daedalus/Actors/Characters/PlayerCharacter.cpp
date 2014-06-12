@@ -12,7 +12,7 @@ APlayerCharacter::APlayerCharacter(const class FPostConstructInitializePropertie
 }
 
 void APlayerCharacter::MoveForward(float amount) {
-	if (Controller != NULL && FMath::Abs(amount) > ERROR) {
+	if (Controller != NULL && FMath::Abs(amount) > utils::FLOAT_ERROR) {
 		FRotator rotator = Controller->GetControlRotation();
 
 		if (CharacterMovement->IsMovingOnGround() || CharacterMovement->IsFalling())
@@ -24,7 +24,7 @@ void APlayerCharacter::MoveForward(float amount) {
 }
 
 void APlayerCharacter::MoveRight(float amount) {
-	if (Controller != NULL && FMath::Abs(amount) > ERROR) {
+	if (Controller != NULL && FMath::Abs(amount) > utils::FLOAT_ERROR) {
 		FRotator rotator = Controller->GetControlRotation();
 		const FVector direction = FRotationMatrix(rotator).GetScaledAxis(EAxis::Y);
 		AddMovementInput(direction, amount);

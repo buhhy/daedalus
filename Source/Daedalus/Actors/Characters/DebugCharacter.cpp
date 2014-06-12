@@ -13,7 +13,7 @@ ADebugCharacter::ADebugCharacter(const class FPostConstructInitializeProperties&
 }
 
 void ADebugCharacter::MoveForward(float amount) {
-	if (Controller != NULL && FMath::Abs(amount) > ERROR) {
+	if (Controller != NULL && FMath::Abs(amount) > utils::FLOAT_ERROR) {
 		FRotator rotator = Controller->GetControlRotation();
 		rotator.Pitch = 0.0;
 
@@ -23,7 +23,7 @@ void ADebugCharacter::MoveForward(float amount) {
 }
 
 void ADebugCharacter::MoveRight(float amount) {
-	if (Controller != NULL && FMath::Abs(amount) > ERROR) {
+	if (Controller != NULL && FMath::Abs(amount) > utils::FLOAT_ERROR) {
 		FRotator rotator = Controller->GetControlRotation();
 		const FVector direction = FRotationMatrix(rotator).GetScaledAxis(EAxis::Y);
 		AddMovementInput(direction, amount);
@@ -31,7 +31,7 @@ void ADebugCharacter::MoveRight(float amount) {
 }
 
 void ADebugCharacter::MoveUp(float amount) {
-	if (Controller != NULL && FMath::Abs(amount) > ERROR) {
+	if (Controller != NULL && FMath::Abs(amount) > utils::FLOAT_ERROR) {
 		const FVector direction(0, 0, 1.0);
 		AddMovementInput(direction, amount);
 	}
