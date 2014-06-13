@@ -43,6 +43,7 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	auto gridColor = ColoredMaterial(TestMaterial, this, FLinearColor(0.3, 0.3, 0.3));
 	auto vertexColor = ColoredMaterial(TestMaterial, this, FLinearColor(0.1, 0.55, 0.1));
 	auto edgeColor = ColoredMaterial(TestMaterial, this, FLinearColor(0.55, 0.1, 0.1));
+	auto faceColor = ColoredMaterial(TestMaterial, this, FLinearColor(0.1, 0.1, 0.55));
 
 
 	double scale = BiomeGridScale;
@@ -58,8 +59,7 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	
 	// Draw grid lines
 	std::vector<utils::Triangle> gridTries;
-	utils::Vector3<> tempVector31;
-	utils::Vector3<> tempVector32;
+	utils::Vector3<> tempVector31, tempVector32, tempVector33;
 	// Y lines
 	for (auto y = 0u; y < d; y++) {
 		double lineY = (scale * y) / d;
@@ -81,45 +81,35 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 
 	// Draw points at every Delaunay point
 	std::vector<utils::Triangle> pointTries;
-	for (auto v : graph.Vertices) {
+	auto verts = graph.GetVertices();
+	for (auto v : verts) {
 		tempVector31.Reset(v->Point * scale, 0);
 		utils::CreatePoint(pointTries, tempVector31, 12);
 	}
-	for (auto it : pointTries)
-		triangles.Add(FMeshTriangle(it, vertexColor));
+	for (auto it : pointTries) triangles.Add(FMeshTriangle(it, vertexColor));
 
 	// Draw lines at every Delaunay edge
 	std::vector<utils::Triangle> edgeTries;
-	for (auto e : graph.Edges) {
-		tempVector31.Reset(e->StartVertex->Point * scale, 0);
-		tempVector32.Reset(e->EndVertex->Point * scale, 0);
+	auto edges = graph.GetUniqueEdges();
+	for (auto e : edges) {
+		tempVector31.Reset(e.Start->Point * scale, 0);
+		tempVector32.Reset(e.End->Point * scale, 0);
 		utils::CreateLine(edgeTries, tempVector31, tempVector32, 3);
 	}
-	for (auto it : edgeTries)
-		triangles.Add(FMeshTriangle(it, edgeColor));
+	for (auto it : edgeTries) triangles.Add(FMeshTriangle(it, edgeColor));
 
-	for (auto f : graph.Faces) {
-		// Loop through each edge in face, the face will always be convex in both
-		// Delaunay and Voronoi graphs, hence triangulation of the face will always
-		// be trivial.
-		auto * edge = f->Edge;
-		uint16 count = 0;
-		// Count the number of edges in the face
-		for (; edge != f->Edge; edge = edge->NextRightEdge, count++);
-
-		tempTri.Vertex0 =
-			(edge->StartVertex->Point.ToFVector() + displacementVector) * BiomeGridScale;
-		tempTri.Vertex1 =
-			(edge->EndVertex->Point.ToFVector() + displacementVector) * BiomeGridScale;
-				
-		for (; count > 0; count --) {
-			edge = edge->NextRightEdge;
-			tempTri.Vertex2 =
-				(edge->EndVertex->Point.ToFVector() + displacementVector) * BiomeGridScale;
-			triangles.Add(tempTri);
-			tempTri.Vertex1 = tempTri.Vertex2;
+	// Draw each Delaunay triangle
+	std::vector<utils::Triangle> faceTries;
+	auto faces = graph.GetFaces();
+	for (auto f : faces) {
+		if (!f->IsDegenerate) {
+			tempVector31.Reset(f->Vertices[0]->Point * scale, 0);
+			tempVector32.Reset(f->Vertices[1]->Point * scale, 0);
+			tempVector33.Reset(f->Vertices[2]->Point * scale, 0);
+			faceTries.push_back(utils::Triangle(tempVector31, tempVector32, tempVector33));
 		}
 	}
+	for (auto it : faceTries) triangles.Add(FMeshTriangle(it, faceColor));
 
 	Mesh->SetGeneratedMeshTriangles(triangles);
 }

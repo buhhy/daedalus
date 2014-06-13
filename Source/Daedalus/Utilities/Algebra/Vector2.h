@@ -11,12 +11,20 @@ namespace utils {
 
 		inline void Reset(T x, T y) { X = x; Y = y; }
 
-		/**
-		 * Dot product.
-		 */
+		/** Dot product. */
 		template <typename T1>
 		inline double Dot(const Vector2<T1> other) const {
 			return X * other.X + Y * other.Y;
+		}
+
+		/**
+		 * Takes the determinant of the 2 vectors, effectively finding the winding order of
+		 * the 2 vectors.
+		 * | x1 y1 |
+		 * | x2 y2 |
+		 */
+		inline T Determinant(const Vector2<T> other) const {
+			return X * other.Y - Y * other.X;
 		}
 
 		/** Length squared. */

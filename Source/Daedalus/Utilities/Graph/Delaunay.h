@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Engine.h"
-#include "Vector2.h"
+#include "DataStructures.h"
 #include <vector>
+#include <array>
+#include <unordered_set>
 
 namespace utils {
 	/**
@@ -11,118 +13,135 @@ namespace utils {
 	 */
 
 	namespace delaunay {
-		struct Vertex;
 		struct Face;
+		struct Vertex;
 
-		/**
-		 *                            |
-		 *        Next left edge      |      Next right edge
-		 * ---------------------------*-----------------------------
-		 *                            | End vertex
-		 *                            |
-		 *                            |
-		 *              o             |             o
-		 *          Left face         |        Right face
-		 *                            |
-		 *                            | Start vertex
-		 * ---------------------------*-----------------------------
-		 *        Prev left edge      |     Prev right edge
-		 *                            |
-		 */
-		struct Edge {
-			Vertex * StartVertex;
-			Vertex * EndVertex;
-			Edge * NextLeftEdge;			// Next CW edge from end vertex
-			Edge * NextRightEdge;			// Next CCW edge from end vertex
-			Edge * PrevLeftEdge;			// Previous CCW edge from start vertex
-			Edge * PrevRightEdge;			// Previous CW edge from start vertex
-			Face * LeftFace;
-			Face * RightFace;
-
-			Edge(Vertex * const start, Vertex * const end) :
-				StartVertex(start),
-				EndVertex(end),
-				NextLeftEdge(NULL),
-				NextRightEdge(NULL),
-				PrevLeftEdge(NULL),
-				PrevRightEdge(NULL),
-				LeftFace(NULL),
-				RightFace(NULL) {}
-		};
+		bool IsCWWinding(Vertex * const v1, Vertex * const v2, Vertex * const v3);
 
 		struct Vertex {
 			Vector2<> Point;
-			Edge * Edge;
+			Face * IncidentFace;
 			uint64 VertexId;
 
 			Vertex(const Vector2<> & point, uint64 id) :
-				Point(point), Edge(NULL), VertexId(id) {}
+				Point(point), IncidentFace(NULL), VertexId(id)
+			{}
+
+			inline bool operator == (const Vertex & other) const {
+				return other.VertexId == VertexId;
+			}
 		};
 
+		struct Edge {
+			Vertex * Start;
+			Vertex * End;
+
+			Edge(Vertex * const start, Vertex * const end) {
+				if (start->VertexId < end->VertexId) {
+					Start = start;
+					End = end;
+				} else {
+					Start = end;
+					End = start;
+				}	
+			}
+
+			inline bool operator == (const Edge & other) const {
+				return *other.Start == *Start && *other.End == *End;
+			}
+		};
+
+		/**
+		 * Triangle datastructure: each vertex has a corresponding opposite face.
+		 */
 		struct Face {
-			Edge * Edge;
+		private:
+			Face * GetAdjacentFaceCCW(Vertex * const sharedVertex, int8 direction) {
+				int8 found = FindVertex(sharedVertex);
+				// Shared vertex doesn't actually exist in this face
+				if (found == -1) return NULL;
+				found = (found + 1 + direction) % 3;
+				return AdjacentFaces[found];
+			}
+
+		public:
+			std::array<Vertex *, 3> Vertices;        // Vertices of the triangle provided in CW order
+			std::array<Face *, 3> AdjacentFaces;     // Each adjacent face opposite of the vertex provided
+			bool IsDegenerate;
+
+			/** Creates a degenerate face */
+			Face(Vertex * const v1, Vertex * const v2) : Face(v1, v2, NULL) {}
+
+			Face(Vertex * const v1, Vertex * const v2, Vertex * const v3) :
+				Vertices({ v1, v2, v3 }),
+				AdjacentFaces({ this, this, this }),
+				IsDegenerate(v3 == NULL)
+			{}
+
+			int8 FindVertex(Vertex * const vertex) const {
+				for (int8 i = 2; i >= 0; i--)
+					if (Vertices[i] == vertex) return i;
+				return -1;
+			}
+
+			int8 FindFace(Face * const face) const {
+				for (int8 i = 2; i >= 0; i--)
+					if (AdjacentFaces[i] == face) return i;
+				return -1;
+			}
+
+			Face * GetAdjacentFaceCW(Vertex * const sharedVertex) {
+				return GetAdjacentFaceCCW(sharedVertex, 0);
+			}
+
+			Face * GetAdjacentFaceCCW(Vertex * const sharedVertex) {
+				// Equivalent to subtracting 1 and modulus
+				return GetAdjacentFaceCCW(sharedVertex, 1);
+			}
 		};
 
-		struct DelaunayGraph {
-			std::vector<Vertex *> Vertices;
-			std::vector<Edge *> Edges;
-			std::vector<Face *> Faces;
+		class DelaunayGraph {
+		private:
+			std::unordered_set<Vertex *> Vertices;
+			std::unordered_set<Face *> Faces;
 
+			std::pair<Face *, int8> AdjustNewFaceAdjacencies(
+				Face * const newFace, const uint8 currentIndex);
+
+		public:
 			~DelaunayGraph() {
 				for (auto it : Vertices) delete it;
-				for (auto it : Edges) delete it;
 				for (auto it : Faces) delete it;
 				Vertices.clear();
-				Edges.clear();
 				Faces.clear();
 			}
 
-			Vertex * AddVertex(
-				Vertex * const vertex
-			) {
-				Vertices.push_back(vertex);
-				return vertex;
-			}
+			inline uint64 VertexCount() const { return Vertices.size(); }
+			inline uint64 FaceCount() const { return Faces.size(); }
 
-			Edge * CreateEdge(
-				const uint64 startVertexIndex,
-				const uint64 endVertexIndex
-			) {
-				Vertex * const v1 = Vertices[startVertexIndex];
-				Vertex * const v2 = Vertices[endVertexIndex];
-				Edge * newEdge = new Edge(v1, v2);
-				Edges.push_back(newEdge);
-				v1->Edge = v2->Edge = newEdge;
-				return newEdge;
-			}
+			const std::vector<Vertex const *> GetVertices() const;
+			const std::vector<Face const *> GetFaces() const;
+			const std::vector<Edge> GetUniqueEdges() const;
 
-			/**
-			 * Indices of vertices should be provided in CW winding.
-			 */
-			Face * CreateTriangle(const uint64 i1, const uint64 i2, const uint64 i3) {
-				Edge * e1 = CreateEdge(i1, i2);
-				Edge * e2 = CreateEdge(i2, i3);
-				Edge * e3 = CreateEdge(i3, i1);
-				Face * face = new Face();
-
-				e1->NextLeftEdge = e1->NextRightEdge = e2;
-				e2->NextLeftEdge = e2->NextRightEdge = e3;
-				e3->NextLeftEdge = e3->NextRightEdge = e1;
-
-				e1->PrevLeftEdge = e1->PrevRightEdge = e3;
-				e2->PrevLeftEdge = e2->PrevRightEdge = e1;
-				e3->PrevLeftEdge = e3->PrevRightEdge = e2;
-
-				e1->RightFace = e2->RightFace = e3->RightFace = face;
-
-				face->Edge = e1;
-
-				return face;
-			}
+			Vertex * AddVertex(Vertex * const vertex);
+			Face * CreateFace(Vertex * const v1, Vertex * const v2);
+			Face * CreateFace(Vertex * const v1, Vertex * const v2, Vertex * const v3);
 		};
 	}
 
 	void BuildDelaunay2D(
 		delaunay::DelaunayGraph & graph,
 		const std::vector<Vector2<> > & inputPoints);
+}
+
+namespace std {
+	template <>
+	struct hash<utils::delaunay::Edge> {
+		size_t operator()(const utils::delaunay::Edge & e) const {
+			int64 seed = 0;
+			std::hashCombine(seed, e.Start->VertexId);
+			std::hashCombine(seed, e.End->VertexId);
+			return seed;
+		}
+	};
 }
