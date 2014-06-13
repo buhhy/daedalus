@@ -56,13 +56,7 @@ namespace utils {
 		 */
 		struct Face {
 		private:
-			Face * GetAdjacentFaceCCW(Vertex * const sharedVertex, int8 direction) {
-				int8 found = FindVertex(sharedVertex);
-				// Shared vertex doesn't actually exist in this face
-				if (found == -1) return NULL;
-				found = (found + 1 + direction) % 3;
-				return AdjacentFaces[found];
-			}
+			uint8 NumVertices;
 
 		public:
 			std::array<Vertex *, 3> Vertices;        // Vertices of the triangle provided in CW order
@@ -73,30 +67,38 @@ namespace utils {
 			Face(Vertex * const v1, Vertex * const v2) : Face(v1, v2, NULL) {}
 
 			Face(Vertex * const v1, Vertex * const v2, Vertex * const v3) :
-				Vertices({ v1, v2, v3 }),
-				AdjacentFaces({ this, this, this }),
-				IsDegenerate(v3 == NULL)
+				Vertices({{ v1, v2, v3 }}),
+				AdjacentFaces({{ this, this, this }}),
+				IsDegenerate(v3 == NULL),
+				NumVertices(v3 == NULL ? 2 : 3)
 			{}
 
 			int8 FindVertex(Vertex * const vertex) const {
-				for (int8 i = 2; i >= 0; i--)
+				for (int8 i = NumVertices - 1; i >= 0; i--)
 					if (Vertices[i] == vertex) return i;
 				return -1;
 			}
 
 			int8 FindFace(Face * const face) const {
-				for (int8 i = 2; i >= 0; i--)
+				for (int8 i = NumVertices - 1; i >= 0; i--)
 					if (AdjacentFaces[i] == face) return i;
 				return -1;
 			}
 
-			Face * GetAdjacentFaceCW(Vertex * const sharedVertex) {
-				return GetAdjacentFaceCCW(sharedVertex, 0);
+			Face * GetAdjacentFaceCCW(Vertex * const sharedVertex) {
+				int8 found = FindVertex(sharedVertex);
+				// Shared vertex doesn't actually exist in this face
+				if (found == -1) return NULL;
+				return AdjacentFaces[GetCCWVertexIndex(found)];
 			}
 
-			Face * GetAdjacentFaceCCW(Vertex * const sharedVertex) {
-				// Equivalent to subtracting 1 and modulus
-				return GetAdjacentFaceCCW(sharedVertex, 1);
+			inline uint8 GetCWVertexIndex(const uint8 current) const {
+				return (current + 1) % NumVertices;
+			}
+
+			inline uint8 GetCCWVertexIndex(const uint8 current) const {
+				// If degenerate, need to return the opposite vertex index instead
+				return (current + (IsDegenerate ? 1 : 2)) % NumVertices;
 			}
 		};
 

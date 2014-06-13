@@ -26,8 +26,8 @@ namespace utils {
 			Face * const newFace,
 			const uint8 pivotIndex
 		) {
-			int8 pivotCWIndex = (pivotIndex + 1) % 3;
-			int8 pivotCCWIndex = (pivotIndex + 2) % 3;
+			int8 pivotCWIndex = newFace->GetCWVertexIndex(pivotIndex);
+			int8 pivotCCWIndex = newFace->GetCCWVertexIndex(pivotIndex);
 
 			const auto pivotPoint = newFace->Vertices[pivotIndex];
 			const auto pivotCWPoint = newFace->Vertices[pivotCWIndex];
@@ -57,8 +57,8 @@ namespace utils {
 			// available CCW angle, as well as the smallest available CW angle.
 			do {
 				int8 otherPivotIndex = otherFace->FindVertex(pivotPoint);
-				int8 otherPivotCWIndex = (otherPivotIndex + 1) % 3;
-				int8 otherPivotCCWIndex = (otherPivotIndex + 2) % 3;
+				int8 otherPivotCWIndex = otherFace->GetCWVertexIndex(otherPivotIndex);
+				int8 otherPivotCCWIndex = otherFace->GetCCWVertexIndex(otherPivotIndex);
 
 				// Get the CCW point from the pivot from the other face
 				const auto otherPivotCCW = otherFace->Vertices[otherPivotCCWIndex];
@@ -116,8 +116,20 @@ namespace utils {
 
 		Face * DelaunayGraph::CreateFace(Vertex * const v1, Vertex * const v2) {
 			Face * newFace = new Face(v1, v2);
+
+			// Modify adjacencies
+			std::array<std::pair<Face *, uint8>, 3> adjusts({
+				AdjustNewFaceAdjacencies(newFace, 0),
+				AdjustNewFaceAdjacencies(newFace, 1)
+			});
+
+			for (auto adjust : adjusts) {
+				if (adjust.first != NULL)
+					adjust.first->AdjacentFaces[adjust.second] = newFace;
+			}
+			
 			Faces.insert(newFace);
-			v1->IncidentFace = newFace;
+
 			return newFace;
 		}
 
@@ -173,8 +185,8 @@ namespace utils {
 			for (auto it : Faces) {
 				edgeSet.insert({ it->Vertices[0], it->Vertices[1] });
 				if (!it->IsDegenerate) {
-				edgeSet.insert({ it->Vertices[0], it->Vertices[2] });
-				edgeSet.insert({ it->Vertices[1], it->Vertices[2] });
+					edgeSet.insert({ it->Vertices[0], it->Vertices[2] });
+					edgeSet.insert({ it->Vertices[1], it->Vertices[2] });
 				}
 			}
 
@@ -242,9 +254,12 @@ namespace utils {
 		for (auto i = 0u; i < testPoints.size(); i++)
 			testVertices.push_back(graph.AddVertex(new Vertex(testPoints[i], i)));
 
-		graph.CreateFace(testVertices[0], testVertices[1], testVertices[2]);
+		graph.CreateFace(testVertices[0], testVertices[1]);
 		graph.CreateFace(testVertices[3], testVertices[1], testVertices[2]);
-		graph.CreateFace(testVertices[1], testVertices[3], testVertices[4]);
+
+		//graph.CreateFace(testVertices[0], testVertices[1], testVertices[2]);
+		//graph.CreateFace(testVertices[3], testVertices[1], testVertices[2]);
+		//graph.CreateFace(testVertices[1], testVertices[3], testVertices[4]);
 	}
 
 	void BuildDelaunay2D(DelaunayGraph & graph, const std::vector<Vector2<> > & inputPoints) {
