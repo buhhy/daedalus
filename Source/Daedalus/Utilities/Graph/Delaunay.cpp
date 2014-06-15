@@ -7,12 +7,15 @@
 
 namespace utils {
 	namespace delaunay {
-		bool IsCWWinding(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
+		/**
+			* Returns 1: CW, 0: Colinear, -1: CCW
+			*/
+		double IsCWWinding(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
 			Vector2<> sub12 = v1->Point - v2->Point;
 			Vector2<> sub32 = v3->Point - v2->Point;
 
 			// All degenerate triangles count as CW triangles
-			return sub12.Determinant(sub32) >= -FLOAT_ERROR;
+			return sub12.Determinant(sub32);
 		}
 
 		float FindAngle(const Vector2<> & v1, const Vector2<> & v2) {
@@ -21,7 +24,7 @@ namespace utils {
 				result += 2 * M_PI;
 			return result;
 		}
-		
+
 		std::pair<Face *, int8> DelaunayGraph::AdjustNewFaceAdjacencies(
 			Face * const newFace,
 			const uint8 pivotIndex
@@ -142,7 +145,7 @@ namespace utils {
 			Vertex * inV3 = v3;
 
 			// Insert face with clockwise vertex winding order
-			if (!IsCWWinding(v1, v2, v3)) {
+			if (IsCWWinding(v1, v2, v3) < 0) {
 				inV2 = v3;
 				inV3 = v2;
 			}
@@ -198,23 +201,164 @@ namespace utils {
 
 	using namespace delaunay;
 
-	void Merge(
+	const double DOUBLE_MIN = std::numeric_limits<double>::min();
+	const double DOUBLE_MAX = std::numeric_limits<double>::max();
+
+	inline uint64 BoundedAdd(uint64 source, uint64 limit, uint64 amount = 1) {
+		source += amount;
+		if (source >= limit) return source - limit;
+		return source;
+	}
+
+	inline uint64 BoundedSubtract(uint64 source, uint64 limit, uint64 amount = 1) {
+		if (source < amount) return source + limit - amount;
+		return source - amount;
+	}
+
+	typedef std::vector<Vertex *> ConvexHull;
+	typedef std::pair<uint64, uint64> Tangent;
+
+	void MergeDelaunay(
 		DelaunayGraph & results,
 		const std::vector<Vertex *> & sortedVertices,
 		const uint64 start1,
 		const uint64 end1,
 		const uint64 start2,
-		const uint64 end2
+		const uint64 end2,
+		const Tangent & upperTangent,
+		const Tangent & lowerTangent
 	) {
-		bool left, right;
+		//bool left, right;
 
-		do {
-			left = false, right = false;
-		} while (left || right);
+		//do {
+		//	left = false, right = false;
+		//} while (left || right);
 	}
 
-	// Use tail recursion
-	void Divide(
+	uint64 ConvexHullLeftmostIndex(const ConvexHull & hull) {
+		uint64 leftIndex = 0;
+		double threshold = DOUBLE_MAX;
+		for (uint64 i = 0u; i < hull.size(); i++) {
+			if (hull[i]->Point.X < threshold) {
+				leftIndex = i;
+				threshold = hull[i]->Point.X;
+			}
+		}
+		return leftIndex;
+	}
+
+	uint64 ConvexHullRightmostIndex(const ConvexHull & hull) {
+		uint64 rightIndex = 0;
+		double threshold = DOUBLE_MIN;
+		for (uint64 i = 0u; i < hull.size(); i++) {
+			if (hull[i]->Point.X > threshold) {
+				rightIndex = i;
+				threshold = hull[i]->Point.X;
+			}
+		}
+		return rightIndex;
+	}
+
+	/**
+	 * Retrieves the upper tangent of the provided left and right hulls.
+	 */
+	Tangent UpperTangent(
+		const ConvexHull & leftHull,
+		const ConvexHull & rightHull
+	) {
+		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
+		auto leftSize = leftHull.size();
+		auto rightSize = rightHull.size();
+		uint64 leftIndex = ConvexHullRightmostIndex(leftHull);
+		uint64 rightIndex = ConvexHullLeftmostIndex(rightHull);
+		uint64 nextLeft = BoundedSubtract(leftIndex, leftSize);
+		uint64 nextRight = BoundedAdd(rightIndex, rightSize);
+		
+		bool done;
+
+		do {
+			done = true;
+
+			while (
+				IsCWWinding(leftHull[nextLeft], rightHull[rightIndex], leftHull[leftIndex]) > 0
+			) {
+				nextLeft = BoundedSubtract(nextLeft, leftSize);
+				leftIndex = BoundedSubtract(leftIndex, leftSize);
+			}
+
+			while (
+				IsCWWinding(rightHull[nextRight], rightHull[rightIndex], leftHull[leftIndex]) > 0
+			) {
+				nextRight = BoundedAdd(nextRight, rightSize);
+				rightIndex = BoundedAdd(rightIndex, rightSize);
+				done = false;
+			}
+		} while (!done);
+
+		return std::make_pair(leftIndex, rightIndex);
+	}
+
+	/**
+	 * Retrieves the lower tangent of the provided left and right hulls;
+	 */
+	Tangent LowerTangent(const ConvexHull & leftHull, const ConvexHull & rightHull) {
+		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
+		auto leftSize = leftHull.size();
+		auto rightSize = rightHull.size();
+		uint64 leftIndex = ConvexHullRightmostIndex(leftHull);
+		uint64 rightIndex = ConvexHullLeftmostIndex(rightHull);
+		uint64 nextLeft = BoundedAdd(leftIndex, leftSize);
+		uint64 nextRight = BoundedSubtract(rightIndex, rightSize);
+		
+		bool done;
+
+		do {
+			done = true;
+
+			while (
+				IsCWWinding(leftHull[leftIndex], rightHull[rightIndex], leftHull[nextLeft]) > 0
+			) {
+				nextLeft = BoundedAdd(nextLeft, leftSize);
+				leftIndex = BoundedAdd(leftIndex, leftSize);
+			}
+
+			while (
+				IsCWWinding(leftHull[leftIndex], rightHull[rightIndex], rightHull[nextRight]) > 0
+			) {
+				rightIndex = BoundedSubtract(rightIndex, rightSize);
+				nextRight = BoundedSubtract(nextRight, rightSize);
+				done = false;
+			}
+		} while (!done);
+
+		return std::make_pair(leftIndex, rightIndex);
+	}
+
+	ConvexHull MergeConvexHulls(
+		const ConvexHull & leftHull,
+		const ConvexHull & rightHull,
+		const Tangent & upperTangent,
+		const Tangent & lowerTangent
+	) {
+		ConvexHull newConvexHull;
+
+		uint64 count = (upperTangent.first - lowerTangent.first + leftHull.size()) % leftHull.size() + 1;
+		for (uint64 i = lowerTangent.first, c = 0; c < count; c++, i++) {
+			if (i >= leftHull.size()) i -= leftHull.size();
+			newConvexHull.push_back(leftHull[i]);
+		}
+		
+		count = (lowerTangent.second - upperTangent.second + rightHull.size()) % rightHull.size() + 1;
+		for (uint64 i = upperTangent.second, c = 0; c < count; c++, i++) {
+			if (i >= rightHull.size()) i -= rightHull.size();
+			newConvexHull.push_back(rightHull[i]);
+		}
+
+		return newConvexHull;
+	}
+
+	// Return a CW array of vertices representing the convex hull
+	ConvexHull Divide(
 		DelaunayGraph & results,
 		const std::vector<Vertex *> & sortedVertices,
 		const uint64 start, const uint64 end
@@ -222,23 +366,40 @@ namespace utils {
 		// End condition when less than 4 vertices counted
 		uint64 count = end - start + 1;
 		if (count < 4) {
+			ConvexHull hull;
 			if (count == 3) {
-				// Triangle
-				results.CreateFace(
+				// Create triangle with 3 vertices
+				auto newFace = results.CreateFace(
 					sortedVertices[start],
 					sortedVertices[start + 1],
 					sortedVertices[start + 2]);
+
+				for (uint8 i = 0u; i < newFace->NumVertices; i++)
+					hull.push_back(newFace->Vertices[i]);
 			} else if (count == 2) {
 				// Otherwise, just create a line
-				results.CreateFace(
+				auto newFace = results.CreateFace(
 					sortedVertices[start],
 					sortedVertices[start + 1]);
+
+				for (uint8 i = 0u; i < newFace->NumVertices; i++)
+					hull.push_back(newFace->Vertices[i]);
+			} else {
+				// This shouldn't ever happen
+				hull.push_back(sortedVertices[start]);
 			}
+
+			return hull;
 		} else {
 			uint64 half = (end + start) / 2;
-			Divide(results, sortedVertices, start, half);
-			Divide(results, sortedVertices, half + 1, end);
-			Merge(results, sortedVertices, start, half, half + 1, end);
+			auto leftHull = Divide(results, sortedVertices, start, half);
+			auto rightHull = Divide(results, sortedVertices, half + 1, end);
+			auto upperTangent = UpperTangent(leftHull, rightHull);
+			auto lowerTangent = LowerTangent(leftHull, rightHull);
+			MergeDelaunay(
+				results, sortedVertices, start, half, half + 1, end,
+				upperTangent, lowerTangent);
+			return MergeConvexHulls(leftHull, rightHull, upperTangent, lowerTangent);
 		}
 	}
 
@@ -250,12 +411,29 @@ namespace utils {
 		testPoints.push_back({ 0.2, 0.1 });
 		testPoints.push_back({ 0.3, 0.2 });
 		testPoints.push_back({ 0.3, 0.4 });
+		testPoints.push_back({ 0.5, 0.9 });
+		testPoints.push_back({ 0.8, 0.3 });
+		testPoints.push_back({ 0.6, 0.7 });
+		//testPoints.push_back({ 0.7, 0.2 });
+		//testPoints.push_back({ 0.8, 0.1 });
 
 		for (auto i = 0u; i < testPoints.size(); i++)
-			testVertices.push_back(graph.AddVertex(new Vertex(testPoints[i], i)));
+			testVertices.push_back(new Vertex(testPoints[i], i));
 
-		graph.CreateFace(testVertices[0], testVertices[1]);
-		graph.CreateFace(testVertices[3], testVertices[1], testVertices[2]);
+		std::sort(
+			testVertices.begin(),
+			testVertices.end(),
+			[] (Vertex * const p1, Vertex * const p2) {
+				return p1->Point < p2->Point;
+			});
+
+		for (auto i = 0u; i < testPoints.size(); i++)
+			graph.AddVertex(testVertices[i]);
+
+		graph.ConvexHull = Divide(graph, testVertices, 0, graph.VertexCount() - 1);
+
+		//graph.CreateFace(testVertices[0], testVertices[1]);
+		//graph.CreateFace(testVertices[3], testVertices[1], testVertices[2]);
 
 		//graph.CreateFace(testVertices[0], testVertices[1], testVertices[2]);
 		//graph.CreateFace(testVertices[3], testVertices[1], testVertices[2]);
@@ -263,25 +441,25 @@ namespace utils {
 	}
 
 	void BuildDelaunay2D(DelaunayGraph & graph, const std::vector<Vector2<> > & inputPoints) {
-		//std::vector<Vertex *> copiedVertices;
+		std::vector<Vertex *> copiedVertices;
 
-		//for (auto i = 0u; i < inputPoints.size(); i++)
-		//	copiedVertices.push_back(new Vertex(inputPoints[i], i));
+		for (auto i = 0u; i < inputPoints.size(); i++)
+			copiedVertices.push_back(new Vertex(inputPoints[i], i));
 
-		//// Sort by X from left to right, then Y from top down to resolve conflicts
-		//std::sort(
-		//	copiedVertices.begin(),
-		//	copiedVertices.end(),
-		//	[] (Vertex * const p1, Vertex * const p2) {
-		//		return p1->Point < p2->Point;
-		//	});
+		// Sort by X from left to right, then Y from top down to resolve conflicts
+		std::sort(
+			copiedVertices.begin(),
+			copiedVertices.end(),
+			[] (Vertex * const p1, Vertex * const p2) {
+				return p1->Point < p2->Point;
+			});
 
-		//for (auto it = copiedVertices.cbegin(); it != copiedVertices.cend(); it++)
-		//	graph.AddVertex(*it);
+		for (auto it = copiedVertices.cbegin(); it != copiedVertices.cend(); it++)
+			graph.AddVertex(*it);
 
-		//// Run if at least 2 vertex
-		//if (graph.VertexCount() > 1)
-		//	Divide(graph, copiedVertices, 0, graph.VertexCount() - 1);
-		Test(graph);
+		// Run if at least 2 vertex
+		if (graph.VertexCount() > 1)
+			graph.ConvexHull = Divide(graph, copiedVertices, 0, graph.VertexCount() - 1);
+		//Test(graph);
 	}
 }

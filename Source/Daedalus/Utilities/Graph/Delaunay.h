@@ -16,8 +16,6 @@ namespace utils {
 		struct Face;
 		struct Vertex;
 
-		bool IsCWWinding(Vertex * const v1, Vertex * const v2, Vertex * const v3);
-
 		struct Vertex {
 			Vector2<> Point;
 			Face * IncidentFace;
@@ -55,13 +53,10 @@ namespace utils {
 		 * Triangle datastructure: each vertex has a corresponding opposite face.
 		 */
 		struct Face {
-		private:
-			uint8 NumVertices;
-
-		public:
 			std::array<Vertex *, 3> Vertices;        // Vertices of the triangle provided in CW order
 			std::array<Face *, 3> AdjacentFaces;     // Each adjacent face opposite of the vertex provided
 			bool IsDegenerate;
+			uint8 NumVertices;
 
 			/** Creates a degenerate face */
 			Face(Vertex * const v1, Vertex * const v2) : Face(v1, v2, NULL) {}
@@ -83,6 +78,20 @@ namespace utils {
 				for (int8 i = NumVertices - 1; i >= 0; i--)
 					if (AdjacentFaces[i] == face) return i;
 				return -1;
+			}
+
+			Face * GetAdjacentFaceCW(Vertex * const sharedVertex) {
+				// Since we don't have a pointer to the CW face, we need to loop around the
+				// shared vertex until we find the last face before this face again
+				Face * curFace;
+				Face * nextFace = this;
+
+				do {
+					curFace = nextFace;
+					nextFace = nextFace->GetAdjacentFaceCCW(sharedVertex);
+				} while (nextFace != this && nextFace != NULL);
+
+				return nextFace == NULL ? NULL : curFace;
 			}
 
 			Face * GetAdjacentFaceCCW(Vertex * const sharedVertex) {
@@ -111,6 +120,8 @@ namespace utils {
 				Face * const newFace, const uint8 currentIndex);
 
 		public:
+			std::vector<Vertex *> ConvexHull;
+
 			~DelaunayGraph() {
 				for (auto it : Vertices) delete it;
 				for (auto it : Faces) delete it;
