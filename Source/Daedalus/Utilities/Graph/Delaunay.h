@@ -1,8 +1,7 @@
 #pragma once
 
 #include "Engine.h"
-#include "DelaunayDatastructures.h"
-#include "DataStructures.h"
+#include "GraphDatastructures.h"
 
 #include <vector>
 

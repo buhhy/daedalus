@@ -1,8 +1,15 @@
 #include "Daedalus.h"
 #include "DelaunayDatastructures.h"
 
+#include <algorithm>
+
 namespace utils {
 	namespace delaunay {
+		/*********************************************************************
+		 * Vertex
+		 *********************************************************************/
+
+
 		uint64 Vertex::AddFace(Face * const face) {
 			if (IncidentFace == NULL)
 				IncidentFace = face;
@@ -18,6 +25,12 @@ namespace utils {
 			}
 			return --FaceCount;
 		}
+
+
+		/*********************************************************************
+		 * Delaunay Graph
+		 *********************************************************************/
+
 
 		/**
 		 * Adjusts the adjacency pointer of the new face to point to the closest CCW face
@@ -252,6 +265,43 @@ namespace utils {
 			for (auto it : edgeSet) ret.push_back(it);
 
 			return ret;
+		}
+
+
+		/*********************************************************************
+		 * Convex Hull
+		 *********************************************************************/
+
+		
+		int64 ConvexHull::LeftVertexIndex() const {
+			return MinIndex([] (Vertex * const v) { return v->Point.X; });
+		}
+		
+		int64 ConvexHull::RightVertexIndex() const {
+			return MinIndex([] (Vertex * const v) { return -v->Point.X; });
+		}
+		
+		int64 ConvexHull::TopVertexIndex() const {
+			return MinIndex([] (Vertex * const v) { return v->Point.Y; });
+		}
+		
+		int64 ConvexHull::BottomVertexIndex() const {
+			return MinIndex([] (Vertex * const v) { return -v->Point.Y; });
+		}
+
+		int64 ConvexHull::MinIndex(std::function<double (Vertex * const)> valueOf) const {
+			if (HullVertices.empty())
+				return -1;
+			uint64 minIndex = 0;
+			double threshold = valueOf(HullVertices[0]);
+			for (uint64 i = 1u; i < HullVertices.size(); i++) {
+				auto value = valueOf(HullVertices[i]);
+				if (value < threshold) {
+					minIndex = i;
+					threshold = value;
+				}
+			}
+			return minIndex;
 		}
 	}
 }

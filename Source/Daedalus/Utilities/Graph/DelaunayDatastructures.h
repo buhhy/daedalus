@@ -1,12 +1,16 @@
+#pragma once
+
 #include "Engine.h"
 #include "DataStructures.h"
 
 #include <array>
 #include <unordered_set>
+#include <functional>
 
 namespace utils {
 	namespace delaunay {
 		struct Face;
+		class ConvexHull;
 
 		class Vertex {
 		private:
@@ -142,6 +146,30 @@ namespace utils {
 			}
 		};
 
+		class ConvexHull {
+		private:
+			// Convex hull vertices stored in CW winding order
+			std::vector<Vertex *> HullVertices;
+		public:
+			inline Vertex * operator [] (const uint64 index) { return HullVertices[index]; }
+			inline Vertex * const operator [] (const uint64 index) const {
+				return HullVertices[index];
+			}
+			inline ConvexHull & operator = (const ConvexHull & other) {
+				HullVertices = other.HullVertices;
+				return *this;
+			}
+			inline void AddVertex(Vertex * const vert) { HullVertices.push_back(vert); }
+			inline uint64 Size() const { return HullVertices.size(); }
+
+			int64 MinIndex(std::function<double (Vertex * const)> valueOf) const;
+
+			int64 LeftVertexIndex() const;
+			int64 RightVertexIndex() const;
+			int64 TopVertexIndex() const;
+			int64 BottomVertexIndex() const;
+		};
+
 		class DelaunayGraph {
 		private:
 			std::unordered_set<Vertex *> Vertices;
@@ -152,7 +180,7 @@ namespace utils {
 			void RemoveFace(Face * const face, const uint8 pivotIndex);
 
 		public:
-			std::vector<Vertex *> ConvexHull;
+			ConvexHull ConvexHull;
 
 			~DelaunayGraph() {
 				for (auto it : Vertices) delete it;

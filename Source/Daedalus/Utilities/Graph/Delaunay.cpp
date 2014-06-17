@@ -23,42 +23,17 @@ namespace utils {
 		return source - amount;
 	}
 
-	typedef std::vector<Vertex *> ConvexHull;
 	typedef std::pair<uint64, uint64> Tangent;
-
-	uint64 ConvexHullLeftmostIndex(const ConvexHull & hull) {
-		uint64 leftIndex = 0;
-		double threshold = DOUBLE_MAX;
-		for (uint64 i = 0u; i < hull.size(); i++) {
-			if (hull[i]->Point.X < threshold) {
-				leftIndex = i;
-				threshold = hull[i]->Point.X;
-			}
-		}
-		return leftIndex;
-	}
-
-	uint64 ConvexHullRightmostIndex(const ConvexHull & hull) {
-		uint64 rightIndex = 0;
-		double threshold = DOUBLE_MIN;
-		for (uint64 i = 0u; i < hull.size(); i++) {
-			if (hull[i]->Point.X > threshold) {
-				rightIndex = i;
-				threshold = hull[i]->Point.X;
-			}
-		}
-		return rightIndex;
-	}
 
 	uint64 ConvexHullGetSequenceCW(
 		std::deque<Vertex *> & deque, const ConvexHull & hull,
 		const uint64 start, const uint64 end
 	) {
-		uint64 count = (end - start + hull.size()) % hull.size() + 1;
+		uint64 count = (end - start + hull.Size()) % hull.Size() + 1;
 		if (count == 1)
-			count += hull.size();
+			count += hull.Size();
 		for (uint64 i = start, c = 0; c < count; c++, i++) {
-			if (i >= hull.size()) i -= hull.size();
+			if (i >= hull.Size()) i -= hull.Size();
 			deque.push_back(hull[i]);
 		}
 		return count;
@@ -68,12 +43,12 @@ namespace utils {
 		std::deque<Vertex *> & deque, const ConvexHull & hull,
 		const uint64 start, const uint64 end
 	) {
-		uint64 count = (start - end + hull.size()) % hull.size() + 1;
+		uint64 count = (start - end + hull.Size()) % hull.Size() + 1;
 		uint64 c = 0;
 		if (count == 1)
-			count += hull.size();
+			count += hull.Size();
 		for (int64 i = start; c < count; c++, i--) {
-			if (i < 0) i += hull.size();
+			if (i < 0) i += hull.Size();
 			deque.push_back(hull[i]);
 		}
 		return count;
@@ -219,12 +194,10 @@ namespace utils {
 
 			if (takeRight) {
 				addedFaces.push_back({{ rightCandidate, baseRight, baseLeft }});
-				//rightHullIndex = BoundedAdd(rightHullIndex, rightHull.size());
 				rightVertexQueue.pop_front();
 				baseRight = rightCandidate;
 			} else if (takeLeft) {
 				addedFaces.push_back({{ leftCandidate, baseRight, baseLeft }});
-				//leftHullIndex = BoundedSubtract(leftHullIndex, leftHull.size());
 				leftVertexQueue.pop_front();
 				baseLeft = leftCandidate;
 			}
@@ -240,15 +213,12 @@ namespace utils {
 	/**
 	 * Retrieves the upper tangent of the provided left and right hulls.
 	 */
-	Tangent UpperTangent(
-		const ConvexHull & leftHull,
-		const ConvexHull & rightHull
-	) {
+	Tangent UpperTangent(const ConvexHull & leftHull, const ConvexHull & rightHull	) {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
-		auto leftSize = leftHull.size();
-		auto rightSize = rightHull.size();
-		uint64 leftIndex = ConvexHullRightmostIndex(leftHull);
-		uint64 rightIndex = ConvexHullLeftmostIndex(rightHull);
+		auto leftSize = leftHull.Size();
+		auto rightSize = rightHull.Size();
+		uint64 leftIndex = leftHull.RightVertexIndex();
+		uint64 rightIndex = rightHull.LeftVertexIndex();
 		uint64 nextLeft = BoundedSubtract(leftIndex, leftSize);
 		uint64 nextRight = BoundedAdd(rightIndex, rightSize);
 		
@@ -292,10 +262,10 @@ namespace utils {
 	 */
 	Tangent LowerTangent(const ConvexHull & leftHull, const ConvexHull & rightHull) {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
-		auto leftSize = leftHull.size();
-		auto rightSize = rightHull.size();
-		uint64 leftIndex = ConvexHullRightmostIndex(leftHull);
-		uint64 rightIndex = ConvexHullLeftmostIndex(rightHull);
+		auto leftSize = leftHull.Size();
+		auto rightSize = rightHull.Size();
+		uint64 leftIndex = leftHull.RightVertexIndex();
+		uint64 rightIndex = rightHull.LeftVertexIndex();
 		uint64 nextLeft = BoundedAdd(leftIndex, leftSize);
 		uint64 nextRight = BoundedSubtract(rightIndex, rightSize);
 		
@@ -342,16 +312,18 @@ namespace utils {
 	) {
 		ConvexHull newConvexHull;
 
-		uint64 count = (upperTangent.first - lowerTangent.first + leftHull.size()) % leftHull.size() + 1;
+		uint64 count = (upperTangent.first - lowerTangent.first + leftHull.Size()) %
+			leftHull.Size() + 1;
 		for (uint64 i = lowerTangent.first, c = 0; c < count; c++, i++) {
-			if (i >= leftHull.size()) i -= leftHull.size();
-			newConvexHull.push_back(leftHull[i]);
+			if (i >= leftHull.Size()) i -= leftHull.Size();
+			newConvexHull.AddVertex(leftHull[i]);
 		}
 		
-		count = (lowerTangent.second - upperTangent.second + rightHull.size()) % rightHull.size() + 1;
+		count = (lowerTangent.second - upperTangent.second + rightHull.Size()) %
+			rightHull.Size() + 1;
 		for (uint64 i = upperTangent.second, c = 0; c < count; c++, i++) {
-			if (i >= rightHull.size()) i -= rightHull.size();
-			newConvexHull.push_back(rightHull[i]);
+			if (i >= rightHull.Size()) i -= rightHull.Size();
+			newConvexHull.AddVertex(rightHull[i]);
 		}
 
 		return newConvexHull;
@@ -378,7 +350,7 @@ namespace utils {
 				
 				if (newFace != NULL) {
 					for (uint8 i = 0u; i < newFace->NumVertices; i++)
-						hull.push_back(newFace->Vertices[i]);
+						hull.AddVertex(newFace->Vertices[i]);
 				} else {
 					// The 3 points are colinear, add 2 edges instead
 					results.AddFace(
@@ -388,7 +360,7 @@ namespace utils {
 						sortedVertices[start + 1],
 						sortedVertices[start + 2]);
 					for (uint8 i = 0u; i < 3; i++)
-						hull.push_back(sortedVertices[start + i]);
+						hull.AddVertex(sortedVertices[start + i]);
 				}
 			} else if (count == 2) {
 				// Otherwise, just create a line
@@ -397,10 +369,10 @@ namespace utils {
 					sortedVertices[start + 1]);
 
 				for (uint8 i = 0u; i < newFace->NumVertices; i++)
-					hull.push_back(newFace->Vertices[i]);
+					hull.AddVertex(newFace->Vertices[i]);
 			} else {
 				// This shouldn't ever happen
-				hull.push_back(sortedVertices[start]);
+				hull.AddVertex(sortedVertices[start]);
 			}
 
 			return hull;
@@ -425,35 +397,35 @@ namespace utils {
 		}
 	}
 
-	void Test(DelaunayGraph & graph) {
-		std::vector<Vector2<> > testPoints;
-		std::vector<Vertex *> testVertices;
-		testPoints.push_back({ 0.1, 0.2 });
-		testPoints.push_back({ 0.2, 0.1 });
-		testPoints.push_back({ 0.2, 0.3 });
-		testPoints.push_back({ 0.2, 0.4 });
-		testPoints.push_back({ 0.3, 0.2 });
-		testPoints.push_back({ 0.4, 0.4 });
-		testPoints.push_back({ 0.5, 0.3 });
-		testPoints.push_back({ 0.6, 0.4 });
-		testPoints.push_back({ 0.6, 0.2 });
-		testPoints.push_back({ 0.6, 0.1 });
+	//void Test(DelaunayGraph & graph) {
+	//	std::vector<Vector2<> > testPoints;
+	//	std::vector<Vertex *> testVertices;
+	//	testPoints.push_back({ 0.1, 0.2 });
+	//	testPoints.push_back({ 0.2, 0.1 });
+	//	testPoints.push_back({ 0.2, 0.3 });
+	//	testPoints.push_back({ 0.2, 0.4 });
+	//	testPoints.push_back({ 0.3, 0.2 });
+	//	testPoints.push_back({ 0.4, 0.4 });
+	//	testPoints.push_back({ 0.5, 0.3 });
+	//	testPoints.push_back({ 0.6, 0.4 });
+	//	testPoints.push_back({ 0.6, 0.2 });
+	//	testPoints.push_back({ 0.6, 0.1 });
 
-		for (auto i = 0u; i < testPoints.size(); i++)
-			testVertices.push_back(new Vertex(testPoints[i], i));
+	//	for (auto i = 0u; i < testPoints.size(); i++)
+	//		testVertices.push_back(new Vertex(testPoints[i], i));
 
-		std::sort(
-			testVertices.begin(),
-			testVertices.end(),
-			[] (Vertex * const p1, Vertex * const p2) {
-				return p1->Point < p2->Point;
-			});
+	//	std::sort(
+	//		testVertices.begin(),
+	//		testVertices.end(),
+	//		[] (Vertex * const p1, Vertex * const p2) {
+	//			return p1->Point < p2->Point;
+	//		});
 
-		for (auto i = 0u; i < testPoints.size(); i++)
-			graph.AddVertex(testVertices[i]);
+	//	for (auto i = 0u; i < testPoints.size(); i++)
+	//		graph.AddVertex(testVertices[i]);
 
-		graph.ConvexHull = Divide(graph, testVertices, 0, graph.VertexCount() - 1, 2);
-	}
+	//	graph.ConvexHull = Divide(graph, testVertices, 0, graph.VertexCount() - 1, 2);
+	//}
 
 	void BuildDelaunay2D(DelaunayGraph & graph, const std::vector<Vector2<> > & inputPoints) {
 		std::vector<Vertex *> copiedVertices;
