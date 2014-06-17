@@ -11,14 +11,8 @@ namespace utils {
 		/**
 		 * Returns 1: CW, 0: Colinear, -1: CCW
 		 */
-		int8 IsCWWinding(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
-			Vector2<> sub12 = v1->Point - v2->Point;
-			Vector2<> sub32 = v3->Point - v2->Point;
-
-			double result = sub12.Determinant(sub32);
-			if (result < -FLOAT_ERROR) return -1;       // CCW
-			if (result > FLOAT_ERROR) return 1;         // CW
-			else return 0;                              // Colinear
+		inline int8 IsCWWinding(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
+			return FindWinding(v1->Point, v2->Point, v3->Point);
 		}
 
 		uint64 Vertex::AddFace(Face * const face) {
@@ -388,11 +382,11 @@ namespace utils {
 			if (isLeftDone) {
 				left = false;
 			} else if (faceIt == NULL || faceIt->IsDegenerate) {
-				left = IsStraight(baseRight->Point, baseLeft->Point, leftCandidate->Point) > 0;
+				left = FindWinding(baseRight->Point, baseLeft->Point, leftCandidate->Point) > 0;
 			} else {
 				do {
 					// Only accept candidates that form angles < 180
-					if (IsStraight(baseRight->Point, baseLeft->Point, leftCandidate->Point) <= 0)
+					if (FindWinding(baseRight->Point, baseLeft->Point, leftCandidate->Point) <= 0)
 						break;
 					nextCandidate = faceIt->GetCCWVertex(leftCandidate);
 					// If there is no next candidate, it must mean that there was no immediate face
@@ -431,11 +425,11 @@ namespace utils {
 			if (isRightDone) {
 				right = false;
 			} else if (faceIt == NULL || faceIt->IsDegenerate) {
-				right = IsStraight(rightCandidate->Point, baseRight->Point, baseLeft->Point) > 0;
+				right = FindWinding(rightCandidate->Point, baseRight->Point, baseLeft->Point) > 0;
 			} else {
 				do {
 					// Only accept candidates that form angles < 180
-					if (IsStraight(rightCandidate->Point, baseRight->Point, baseLeft->Point) <= 0)
+					if (FindWinding(rightCandidate->Point, baseRight->Point, baseLeft->Point) <= 0)
 						break;
 					nextCandidate = faceIt->GetCWVertex(rightCandidate);
 					// If there is no next candidate, it must mean that there was no immediate face
@@ -719,13 +713,6 @@ namespace utils {
 			graph.AddVertex(testVertices[i]);
 
 		graph.ConvexHull = Divide(graph, testVertices, 0, graph.VertexCount() - 1, 2);
-
-		//graph.CreateFace(testVertices[0], testVertices[1]);
-		//graph.CreateFace(testVertices[3], testVertices[1], testVertices[2]);
-
-		//graph.CreateFace(testVertices[0], testVertices[1], testVertices[2]);
-		//graph.CreateFace(testVertices[3], testVertices[1], testVertices[2]);
-		//graph.CreateFace(testVertices[1], testVertices[3], testVertices[4]);
 	}
 
 	void BuildDelaunay2D(DelaunayGraph & graph, const std::vector<Vector2<> > & inputPoints) {

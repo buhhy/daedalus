@@ -26,7 +26,7 @@ namespace utils {
 		else return 0;
 	}
 
-	int8 IsStraight(const Vector2<> & p1, const Vector2<> & pivot, const Vector2<> & p3) {
+	int8 FindWinding(const Vector2<> & p1, const Vector2<> & pivot, const Vector2<> & p3) {
 		double result = (p1 - pivot).Determinant(p3 - pivot);
 		if (result < -FLOAT_ERROR) return -1;       // Obtuse
 		if (result > FLOAT_ERROR) return 1;         // Acute
