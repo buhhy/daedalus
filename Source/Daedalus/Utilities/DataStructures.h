@@ -5,11 +5,17 @@
 #include "Vector3.h"
 #include "Vector4.h"
 #include "Matrix4.h"
-#include "Algebra2.h"
-#include "Algebra3.h"
 #include <vector>
 
 namespace utils {
+	struct Circle2D {
+		Vector2<> Center;
+		float Radius;
+
+		Circle2D(const Vector2<> center, const float radius) : Center(center), Radius(radius) {}
+		Circle2D() : Circle2D({ 0, 0 }, 0) {}
+	};
+
 	struct Triangle {
 		Vector3<> Point1, Point2, Point3;
 
@@ -127,3 +133,6 @@ namespace utils {
 		}
 	};
 }
+
+#include "Algebra2.h"
+#include "Algebra3.h"

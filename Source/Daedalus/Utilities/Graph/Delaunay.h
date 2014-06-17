@@ -11,19 +11,26 @@ namespace utils {
 	 * Basic divide and conquer algorithm and data structure taken from here:
 	 * http://www.geom.uiuc.edu/~samuelp/del_project.html
 	 */
-
 	namespace delaunay {
 		struct Face;
-		struct Vertex;
 
-		struct Vertex {
+		class Vertex {
+		private:
+			uint64 FaceCount;
+
+		public:
 			Vector2<> Point;
 			Face * IncidentFace;
 			uint64 VertexId;
 
 			Vertex(const Vector2<> & point, uint64 id) :
-				Point(point), IncidentFace(NULL), VertexId(id)
+				Point(point), IncidentFace(NULL), VertexId(id), FaceCount(0)
 			{}
+
+			uint64 AddFace(Face * const face);
+			uint64 RemoveFace(Face * const face);
+
+			inline uint64 GetFaceCount() const { return FaceCount; }
 
 			inline bool operator == (const Vertex & other) const {
 				return other.VertexId == VertexId;
@@ -101,13 +108,43 @@ namespace utils {
 				return AdjacentFaces[GetCCWVertexIndex(found)];
 			}
 
+			/**
+			 * Returns a pair containing the position of the circumcircle center and the radius
+			 * of the circumcircle.
+			 */
+			Circle2D GetCircumcircle() const {
+				if (IsDegenerate) return Circle2D({ 0, 0 }, 0.0);
+				return CalculateCircumcircle(
+					Vertices[0]->Point, Vertices[1]->Point, Vertices[2]->Point);
+			}
+
 			inline uint8 GetCWVertexIndex(const uint8 current) const {
 				return (current + 1) % NumVertices;
+			}
+
+			inline int8 GetCWVertexIndex(Vertex * const current) const {
+				auto value = FindVertex(current);
+				return value == -1 ? -1 : GetCWVertexIndex(value);
+			}
+
+			inline Vertex * GetCWVertex(Vertex * const current) const {
+				auto value = GetCWVertexIndex(current);
+				return value == -1 ? NULL : Vertices[value];
 			}
 
 			inline uint8 GetCCWVertexIndex(const uint8 current) const {
 				// If degenerate, need to return the opposite vertex index instead
 				return (current + (IsDegenerate ? 1 : 2)) % NumVertices;
+			}
+
+			inline int8 GetCCWVertexIndex(Vertex * const current) const {
+				auto value = FindVertex(current);
+				return value == -1 ? -1 : GetCCWVertexIndex(value);
+			}
+
+			inline Vertex * GetCCWVertex(Vertex * const current) const {
+				auto value = GetCCWVertexIndex(current);
+				return value == -1 ? NULL : Vertices[value];
 			}
 		};
 
@@ -117,7 +154,8 @@ namespace utils {
 			std::unordered_set<Face *> Faces;
 
 			std::pair<Face *, int8> AdjustNewFaceAdjacencies(
-				Face * const newFace, const uint8 currentIndex);
+				Face * const newFace, const uint8 pivotIndex);
+			void RemoveFace(Face * const face, const uint8 pivotIndex);
 
 		public:
 			std::vector<Vertex *> ConvexHull;
@@ -136,9 +174,12 @@ namespace utils {
 			const std::vector<Face const *> GetFaces() const;
 			const std::vector<Edge> GetUniqueEdges() const;
 
+			Face * FindFace(Vertex * const v1, Vertex * const v2);
+
 			Vertex * AddVertex(Vertex * const vertex);
-			Face * CreateFace(Vertex * const v1, Vertex * const v2);
-			Face * CreateFace(Vertex * const v1, Vertex * const v2, Vertex * const v3);
+			Face * AddFace(Vertex * const v1, Vertex * const v2);
+			Face * AddFace(Vertex * const v1, Vertex * const v2, Vertex * const v3);
+			bool RemoveFace(Face * const face);
 		};
 	}
 

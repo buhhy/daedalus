@@ -88,41 +88,41 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	}
 	for (auto it : pointTries) triangles.Add(FMeshTriangle(it, vertexColor));
 
-	// Draw convex hull
-	std::vector<utils::Triangle> edgeTries;
-	auto hull = graph.ConvexHull;
-	for (uint64 i = 0, j = 1; i < hull.size(); i++, j++) {
-		if (j == hull.size())
-			j = 0;
-
-		tempVector31.Reset(hull[i]->Point * scale, 0);
-		tempVector32.Reset(hull[j]->Point * scale, 0);
-		utils::CreateLine(edgeTries, tempVector31, tempVector32, 3);
-	}
-	for (auto it : edgeTries) triangles.Add(FMeshTriangle(it, edgeColor));
-
-	//// Draw lines at every Delaunay edge
+	//// Draw convex hull
 	//std::vector<utils::Triangle> edgeTries;
-	//auto edges = graph.GetUniqueEdges();
-	//for (auto e : edges) {
-	//	tempVector31.Reset(e.Start->Point * scale, 0);
-	//	tempVector32.Reset(e.End->Point * scale, 0);
+	//auto hull = graph.ConvexHull;
+	//for (uint64 i = 0, j = 1; i < hull.size(); i++, j++) {
+	//	if (j == hull.size())
+	//		j = 0;
+
+	//	tempVector31.Reset(hull[i]->Point * scale, 0);
+	//	tempVector32.Reset(hull[j]->Point * scale, 0);
 	//	utils::CreateLine(edgeTries, tempVector31, tempVector32, 3);
 	//}
 	//for (auto it : edgeTries) triangles.Add(FMeshTriangle(it, edgeColor));
 
-	//// Draw each Delaunay triangle
-	//std::vector<utils::Triangle> faceTries;
-	//auto faces = graph.GetFaces();
-	//for (auto f : faces) {
-	//	if (!f->IsDegenerate) {
-	//		tempVector31.Reset(f->Vertices[0]->Point * scale, 0);
-	//		tempVector32.Reset(f->Vertices[1]->Point * scale, 0);
-	//		tempVector33.Reset(f->Vertices[2]->Point * scale, 0);
-	//		faceTries.push_back(utils::Triangle(tempVector31, tempVector32, tempVector33));
-	//	}
-	//}
-	//for (auto it : faceTries) triangles.Add(FMeshTriangle(it, faceColor));
+	// Draw lines at every Delaunay edge
+	std::vector<utils::Triangle> edgeTries;
+	auto edges = graph.GetUniqueEdges();
+	for (auto e : edges) {
+		tempVector31.Reset(e.Start->Point * scale, 0);
+		tempVector32.Reset(e.End->Point * scale, 0);
+		utils::CreateLine(edgeTries, tempVector31, tempVector32, 3);
+	}
+	for (auto it : edgeTries) triangles.Add(FMeshTriangle(it, edgeColor));
+
+	// Draw each Delaunay triangle
+	std::vector<utils::Triangle> faceTries;
+	auto faces = graph.GetFaces();
+	for (auto f : faces) {
+		if (!f->IsDegenerate) {
+			tempVector31.Reset(f->Vertices[0]->Point * scale, 0);
+			tempVector32.Reset(f->Vertices[1]->Point * scale, 0);
+			tempVector33.Reset(f->Vertices[2]->Point * scale, 0);
+			faceTries.push_back(utils::Triangle(tempVector31, tempVector32, tempVector33));
+		}
+	}
+	for (auto it : faceTries) triangles.Add(FMeshTriangle(it, faceColor));
 
 	Mesh->SetGeneratedMeshTriangles(triangles);
 }

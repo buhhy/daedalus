@@ -3,28 +3,46 @@
 #include "Constants.h"
 #include "DataStructures.h"
 
+#include <deque>
 #include <algorithm>
 
 namespace utils {
 	namespace delaunay {
 		/**
-			* Returns 1: CW, 0: Colinear, -1: CCW
-			*/
-		double IsCWWinding(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
+		 * Returns 1: CW, 0: Colinear, -1: CCW
+		 */
+		int8 IsCWWinding(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
 			Vector2<> sub12 = v1->Point - v2->Point;
 			Vector2<> sub32 = v3->Point - v2->Point;
 
-			// All degenerate triangles count as CW triangles
-			return sub12.Determinant(sub32);
+			double result = sub12.Determinant(sub32);
+			if (result < -FLOAT_ERROR) return -1;       // CCW
+			if (result > FLOAT_ERROR) return 1;         // CW
+			else return 0;                              // Colinear
 		}
 
-		float FindAngle(const Vector2<> & v1, const Vector2<> & v2) {
-			float result = FMath::Atan2(v1.Determinant(v2), v1.Dot(v2));
-			if (result < 0)
-				result += 2 * M_PI;
-			return result;
+		uint64 Vertex::AddFace(Face * const face) {
+			if (IncidentFace == NULL)
+				IncidentFace = face;
+			return ++FaceCount;
 		}
 
+		uint64 Vertex::RemoveFace(Face * const face) {
+			if (face == IncidentFace) {
+				if (FaceCount == 1)
+					IncidentFace = NULL;
+				else
+					IncidentFace = face->GetAdjacentFaceCCW(this);
+			}
+			return --FaceCount;
+		}
+
+		/**
+		 * Adjusts the adjacency pointer of the new face to point to the closest CCW face
+		 * around a provided pivot point. This method returns a pair that indicates which
+		 * existing face needs to have which adjacency index updated to point to the new
+		 * face.
+		 */
 		std::pair<Face *, int8> DelaunayGraph::AdjustNewFaceAdjacencies(
 			Face * const newFace,
 			const uint8 pivotIndex
@@ -39,10 +57,9 @@ namespace utils {
 			Face * otherFace = pivotPoint->IncidentFace;
 
 			// If pivot point has no faces yet, assign the new one
-			if (otherFace == NULL) {
-				pivotPoint->IncidentFace = newFace;
+			pivotPoint->AddFace(newFace);
+			if (otherFace == NULL)
 				return std::make_pair((Face *) NULL, -1);
-			}
 
 			// We need to find the face immediately clockwise and counter-clockwise of the
 			// new face to adjust adjacencies. The face to the immediate CW of the new face
@@ -51,6 +68,7 @@ namespace utils {
 			
 			double CCWMinAngle = 10.0, CWMinAngle = 10.0;
 			int8 CWVertexIndex = -1;
+			uint64 index = 0;
 			Face * CCWFace = NULL, * CWFace = NULL;
 
 			Vector2<> CCWCompareEdge = pivotCWPoint->Point - pivotPoint->Point;
@@ -97,7 +115,8 @@ namespace utils {
 				}
 
 				otherFace = otherFace->GetAdjacentFaceCCW(pivotPoint);
-			} while (otherFace != pivotPoint->IncidentFace);
+				index++;
+			} while (index < pivotPoint->GetFaceCount());
 
 			if (CCWFace != NULL) {
 				// Insert current face into the adjacency loop single-linked-list style
@@ -112,19 +131,29 @@ namespace utils {
 			return std::make_pair((Face *) NULL, -1);
 		}
 
+		void DelaunayGraph::RemoveFace(Face * const face, const uint8 pivotIndex) {
+			Vertex * const pivot = face->Vertices[pivotIndex];
+			Face * const CCWFace = face->GetAdjacentFaceCCW(pivot);
+			Face * const CWFace = face->GetAdjacentFaceCW(pivot);
+			
+			if (CWFace != face)
+				CWFace->AdjacentFaces[CWFace->GetCCWVertexIndex(pivot)] = CCWFace;
+			pivot->RemoveFace(face);
+		}
+
 		Vertex * DelaunayGraph::AddVertex(Vertex * const vertex) {
 			Vertices.insert(vertex);
 			return vertex;
 		}
 
-		Face * DelaunayGraph::CreateFace(Vertex * const v1, Vertex * const v2) {
+		Face * DelaunayGraph::AddFace(Vertex * const v1, Vertex * const v2) {
 			Face * newFace = new Face(v1, v2);
 
 			// Modify adjacencies
-			std::array<std::pair<Face *, uint8>, 3> adjusts({
+			std::array<std::pair<Face *, uint8>, 3> adjusts = {{
 				AdjustNewFaceAdjacencies(newFace, 0),
 				AdjustNewFaceAdjacencies(newFace, 1)
-			});
+			}};
 
 			for (auto adjust : adjusts) {
 				if (adjust.first != NULL)
@@ -137,27 +166,42 @@ namespace utils {
 		}
 
 		/**
-			* Indices of vertices should be provided in CW winding.
-			*/
-		Face * DelaunayGraph::CreateFace(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
+		 * Indices of vertices should be provided in CW winding.
+		 */
+		Face * DelaunayGraph::AddFace(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
 			Vertex * inV1 = v1;
 			Vertex * inV2 = v2;
 			Vertex * inV3 = v3;
 
 			// Insert face with clockwise vertex winding order
-			if (IsCWWinding(v1, v2, v3) < 0) {
+			auto winding = IsCWWinding(v1, v2, v3);
+			if (winding < 0) {
 				inV2 = v3;
 				inV3 = v2;
+			} else if (winding == 0) {
+				// Don't create colinear triangles
+				return NULL;
 			}
+			
+			// Check if any degenerate faces exist with the current vertices, if so, adjust
+			// that edge to become a triangle rather than creating one from scratch
+			std::array<Face *, 3> faces = {{
+				FindFace(v1, v2),
+				FindFace(v2, v3),
+				FindFace(v3, v1)
+			}};
+
+			for (auto f : faces)
+				if (f != NULL && f->IsDegenerate) RemoveFace(f);
 
 			Face * newFace = new Face(inV1, inV2, inV3);
 
 			// Modify adjacencies
-			std::array<std::pair<Face *, uint8>, 3> adjusts({
+			std::array<std::pair<Face *, int8>, 3> adjusts = {{
 				AdjustNewFaceAdjacencies(newFace, 0),
 				AdjustNewFaceAdjacencies(newFace, 1),
 				AdjustNewFaceAdjacencies(newFace, 2)
-			});
+			}};
 
 			for (auto adjust : adjusts) {
 				if (adjust.first != NULL)
@@ -167,6 +211,36 @@ namespace utils {
 			Faces.insert(newFace);
 
 			return newFace;
+		}
+
+		bool DelaunayGraph::RemoveFace(Face * const face) {
+			if (Faces.count(face) == 0)
+				return false;
+			for (uint8 i = 0; i < face->NumVertices; i++)
+				RemoveFace(face, i);
+			Faces.erase(face);
+			delete face;
+			return true;
+		}
+		
+		Face * DelaunayGraph::FindFace(Vertex * const v1, Vertex * const v2) {
+			Face * curFace = v1->IncidentFace;
+
+			if (curFace == NULL)
+				return NULL;
+
+			bool found = false;
+			do {
+				found = curFace->FindVertex(v1) != -1 && curFace->FindVertex(v2) != -1;
+				if (found)
+					break;
+				curFace = curFace->GetAdjacentFaceCCW(v1);
+			} while (curFace != v1->IncidentFace);
+
+			if (found)
+				return curFace;
+			else
+				return NULL;
 		}
 
 		const std::vector<Vertex const *> DelaunayGraph::GetVertices() const {
@@ -218,23 +292,6 @@ namespace utils {
 	typedef std::vector<Vertex *> ConvexHull;
 	typedef std::pair<uint64, uint64> Tangent;
 
-	void MergeDelaunay(
-		DelaunayGraph & results,
-		const std::vector<Vertex *> & sortedVertices,
-		const uint64 start1,
-		const uint64 end1,
-		const uint64 start2,
-		const uint64 end2,
-		const Tangent & upperTangent,
-		const Tangent & lowerTangent
-	) {
-		//bool left, right;
-
-		//do {
-		//	left = false, right = false;
-		//} while (left || right);
-	}
-
 	uint64 ConvexHullLeftmostIndex(const ConvexHull & hull) {
 		uint64 leftIndex = 0;
 		double threshold = DOUBLE_MAX;
@@ -259,6 +316,193 @@ namespace utils {
 		return rightIndex;
 	}
 
+	uint64 ConvexHullGetSequenceCW(
+		std::deque<Vertex *> & deque, const ConvexHull & hull,
+		const uint64 start, const uint64 end
+	) {
+		uint64 count = (end - start + hull.size()) % hull.size() + 1;
+		if (count == 1)
+			count += hull.size();
+		for (uint64 i = start, c = 0; c < count; c++, i++) {
+			if (i >= hull.size()) i -= hull.size();
+			deque.push_back(hull[i]);
+		}
+		return count;
+	}
+
+	uint64 ConvexHullGetSequenceCCW(
+		std::deque<Vertex *> & deque, const ConvexHull & hull,
+		const uint64 start, const uint64 end
+	) {
+		uint64 count = (start - end + hull.size()) % hull.size() + 1;
+		uint64 c = 0;
+		if (count == 1)
+			count += hull.size();
+		for (int64 i = start; c < count; c++, i--) {
+			if (i < 0) i += hull.size();
+			deque.push_back(hull[i]);
+		}
+		return count;
+	}
+
+	void MergeDelaunay(
+		DelaunayGraph & results,
+		const std::vector<Vertex *> & sortedVertices,
+		const ConvexHull & leftHull,
+		const ConvexHull & rightHull,
+		const uint64 start1, const uint64 end1,
+		const uint64 start2, const uint64 end2,
+		const Tangent & upperTangent,
+		const Tangent & lowerTangent
+	) {
+		bool left, right;
+		bool takeLeft, takeRight;
+		bool isLeftDone = false, isRightDone = false;
+
+		std::vector<std::array<Vertex *, 3> > addedFaces;
+		std::deque<Vertex *> leftVertexQueue;
+		std::deque<Vertex *> rightVertexQueue;
+
+		ConvexHullGetSequenceCCW(
+			leftVertexQueue, leftHull, lowerTangent.first, upperTangent.first);
+		ConvexHullGetSequenceCW(
+			rightVertexQueue, rightHull, lowerTangent.second, upperTangent.second);
+
+		Vertex * baseLeft = leftVertexQueue.front();
+		Vertex * baseRight = rightVertexQueue.front();
+
+		leftVertexQueue.pop_front();
+		rightVertexQueue.pop_front();
+		
+		Vertex * leftCandidate = NULL, * rightCandidate = NULL, * nextCandidate = NULL;
+		Face * faceIt = NULL;
+		utils::Circle2D circumcircle;
+
+		do {
+			left = false, right = false;
+
+			// Get left candidate
+			leftCandidate = leftVertexQueue.front();
+			faceIt = results.FindFace(leftCandidate, baseLeft);
+
+			if (isLeftDone) {
+				left = false;
+			} else if (faceIt == NULL || faceIt->IsDegenerate) {
+				left = IsStraight(baseRight->Point, baseLeft->Point, leftCandidate->Point) > 0;
+			} else {
+				do {
+					// Only accept candidates that form angles < 180
+					if (IsStraight(baseRight->Point, baseLeft->Point, leftCandidate->Point) <= 0)
+						break;
+					nextCandidate = faceIt->GetCCWVertex(leftCandidate);
+					// If there is no next candidate, it must mean that there was no immediate face
+					// counter-clockwise from the current face. Thus there is at least a 180 deg
+					// angle to next possible candidate.
+					if (nextCandidate == NULL)
+						break;
+					circumcircle = CalculateCircumcircle(
+						leftCandidate->Point, baseRight->Point, baseLeft->Point);
+					// For ambiguous points, don't delete
+					if (IsWithinCircumcircle(nextCandidate->Point, circumcircle) > 0) {
+						// If within circumcircle, we need to delete edge
+						auto faceNext = faceIt->GetAdjacentFaceCCW(baseLeft);
+						if (faceIt == faceNext) {
+							// This is the only face attached to the left base vertex
+							results.RemoveFace(faceIt);
+							faceIt = NULL;
+							left = true;
+						} else {
+							results.RemoveFace(faceIt);
+							faceIt = faceNext;
+						}
+						leftVertexQueue.push_front(nextCandidate);
+						leftCandidate = nextCandidate;
+					} else {
+						// Otherwise, this point is valid, and should be submitted as candidate
+						left = true;
+					}
+				} while (faceIt != NULL && !left);
+			}
+
+			// Get right candidate
+			rightCandidate = rightVertexQueue.front();
+			faceIt = results.FindFace(rightCandidate, baseRight);
+
+			if (isRightDone) {
+				right = false;
+			} else if (faceIt == NULL || faceIt->IsDegenerate) {
+				right = IsStraight(rightCandidate->Point, baseRight->Point, baseLeft->Point) > 0;
+			} else {
+				do {
+					// Only accept candidates that form angles < 180
+					if (IsStraight(rightCandidate->Point, baseRight->Point, baseLeft->Point) <= 0)
+						break;
+					nextCandidate = faceIt->GetCWVertex(rightCandidate);
+					// If there is no next candidate, it must mean that there was no immediate face
+					// clockwise from the current face. Thus there is at least a 180 deg angle to
+					// next possible candidate.
+					if (nextCandidate == NULL)
+						break;
+					circumcircle = CalculateCircumcircle(
+						rightCandidate->Point, baseRight->Point, baseLeft->Point);
+					// For ambiguous points, don't delete
+					if (IsWithinCircumcircle(nextCandidate->Point, circumcircle) > 0) {
+						// If within circumcircle, we need to delete edge
+						auto faceNext = faceIt->GetAdjacentFaceCW(baseRight);
+						if (faceIt == faceNext) {
+							// This is the only face attached to the right base vertex
+							results.RemoveFace(faceIt);
+							faceIt = NULL;
+							right = true;
+						} else {
+							results.RemoveFace(faceIt);
+							faceIt = faceNext;
+						}
+						rightVertexQueue.push_front(nextCandidate);
+						rightCandidate = nextCandidate;
+					} else {
+						// Otherwise, this point is valid, and should be submitted as candidate
+						right = true;
+					}
+				} while (faceIt != NULL && !right);
+			}
+
+			takeLeft = left; takeRight = right;
+
+			if (takeLeft && takeRight) {
+				// If 2 potential candidates, select one of the 2 candidates, left first
+				circumcircle = CalculateCircumcircle(
+					leftCandidate->Point, baseRight->Point, baseLeft->Point);
+
+				if (left && IsWithinCircumcircle(rightCandidate->Point, circumcircle) > 0) {
+					// If the right candidate is within the left circumcircle, right is selected
+					takeLeft = false;
+				} else {
+				// Otherwise, left candidate is selected
+					takeRight = false;
+				}
+			}
+
+			if (takeRight) {
+				addedFaces.push_back({{ rightCandidate, baseRight, baseLeft }});
+				//rightHullIndex = BoundedAdd(rightHullIndex, rightHull.size());
+				rightVertexQueue.pop_front();
+				baseRight = rightCandidate;
+			} else if (takeLeft) {
+				addedFaces.push_back({{ leftCandidate, baseRight, baseLeft }});
+				//leftHullIndex = BoundedSubtract(leftHullIndex, leftHull.size());
+				leftVertexQueue.pop_front();
+				baseLeft = leftCandidate;
+			}
+
+			isLeftDone = leftVertexQueue.empty();
+			isRightDone = rightVertexQueue.empty();
+		} while ((takeLeft || takeRight) && (!isLeftDone || !isRightDone));
+
+		for (auto f : addedFaces)
+			results.AddFace(f[0], f[1], f[2]);
+	}
+
 	/**
 	 * Retrieves the upper tangent of the provided left and right hulls.
 	 */
@@ -275,20 +519,31 @@ namespace utils {
 		uint64 nextRight = BoundedAdd(rightIndex, rightSize);
 		
 		bool done;
+		int8 winding;
 
 		do {
 			done = true;
-
-			while (
-				IsCWWinding(leftHull[nextLeft], rightHull[rightIndex], leftHull[leftIndex]) > 0
-			) {
+			
+			// Loop until the next left vertex is below the tangent
+			while (true) {
+				winding = IsCWWinding(leftHull[nextLeft], rightHull[rightIndex], leftHull[leftIndex]);
+				// If the next left is below the tangent, or the 3 points are co-linear and the current left
+				// is already higher than the next left, break
+				if (winding < 0 ||
+					(winding == 0 &&
+						leftHull[leftIndex]->Point.Y >= leftHull[nextLeft]->Point.Y))
+					break;
 				nextLeft = BoundedSubtract(nextLeft, leftSize);
 				leftIndex = BoundedSubtract(leftIndex, leftSize);
 			}
-
-			while (
-				IsCWWinding(rightHull[nextRight], rightHull[rightIndex], leftHull[leftIndex]) > 0
-			) {
+			
+			// Loop until the next right vertex is below the tangent
+			while (true) {
+				winding = IsCWWinding(rightHull[nextRight], rightHull[rightIndex], leftHull[leftIndex]);
+				if (winding < 0 ||
+					(winding == 0 &&
+						rightHull[rightIndex]->Point.Y >= rightHull[nextRight]->Point.Y))
+					break;
 				nextRight = BoundedAdd(nextRight, rightSize);
 				rightIndex = BoundedAdd(rightIndex, rightSize);
 				done = false;
@@ -311,20 +566,31 @@ namespace utils {
 		uint64 nextRight = BoundedSubtract(rightIndex, rightSize);
 		
 		bool done;
+		int8 winding;
 
 		do {
 			done = true;
 
-			while (
-				IsCWWinding(leftHull[leftIndex], rightHull[rightIndex], leftHull[nextLeft]) > 0
-			) {
+			// Loop until the next left vertex is above the tangent
+			while (true) {
+				winding = IsCWWinding(leftHull[leftIndex], rightHull[rightIndex], leftHull[nextLeft]);
+				// If the next left is above the tangent, or the 3 points are co-linear and the current left
+				// is already lower than the next left, break
+				if (winding < 0 ||
+					(winding == 0 &&
+						leftHull[leftIndex]->Point.Y <= leftHull[nextLeft]->Point.Y))
+					break;
 				nextLeft = BoundedAdd(nextLeft, leftSize);
 				leftIndex = BoundedAdd(leftIndex, leftSize);
 			}
-
-			while (
-				IsCWWinding(leftHull[leftIndex], rightHull[rightIndex], rightHull[nextRight]) > 0
-			) {
+			
+			// Loop until the next right vertex is above the tangent
+			while (true) {
+				winding = IsCWWinding(leftHull[leftIndex], rightHull[rightIndex], rightHull[nextRight]);
+				if (winding < 0 ||
+					(winding == 0 &&
+						rightHull[rightIndex]->Point.Y <= rightHull[nextRight]->Point.Y))
+					break;
 				rightIndex = BoundedSubtract(rightIndex, rightSize);
 				nextRight = BoundedSubtract(nextRight, rightSize);
 				done = false;
@@ -361,7 +627,9 @@ namespace utils {
 	ConvexHull Divide(
 		DelaunayGraph & results,
 		const std::vector<Vertex *> & sortedVertices,
-		const uint64 start, const uint64 end
+		const uint64 start, const uint64 end,
+		const uint64 minSubdivisionDepth,
+		const uint64 subdivisionDepth = 0
 	) {
 		// End condition when less than 4 vertices counted
 		uint64 count = end - start + 1;
@@ -369,16 +637,28 @@ namespace utils {
 			ConvexHull hull;
 			if (count == 3) {
 				// Create triangle with 3 vertices
-				auto newFace = results.CreateFace(
+				auto newFace = results.AddFace(
 					sortedVertices[start],
 					sortedVertices[start + 1],
 					sortedVertices[start + 2]);
-
-				for (uint8 i = 0u; i < newFace->NumVertices; i++)
-					hull.push_back(newFace->Vertices[i]);
+				
+				if (newFace != NULL) {
+					for (uint8 i = 0u; i < newFace->NumVertices; i++)
+						hull.push_back(newFace->Vertices[i]);
+				} else {
+					// The 3 points are colinear, add 2 edges instead
+					results.AddFace(
+						sortedVertices[start],
+						sortedVertices[start + 1]);
+					results.AddFace(
+						sortedVertices[start + 1],
+						sortedVertices[start + 2]);
+					for (uint8 i = 0u; i < 3; i++)
+						hull.push_back(sortedVertices[start + i]);
+				}
 			} else if (count == 2) {
 				// Otherwise, just create a line
-				auto newFace = results.CreateFace(
+				auto newFace = results.AddFace(
 					sortedVertices[start],
 					sortedVertices[start + 1]);
 
@@ -392,13 +672,21 @@ namespace utils {
 			return hull;
 		} else {
 			uint64 half = (end + start) / 2;
-			auto leftHull = Divide(results, sortedVertices, start, half);
-			auto rightHull = Divide(results, sortedVertices, half + 1, end);
+			auto leftHull = Divide(
+				results, sortedVertices, start, half,
+				minSubdivisionDepth, subdivisionDepth + 1);
+			auto rightHull = Divide(
+				results, sortedVertices, half + 1, end,
+				minSubdivisionDepth, subdivisionDepth + 1);
 			auto upperTangent = UpperTangent(leftHull, rightHull);
 			auto lowerTangent = LowerTangent(leftHull, rightHull);
-			MergeDelaunay(
-				results, sortedVertices, start, half, half + 1, end,
-				upperTangent, lowerTangent);
+			if (subdivisionDepth >= minSubdivisionDepth) {
+				MergeDelaunay(
+					results, sortedVertices,
+					leftHull, rightHull,
+					start, half, half + 1, end,
+					upperTangent, lowerTangent);
+			}
 			return MergeConvexHulls(leftHull, rightHull, upperTangent, lowerTangent);
 		}
 	}
@@ -407,15 +695,15 @@ namespace utils {
 		std::vector<Vector2<> > testPoints;
 		std::vector<Vertex *> testVertices;
 		testPoints.push_back({ 0.1, 0.2 });
-		testPoints.push_back({ 0.2, 0.3 });
 		testPoints.push_back({ 0.2, 0.1 });
+		testPoints.push_back({ 0.2, 0.3 });
+		testPoints.push_back({ 0.2, 0.4 });
 		testPoints.push_back({ 0.3, 0.2 });
-		testPoints.push_back({ 0.3, 0.4 });
-		testPoints.push_back({ 0.5, 0.9 });
-		testPoints.push_back({ 0.8, 0.3 });
-		testPoints.push_back({ 0.6, 0.7 });
-		//testPoints.push_back({ 0.7, 0.2 });
-		//testPoints.push_back({ 0.8, 0.1 });
+		testPoints.push_back({ 0.4, 0.4 });
+		testPoints.push_back({ 0.5, 0.3 });
+		testPoints.push_back({ 0.6, 0.4 });
+		testPoints.push_back({ 0.6, 0.2 });
+		testPoints.push_back({ 0.6, 0.1 });
 
 		for (auto i = 0u; i < testPoints.size(); i++)
 			testVertices.push_back(new Vertex(testPoints[i], i));
@@ -430,7 +718,7 @@ namespace utils {
 		for (auto i = 0u; i < testPoints.size(); i++)
 			graph.AddVertex(testVertices[i]);
 
-		graph.ConvexHull = Divide(graph, testVertices, 0, graph.VertexCount() - 1);
+		graph.ConvexHull = Divide(graph, testVertices, 0, graph.VertexCount() - 1, 2);
 
 		//graph.CreateFace(testVertices[0], testVertices[1]);
 		//graph.CreateFace(testVertices[3], testVertices[1], testVertices[2]);
@@ -459,7 +747,6 @@ namespace utils {
 
 		// Run if at least 2 vertex
 		if (graph.VertexCount() > 1)
-			graph.ConvexHull = Divide(graph, copiedVertices, 0, graph.VertexCount() - 1);
-		//Test(graph);
+			graph.ConvexHull = Divide(graph, copiedVertices, 0, graph.VertexCount() - 1, 0);
 	}
 }
