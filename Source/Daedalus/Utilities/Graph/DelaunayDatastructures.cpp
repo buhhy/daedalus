@@ -77,6 +77,29 @@ namespace utils {
 		 *********************************************************************/
 
 		
+		bool ConvexHull::AddVertex(Vertex * const vert) {
+			// Check for collinearity, already collinear hulls can continue being collinear
+			// or cease being collinear, non-collinear hulls can never become collinear, hulls
+			// with 2 or less vertices are considered collinear
+			if (Size() > 1 && bIsCollinear) {
+				Vertex * const v0 = (*this)[0];
+				Vertex * const v1 = (*this)[1];
+
+				// If collinear, find out which vertex to duplicate
+				bIsCollinear = IsCWWinding(v0, vert, v1) == 0;
+			}
+
+			if (bIsCollinear) {
+				// If collinear, vertices should be inserted in increasing order
+				HullVertices.push_back(vert);
+			} else {
+				HullVertices.push_back(vert);
+			}
+
+			return bIsCollinear;
+		}
+		
+		
 		int64 ConvexHull::LeftVertexIndex() const {
 			return MinIndex([] (Vertex * const v) { return v->Point.X; });
 		}
@@ -106,6 +129,37 @@ namespace utils {
 				}
 			}
 			return minIndex;
+		}
+
+		uint64 ConvexHull::GetSequence(
+			std::deque<Vertex *> & deque,
+			const uint64 start, const uint64 end,
+			const int8 direction
+		) const {
+			uint64 c = 0, size = Size();
+			uint64 count = (direction * (end - start) + size) % Size() + 1;
+			if (count == 1)
+				count += size;
+			for (int64 i = start; c < count; c++, i += direction) {
+				if (i >= (signed) size) i -= size;
+				if (i < 0) i += size;
+				deque.push_back((*this)[i]);
+			}
+			return count;
+		}
+
+		uint64 ConvexHull::GetSequenceCW(
+			std::deque<Vertex *> & deque,
+			const uint64 start, const uint64 end
+		) const {
+			return GetSequence(deque, start, end, 1);
+		}
+
+		uint64 ConvexHull::GetSequenceCCW(
+			std::deque<Vertex *> & deque,
+			const uint64 start, const uint64 end
+		) const {
+			return GetSequence(deque, start, end, -1);
 		}
 	}
 

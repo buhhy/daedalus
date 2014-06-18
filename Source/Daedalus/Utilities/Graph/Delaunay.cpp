@@ -3,7 +3,6 @@
 #include "Constants.h"
 #include "DataStructures.h"
 
-#include <deque>
 #include <algorithm>
 
 namespace utils {
@@ -25,35 +24,6 @@ namespace utils {
 
 	typedef std::pair<uint64, uint64> Tangent;
 
-	uint64 ConvexHullGetSequenceCW(
-		std::deque<Vertex *> & deque, const ConvexHull & hull,
-		const uint64 start, const uint64 end
-	) {
-		uint64 count = (end - start + hull.Size()) % hull.Size() + 1;
-		if (count == 1)
-			count += hull.Size();
-		for (uint64 i = start, c = 0; c < count; c++, i++) {
-			if (i >= hull.Size()) i -= hull.Size();
-			deque.push_back(hull[i]);
-		}
-		return count;
-	}
-
-	uint64 ConvexHullGetSequenceCCW(
-		std::deque<Vertex *> & deque, const ConvexHull & hull,
-		const uint64 start, const uint64 end
-	) {
-		uint64 count = (start - end + hull.Size()) % hull.Size() + 1;
-		uint64 c = 0;
-		if (count == 1)
-			count += hull.Size();
-		for (int64 i = start; c < count; c++, i--) {
-			if (i < 0) i += hull.Size();
-			deque.push_back(hull[i]);
-		}
-		return count;
-	}
-
 	void MergeDelaunay(
 		DelaunayGraph & results,
 		const std::vector<Vertex *> & sortedVertices,
@@ -72,10 +42,10 @@ namespace utils {
 		std::deque<Vertex *> leftVertexQueue;
 		std::deque<Vertex *> rightVertexQueue;
 
-		ConvexHullGetSequenceCCW(
-			leftVertexQueue, leftHull, lowerTangent.first, upperTangent.first);
-		ConvexHullGetSequenceCW(
-			rightVertexQueue, rightHull, lowerTangent.second, upperTangent.second);
+		leftHull.GetSequenceCCW(
+			leftVertexQueue, lowerTangent.first, upperTangent.first);
+		rightHull.GetSequenceCW(
+			rightVertexQueue, lowerTangent.second, upperTangent.second);
 
 		Vertex * baseLeft = leftVertexQueue.front();
 		Vertex * baseRight = rightVertexQueue.front();
@@ -409,35 +379,42 @@ namespace utils {
 		}
 	}
 
-	//void Test(DelaunayGraph & graph) {
-	//	std::vector<Vector2<> > testPoints;
-	//	std::vector<Vertex *> testVertices;
-	//	testPoints.push_back({ 0.1, 0.2 });
-	//	testPoints.push_back({ 0.2, 0.1 });
-	//	testPoints.push_back({ 0.2, 0.3 });
-	//	testPoints.push_back({ 0.2, 0.4 });
-	//	testPoints.push_back({ 0.3, 0.2 });
-	//	testPoints.push_back({ 0.4, 0.4 });
-	//	testPoints.push_back({ 0.5, 0.3 });
-	//	testPoints.push_back({ 0.6, 0.4 });
-	//	testPoints.push_back({ 0.6, 0.2 });
-	//	testPoints.push_back({ 0.6, 0.1 });
+	void Test(DelaunayGraph & graph) {
+		std::vector<Vector2<> > testPoints;
+		std::vector<Vertex *> testVertices;
+		//testPoints.push_back({ 0.1, 0.2 });
+		//testPoints.push_back({ 0.2, 0.1 });
+		//testPoints.push_back({ 0.2, 0.3 });
+		//testPoints.push_back({ 0.2, 0.4 });
+		//testPoints.push_back({ 0.3, 0.2 });
+		//testPoints.push_back({ 0.4, 0.4 });
+		//testPoints.push_back({ 0.5, 0.3 });
+		//testPoints.push_back({ 0.6, 0.4 });
+		//testPoints.push_back({ 0.6, 0.2 });
+		//testPoints.push_back({ 0.6, 0.1 });
 
-	//	for (auto i = 0u; i < testPoints.size(); i++)
-	//		testVertices.push_back(new Vertex(testPoints[i], i));
+		
+		testPoints.push_back({ 0.1, 0.1 });
+		testPoints.push_back({ 0.1, 0.2 });
+		testPoints.push_back({ 0.1, 0.3 });
+		testPoints.push_back({ 0.2, 0.1 });
+		testPoints.push_back({ 0.3, 0.1 });
 
-	//	std::sort(
-	//		testVertices.begin(),
-	//		testVertices.end(),
-	//		[] (Vertex * const p1, Vertex * const p2) {
-	//			return p1->Point < p2->Point;
-	//		});
+		for (auto i = 0u; i < testPoints.size(); i++)
+			testVertices.push_back(new Vertex(testPoints[i], i));
 
-	//	for (auto i = 0u; i < testPoints.size(); i++)
-	//		graph.AddVertex(testVertices[i]);
+		std::sort(
+			testVertices.begin(),
+			testVertices.end(),
+			[] (Vertex * const p1, Vertex * const p2) {
+				return p1->Point < p2->Point;
+			});
 
-	//	graph.ConvexHull = Divide(graph, testVertices, 0, graph.VertexCount() - 1, 2);
-	//}
+		for (auto i = 0u; i < testPoints.size(); i++)
+			graph.AddVertex(testVertices[i]);
+
+		graph.ConvexHull = Divide(graph, testVertices, 0, graph.VertexCount() - 1, 0);
+	}
 
 	void BuildDelaunay2D(DelaunayGraph & graph, const std::vector<Vector2<> > & inputPoints) {
 		std::vector<Vertex *> copiedVertices;
@@ -459,5 +436,6 @@ namespace utils {
 		// Run if at least 2 vertex
 		if (graph.VertexCount() > 1)
 			graph.ConvexHull = Divide(graph, copiedVertices, 0, graph.VertexCount() - 1, 0);
+		//Test(graph);
 	}
 }

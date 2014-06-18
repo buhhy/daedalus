@@ -4,6 +4,7 @@
 #include "DataStructures.h"
 
 #include <array>
+#include <deque>
 #include <unordered_set>
 #include <functional>
 
@@ -128,7 +129,15 @@ namespace utils {
 		private:
 			// Convex hull vertices stored in CW winding order
 			std::vector<Vertex *> HullVertices;
+			bool bIsCollinear;
+
+			uint64 GetSequence(
+				std::deque<Vertex *> & deque,
+				const uint64 start, const uint64 end,
+				const int8 direction) const;
 		public:
+			ConvexHull() : bIsCollinear(true) {}
+
 			inline Vertex * operator [] (const uint64 index) { return HullVertices[index]; }
 			inline Vertex * const operator [] (const uint64 index) const {
 				return HullVertices[index];
@@ -137,15 +146,29 @@ namespace utils {
 				HullVertices = other.HullVertices;
 				return *this;
 			}
-			inline void AddVertex(Vertex * const vert) { HullVertices.push_back(vert); }
 			inline uint64 Size() const { return HullVertices.size(); }
-
+			
+			/**
+			 * Adds a new point in between the first point and the last point, returns true
+			 * if the new point is collinear.
+			 */
+			bool AddVertex(Vertex * const vert);
 			int64 MinIndex(std::function<double (Vertex * const)> valueOf) const;
 
 			int64 LeftVertexIndex() const;
 			int64 RightVertexIndex() const;
 			int64 TopVertexIndex() const;
 			int64 BottomVertexIndex() const;
+
+			uint64 GetSequenceCW(
+				std::deque<Vertex *> & deque,
+				const uint64 start, const uint64 end
+			) const;
+
+			uint64 GetSequenceCCW(
+				std::deque<Vertex *> & deque,
+				const uint64 start, const uint64 end
+			) const;
 		};
 
 		/**
