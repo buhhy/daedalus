@@ -205,31 +205,50 @@ namespace utils {
 		uint64 nextRight = BoundedAdd(rightIndex, rightSize);
 		
 		bool done;
-		int8 winding;
 
 		do {
 			done = true;
 			
 			// Loop until the next left vertex is below the tangent
 			while (true) {
-				winding = IsCWWinding(leftHull[nextLeft], rightHull[rightIndex], leftHull[leftIndex]);
-				// If the next left is below the tangent, or the 3 points are co-linear and the current left
-				// is already higher than the next left, break
-				if (winding < 0 ||
-					(winding == 0 &&
-						leftHull[leftIndex]->Point.Y >= leftHull[nextLeft]->Point.Y))
+				int8 winding = IsCWWinding(
+					leftHull[nextLeft], rightHull[rightIndex], leftHull[leftIndex]);
+
+				// If the next left is below the tangent, then we've reached the apex
+				if (winding < 0) {
 					break;
+				} else if (winding == 0) {
+					// In the case of collinear left, next left, and right points, select
+					// the point with the shortest distance
+					double newDist =
+						(leftHull[nextLeft]->Point - rightHull[rightIndex]->Point).Length2();
+					double oldDist =
+						(leftHull[leftIndex]->Point - rightHull[rightIndex]->Point).Length2();
+					if (newDist >= oldDist)
+						break;
+				}
 				nextLeft = BoundedSubtract(nextLeft, leftSize);
 				leftIndex = BoundedSubtract(leftIndex, leftSize);
 			}
 			
 			// Loop until the next right vertex is below the tangent
 			while (true) {
-				winding = IsCWWinding(rightHull[nextRight], rightHull[rightIndex], leftHull[leftIndex]);
-				if (winding < 0 ||
-					(winding == 0 &&
-						rightHull[rightIndex]->Point.Y >= rightHull[nextRight]->Point.Y))
+				int8 winding = IsCWWinding(
+					rightHull[nextRight], rightHull[rightIndex], leftHull[leftIndex]);
+
+				// If the next right is below the tangent, then we've reached the apex
+				if (winding < 0) {
 					break;
+				} else if (winding == 0) {
+					// In the case of collinear left, right, and next right points, select
+					// the point with the shortest distance
+					double newDist =
+						(rightHull[nextRight]->Point - leftHull[leftIndex]->Point).Length2();
+					double oldDist =
+						(rightHull[rightIndex]->Point - leftHull[leftIndex]->Point).Length2();
+					if (newDist >= oldDist)
+						break;
+				}
 				nextRight = BoundedAdd(nextRight, rightSize);
 				rightIndex = BoundedAdd(rightIndex, rightSize);
 				done = false;
@@ -259,24 +278,44 @@ namespace utils {
 
 			// Loop until the next left vertex is above the tangent
 			while (true) {
-				winding = IsCWWinding(leftHull[leftIndex], rightHull[rightIndex], leftHull[nextLeft]);
-				// If the next left is above the tangent, or the 3 points are co-linear and the current left
-				// is already lower than the next left, break
-				if (winding < 0 ||
-					(winding == 0 &&
-						leftHull[leftIndex]->Point.Y <= leftHull[nextLeft]->Point.Y))
+				winding = IsCWWinding(
+					leftHull[leftIndex], rightHull[rightIndex], leftHull[nextLeft]);
+
+				// If the next left is above the tangent, then we've reached the apex
+				if (winding < 0) {
 					break;
+				} else if (winding == 0) {
+					// In the case of collinear left, next left, and right points, select
+					// the point with the shortest distance
+					double newDist =
+						(leftHull[nextLeft]->Point - rightHull[rightIndex]->Point).Length2();
+					double oldDist =
+						(leftHull[leftIndex]->Point - rightHull[rightIndex]->Point).Length2();
+					if (newDist >= oldDist)
+						break;
+				}
 				nextLeft = BoundedAdd(nextLeft, leftSize);
 				leftIndex = BoundedAdd(leftIndex, leftSize);
 			}
 			
 			// Loop until the next right vertex is above the tangent
 			while (true) {
-				winding = IsCWWinding(leftHull[leftIndex], rightHull[rightIndex], rightHull[nextRight]);
-				if (winding < 0 ||
-					(winding == 0 &&
-						rightHull[rightIndex]->Point.Y <= rightHull[nextRight]->Point.Y))
+				winding = IsCWWinding(
+					leftHull[leftIndex], rightHull[rightIndex], rightHull[nextRight]);
+
+				// If the next right is above the tangent, then we've reached the apex
+				if (winding < 0) {
 					break;
+				} else if (winding == 0) {
+					// In the case of collinear left, right, and next right points, select
+					// the point with the shortest distance
+					double newDist =
+						(rightHull[nextRight]->Point - leftHull[leftIndex]->Point).Length2();
+					double oldDist =
+						(rightHull[rightIndex]->Point - leftHull[leftIndex]->Point).Length2();
+					if (newDist >= oldDist)
+						break;
+				}
 				rightIndex = BoundedSubtract(rightIndex, rightSize);
 				nextRight = BoundedSubtract(nextRight, rightSize);
 				done = false;
