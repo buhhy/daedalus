@@ -134,19 +134,31 @@ namespace utils {
 			uint64 GetSequence(
 				std::deque<Vertex *> & deque,
 				const uint64 start, const uint64 end,
-				const int8 direction) const;
+				const bool isCw) const;
 		public:
-			ConvexHull() : bIsCollinear(true) {}
+			ConvexHull() : bIsCollinear(false) {}
 
 			inline Vertex * operator [] (const uint64 index) { return HullVertices[index]; }
 			inline Vertex * const operator [] (const uint64 index) const {
 				return HullVertices[index];
 			}
+
 			inline ConvexHull & operator = (const ConvexHull & other) {
 				HullVertices = other.HullVertices;
 				return *this;
 			}
+
 			inline uint64 Size() const { return HullVertices.size(); }
+
+			inline uint64 GetSequenceCW(
+				std::deque<Vertex *> & deque,
+				const uint64 start, const uint64 end
+			) const { return GetSequence(deque, start, end, true); }
+
+			inline uint64 GetSequenceCCW(
+				std::deque<Vertex *> & deque,
+				const uint64 start, const uint64 end
+			) const { return GetSequence(deque, start, end, false); }
 			
 			/**
 			 * Adds a new point in between the first point and the last point, returns true
@@ -159,16 +171,6 @@ namespace utils {
 			int64 RightVertexIndex() const;
 			int64 TopVertexIndex() const;
 			int64 BottomVertexIndex() const;
-
-			uint64 GetSequenceCW(
-				std::deque<Vertex *> & deque,
-				const uint64 start, const uint64 end
-			) const;
-
-			uint64 GetSequenceCCW(
-				std::deque<Vertex *> & deque,
-				const uint64 start, const uint64 end
-			) const;
 		};
 
 		/**

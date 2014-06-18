@@ -80,18 +80,24 @@ namespace utils {
 		bool ConvexHull::AddVertex(Vertex * const vert) {
 			// Check for collinearity, already collinear hulls can continue being collinear
 			// or cease being collinear, non-collinear hulls can never become collinear, hulls
-			// with 2 or less vertices are considered collinear
-			if (Size() > 1 && bIsCollinear) {
+			// with 2 or less vertices are considered not collinear, hence the collinear check
+			// must occur when inserting the 3rd vertex
+			if (Size() == 2 || bIsCollinear) {
 				Vertex * const v0 = (*this)[0];
 				Vertex * const v1 = (*this)[1];
 
-				// If collinear, find out which vertex to duplicate
 				bIsCollinear = IsCWWinding(v0, vert, v1) == 0;
 			}
 
 			if (bIsCollinear) {
-				// If collinear, vertices should be inserted in increasing order
-				HullVertices.push_back(vert);
+				// If collinear, vertices should be inserted in increasing order, if the
+				// hull is just a line, don't sort it
+				auto insertIt = std::lower_bound(
+					HullVertices.begin(), HullVertices.end(), vert,
+					[] (Vertex * const arrElem, Vertex * const compare) {
+						return arrElem->Point < compare->Point;
+					});
+				HullVertices.insert(insertIt, vert);
 			} else {
 				HullVertices.push_back(vert);
 			}
@@ -134,32 +140,41 @@ namespace utils {
 		uint64 ConvexHull::GetSequence(
 			std::deque<Vertex *> & deque,
 			const uint64 start, const uint64 end,
-			const int8 direction
+			const bool isCW
 		) const {
 			uint64 c = 0, size = Size();
-			uint64 count = (direction * (end - start) + size) % Size() + 1;
-			if (count == 1)
-				count += size;
-			for (int64 i = start; c < count; c++, i += direction) {
-				if (i >= (signed) size) i -= size;
-				if (i < 0) i += size;
-				deque.push_back((*this)[i]);
+			if (bIsCollinear) {
+				int8 direction = (isCW ? 1 : -1);
+				int64 compare = direction * (end - start);
+				uint64 count;
+				if (compare <= 0) {
+					if (isCW)
+						count = (2 * (size - 1)) - end - start + 1;
+					else
+						count = end + start + 1;
+				} else {
+					count = compare + 1;
+				}
+				// If the hull is collinear, iterate in the original intended direction, then
+				// ping-pong when reaching an extreme rather than loop around
+				for (int64 i = start; c < count; c++, i += direction) {
+					deque.push_back((*this)[i]);
+					if (direction < 0 && i == 0 || direction > 0 && i == size - 1)
+						direction *= -1;
+				}
+				return count;
+			} else {
+				int8 direction = (isCW ? 1 : -1);
+				uint64 count = (direction * (end - start) + size) % Size() + 1;
+				if (count == 1)
+					count += size;
+				for (int64 i = start; c < count; c++, i += direction) {
+					if (i >= (signed) size) i -= size;
+					if (i < 0) i += size;
+					deque.push_back((*this)[i]);
+				}
+				return count;
 			}
-			return count;
-		}
-
-		uint64 ConvexHull::GetSequenceCW(
-			std::deque<Vertex *> & deque,
-			const uint64 start, const uint64 end
-		) const {
-			return GetSequence(deque, start, end, 1);
-		}
-
-		uint64 ConvexHull::GetSequenceCCW(
-			std::deque<Vertex *> & deque,
-			const uint64 start, const uint64 end
-		) const {
-			return GetSequence(deque, start, end, -1);
 		}
 	}
 

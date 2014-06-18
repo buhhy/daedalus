@@ -382,23 +382,23 @@ namespace utils {
 	void Test(DelaunayGraph & graph) {
 		std::vector<Vector2<> > testPoints;
 		std::vector<Vertex *> testVertices;
-		//testPoints.push_back({ 0.1, 0.2 });
-		//testPoints.push_back({ 0.2, 0.1 });
-		//testPoints.push_back({ 0.2, 0.3 });
-		//testPoints.push_back({ 0.2, 0.4 });
-		//testPoints.push_back({ 0.3, 0.2 });
-		//testPoints.push_back({ 0.4, 0.4 });
-		//testPoints.push_back({ 0.5, 0.3 });
-		//testPoints.push_back({ 0.6, 0.4 });
-		//testPoints.push_back({ 0.6, 0.2 });
-		//testPoints.push_back({ 0.6, 0.1 });
+		testPoints.push_back({ 0.1, 0.2 });
+		testPoints.push_back({ 0.2, 0.1 });
+		testPoints.push_back({ 0.2, 0.3 });
+		testPoints.push_back({ 0.2, 0.4 });
+		testPoints.push_back({ 0.3, 0.2 });
+		testPoints.push_back({ 0.4, 0.4 });
+		testPoints.push_back({ 0.5, 0.3 });
+		testPoints.push_back({ 0.6, 0.4 });
+		testPoints.push_back({ 0.6, 0.2 });
+		testPoints.push_back({ 0.6, 0.1 });
 
 		
-		testPoints.push_back({ 0.1, 0.1 });
-		testPoints.push_back({ 0.1, 0.2 });
-		testPoints.push_back({ 0.1, 0.3 });
-		testPoints.push_back({ 0.2, 0.1 });
-		testPoints.push_back({ 0.3, 0.1 });
+		//testPoints.push_back({ 0.1, 0.1 });
+		//testPoints.push_back({ 0.1, 0.2 });
+		//testPoints.push_back({ 0.1, 0.3 });
+		//testPoints.push_back({ 0.2, 0.1 });
+		//testPoints.push_back({ 0.3, 0.1 });
 
 		for (auto i = 0u; i < testPoints.size(); i++)
 			testVertices.push_back(new Vertex(testPoints[i], i));
