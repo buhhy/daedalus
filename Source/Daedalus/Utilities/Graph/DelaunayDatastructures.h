@@ -159,6 +159,16 @@ namespace utils {
 				std::deque<Vertex *> & deque,
 				const uint64 start, const uint64 end
 			) const { return GetSequence(deque, start, end, false); }
+
+			inline uint64 NextIndex(const uint64 current) const {
+				return (current + 1) % Size();
+			}
+
+			inline uint64 PrevIndex(const uint64 current) const {
+				if (current < 1)
+					return Size() - 1;
+				return current - 1;
+			}
 			
 			/**
 			 * Adds a new point in between the first point and the last point, returns true

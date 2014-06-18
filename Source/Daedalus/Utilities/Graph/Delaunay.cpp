@@ -8,20 +8,6 @@
 namespace utils {
 	using namespace delaunay;
 
-	const double DOUBLE_MIN = std::numeric_limits<double>::min();
-	const double DOUBLE_MAX = std::numeric_limits<double>::max();
-
-	inline uint64 BoundedAdd(uint64 source, uint64 limit, uint64 amount = 1) {
-		source += amount;
-		if (source >= limit) return source - limit;
-		return source;
-	}
-
-	inline uint64 BoundedSubtract(uint64 source, uint64 limit, uint64 amount = 1) {
-		if (source < amount) return source + limit - amount;
-		return source - amount;
-	}
-
 	typedef std::pair<uint64, uint64> Tangent;
 
 	void MergeDelaunay(
@@ -197,12 +183,10 @@ namespace utils {
 	 */
 	Tangent UpperTangent(const ConvexHull & leftHull, const ConvexHull & rightHull	) {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
-		auto leftSize = leftHull.Size();
-		auto rightSize = rightHull.Size();
 		uint64 leftIndex = leftHull.RightVertexIndex();
 		uint64 rightIndex = rightHull.LeftVertexIndex();
-		uint64 nextLeft = BoundedSubtract(leftIndex, leftSize);
-		uint64 nextRight = BoundedAdd(rightIndex, rightSize);
+		uint64 nextLeft = leftHull.PrevIndex(leftIndex);
+		uint64 nextRight = rightHull.NextIndex(rightIndex);
 		
 		bool done;
 
@@ -227,8 +211,8 @@ namespace utils {
 					if (newDist >= oldDist)
 						break;
 				}
-				nextLeft = BoundedSubtract(nextLeft, leftSize);
-				leftIndex = BoundedSubtract(leftIndex, leftSize);
+				nextLeft = leftHull.PrevIndex(nextLeft);
+				leftIndex = leftHull.PrevIndex(leftIndex);
 			}
 			
 			// Loop until the next right vertex is below the tangent
@@ -249,8 +233,8 @@ namespace utils {
 					if (newDist >= oldDist)
 						break;
 				}
-				nextRight = BoundedAdd(nextRight, rightSize);
-				rightIndex = BoundedAdd(rightIndex, rightSize);
+				nextRight = rightHull.NextIndex(nextRight);
+				rightIndex = rightHull.NextIndex(rightIndex);
 				done = false;
 			}
 		} while (!done);
@@ -263,12 +247,10 @@ namespace utils {
 	 */
 	Tangent LowerTangent(const ConvexHull & leftHull, const ConvexHull & rightHull) {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
-		auto leftSize = leftHull.Size();
-		auto rightSize = rightHull.Size();
 		uint64 leftIndex = leftHull.RightVertexIndex();
 		uint64 rightIndex = rightHull.LeftVertexIndex();
-		uint64 nextLeft = BoundedAdd(leftIndex, leftSize);
-		uint64 nextRight = BoundedSubtract(rightIndex, rightSize);
+		uint64 nextLeft = leftHull.NextIndex(leftIndex);
+		uint64 nextRight = rightHull.PrevIndex(rightIndex);
 		
 		bool done;
 		int8 winding;
@@ -294,8 +276,8 @@ namespace utils {
 					if (newDist >= oldDist)
 						break;
 				}
-				nextLeft = BoundedAdd(nextLeft, leftSize);
-				leftIndex = BoundedAdd(leftIndex, leftSize);
+				nextLeft = leftHull.NextIndex(nextLeft);
+				leftIndex = leftHull.NextIndex(leftIndex);
 			}
 			
 			// Loop until the next right vertex is above the tangent
@@ -316,8 +298,8 @@ namespace utils {
 					if (newDist >= oldDist)
 						break;
 				}
-				rightIndex = BoundedSubtract(rightIndex, rightSize);
-				nextRight = BoundedSubtract(nextRight, rightSize);
+				rightIndex = rightHull.PrevIndex(rightIndex);
+				nextRight = rightHull.PrevIndex(nextRight);
 				done = false;
 			}
 		} while (!done);
