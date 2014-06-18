@@ -65,14 +65,14 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 		double lineY = (scale * y) / d;
 		tempVector31.Reset(0, lineY, 0);
 		tempVector32.Reset(scale, lineY, 0);
-		utils::CreateLine(gridTries, tempVector31, tempVector32, 4);
+		utils::CreateLine(gridTries, tempVector31, tempVector32, 0.3);
 	}
 	// X lines
 	for (auto x = 0u; x < w; x++) {
 		double lineX = (scale * x) / d;
 		tempVector31.Reset(lineX, 0, 0);
 		tempVector32.Reset(lineX, scale, 0);
-		utils::CreateLine(gridTries, tempVector31, tempVector32, 4);
+		utils::CreateLine(gridTries, tempVector31, tempVector32, 0.3);
 	}
 	for (auto it : gridTries)
 		triangles.Add(FMeshTriangle(it, gridColor));
@@ -84,7 +84,7 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	auto verts = graph.GetVertices();
 	for (auto v : verts) {
 		tempVector31.Reset(v->Point * scale, 0);
-		utils::CreatePoint(pointTries, tempVector31, 12);
+		utils::CreatePoint(pointTries, tempVector31, 2.0);
 	}
 	for (auto it : pointTries) triangles.Add(FMeshTriangle(it, vertexColor));
 
@@ -107,7 +107,7 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	for (auto e : edges) {
 		tempVector31.Reset(e.Start->Point * scale, 0);
 		tempVector32.Reset(e.End->Point * scale, 0);
-		utils::CreateLine(edgeTries, tempVector31, tempVector32, 3);
+		utils::CreateLine(edgeTries, tempVector31, tempVector32, 0.5);
 	}
 	for (auto it : edgeTries) triangles.Add(FMeshTriangle(it, edgeColor));
 
@@ -115,7 +115,7 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	std::vector<utils::Triangle> faceTries;
 	auto faces = graph.GetFaces();
 	for (auto f : faces) {
-		if (!f->IsDegenerate) {
+		if (!f->IsDegenerate()) {
 			tempVector31.Reset(f->Vertices[0]->Point * scale, 0);
 			tempVector32.Reset(f->Vertices[1]->Point * scale, 0);
 			tempVector33.Reset(f->Vertices[2]->Point * scale, 0);

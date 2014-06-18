@@ -91,5 +91,5 @@ namespace utils {
 	 * Returns -1: >180 degrees, 0: straight, 1: < 180
 	 */
 	int8 FindWinding(const Vector2<> & p1, const Vector2<> & pivot, const Vector2<> & p3);
-	float FindAngle(const Vector2<> & v1, const Vector2<> & v2);
+	double FindAngle(const Vector2<> & v1, const Vector2<> & v2);
 }

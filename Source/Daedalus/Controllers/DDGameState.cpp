@@ -12,7 +12,7 @@ ADDGameState::ADDGameState(const class FPostConstructInitializeProperties& PCIP)
 		3,               // BufferSize
 		1,               // MinPointsPerCell
 		1,               // MaxPointsPerCell
-		10000.0          // BiomeScale
+		1000.0          // BiomeScale
 	}),
 	ChunkLoader(new terrain::ChunkLoader(TerrainGenParams)),
 	BiomeRegionLoader(new terrain::BiomeRegionLoader(BiomeGenParams))

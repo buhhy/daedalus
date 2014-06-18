@@ -90,90 +90,102 @@ namespace utils {
 		do {
 			left = false, right = false;
 
-			// Get left candidate
-			leftCandidate = leftVertexQueue.front();
-			faceIt = results.FindFace(leftCandidate, baseLeft);
-
 			if (isLeftDone) {
+				// If left side is finished, there is no need to change the left candidate,
+				// it will always be the last one used
 				left = false;
-			} else if (faceIt == NULL || faceIt->IsDegenerate) {
-				left = FindWinding(baseRight->Point, baseLeft->Point, leftCandidate->Point) > 0;
 			} else {
-				do {
-					// Only accept candidates that form angles < 180
-					if (FindWinding(baseRight->Point, baseLeft->Point, leftCandidate->Point) <= 0)
-						break;
-					nextCandidate = faceIt->GetCCWVertex(leftCandidate);
-					// If there is no next candidate, it must mean that there was no immediate face
-					// counter-clockwise from the current face. Thus there is at least a 180 deg
-					// angle to next possible candidate.
-					if (nextCandidate == NULL)
-						break;
-					circumcircle = CalculateCircumcircle(
-						leftCandidate->Point, baseRight->Point, baseLeft->Point);
-					// For ambiguous points, don't delete
-					if (IsWithinCircumcircle(nextCandidate->Point, circumcircle) > 0) {
-						// If within circumcircle, we need to delete edge
-						auto faceNext = faceIt->GetAdjacentFaceCCW(baseLeft);
-						if (faceIt == faceNext) {
-							// This is the only face attached to the left base vertex
-							results.RemoveFace(faceIt);
-							faceIt = NULL;
+				// Get left candidate
+				leftCandidate = leftVertexQueue.front();
+				faceIt = results.FindFace(leftCandidate, baseLeft);
+
+				if (faceIt == NULL || faceIt->VertexCount() < 3) {
+					left = FindWinding(baseRight->Point, baseLeft->Point, leftCandidate->Point) > 0;
+				} else {
+					do {
+						// Only accept candidates that form angles < 180
+						if (FindWinding(baseRight->Point, baseLeft->Point, leftCandidate->Point) <= 0)
+							break;
+						nextCandidate = faceIt->GetCCWVertex(leftCandidate);
+						// If there is no next candidate, it must mean that there was no immediate face
+						// counter-clockwise from the current face. Thus there is at least a 180 deg
+						// angle to next possible candidate.
+						if (nextCandidate == NULL) {
 							left = true;
-						} else {
-							results.RemoveFace(faceIt);
-							faceIt = faceNext;
+							break;
 						}
-						leftVertexQueue.push_front(nextCandidate);
-						leftCandidate = nextCandidate;
-					} else {
-						// Otherwise, this point is valid, and should be submitted as candidate
-						left = true;
-					}
-				} while (faceIt != NULL && !left);
+						circumcircle = CalculateCircumcircle(
+							leftCandidate->Point, baseRight->Point, baseLeft->Point);
+						// For ambiguous points, don't delete
+						if (IsWithinCircumcircle(nextCandidate->Point, circumcircle) > 0) {
+							// If within circumcircle, we need to delete edge
+							auto faceNext = faceIt->GetAdjacentFaceCCW(baseLeft);
+							if (faceIt == faceNext) {
+								// This is the only face attached to the left base vertex
+								results.RemoveFace(faceIt);
+								faceIt = NULL;
+								left = true;
+							} else {
+								results.RemoveFace(faceIt);
+								faceIt = faceNext;
+							}
+							leftVertexQueue.push_front(nextCandidate);
+							leftCandidate = nextCandidate;
+						} else {
+							// Otherwise, this point is valid, and should be submitted as candidate
+							left = true;
+						}
+					} while (faceIt != NULL && !left);
+				}
 			}
 
-			// Get right candidate
-			rightCandidate = rightVertexQueue.front();
-			faceIt = results.FindFace(rightCandidate, baseRight);
-
 			if (isRightDone) {
+				// If right side is finished, there is no need to change the right candidate,
+				// it will always be the last one used
 				right = false;
-			} else if (faceIt == NULL || faceIt->IsDegenerate) {
-				right = FindWinding(rightCandidate->Point, baseRight->Point, baseLeft->Point) > 0;
 			} else {
-				do {
-					// Only accept candidates that form angles < 180
-					if (FindWinding(rightCandidate->Point, baseRight->Point, baseLeft->Point) <= 0)
-						break;
-					nextCandidate = faceIt->GetCWVertex(rightCandidate);
-					// If there is no next candidate, it must mean that there was no immediate face
-					// clockwise from the current face. Thus there is at least a 180 deg angle to
-					// next possible candidate.
-					if (nextCandidate == NULL)
-						break;
-					circumcircle = CalculateCircumcircle(
-						rightCandidate->Point, baseRight->Point, baseLeft->Point);
-					// For ambiguous points, don't delete
-					if (IsWithinCircumcircle(nextCandidate->Point, circumcircle) > 0) {
-						// If within circumcircle, we need to delete edge
-						auto faceNext = faceIt->GetAdjacentFaceCW(baseRight);
-						if (faceIt == faceNext) {
-							// This is the only face attached to the right base vertex
-							results.RemoveFace(faceIt);
-							faceIt = NULL;
+				// Get right candidate
+				rightCandidate = rightVertexQueue.front();
+				faceIt = results.FindFace(rightCandidate, baseRight);
+
+				if (faceIt == NULL || faceIt->VertexCount() < 3) {
+					right = FindWinding(rightCandidate->Point, baseRight->Point, baseLeft->Point) > 0;
+				} else {
+					do {
+						// Only accept candidates that form angles < 180
+						if (FindWinding(rightCandidate->Point, baseRight->Point, baseLeft->Point) <= 0)
+							break;
+						nextCandidate = faceIt->GetCWVertex(rightCandidate);
+						// If there is no next candidate, it must mean that there was no immediate face
+						// clockwise from the current face. Thus there is at least a 180 deg angle to
+						// next possible candidate.
+						if (nextCandidate == NULL) {
 							right = true;
-						} else {
-							results.RemoveFace(faceIt);
-							faceIt = faceNext;
+							break;
 						}
-						rightVertexQueue.push_front(nextCandidate);
-						rightCandidate = nextCandidate;
-					} else {
-						// Otherwise, this point is valid, and should be submitted as candidate
-						right = true;
-					}
-				} while (faceIt != NULL && !right);
+						circumcircle = CalculateCircumcircle(
+							rightCandidate->Point, baseRight->Point, baseLeft->Point);
+						// For ambiguous points, don't delete
+						if (IsWithinCircumcircle(nextCandidate->Point, circumcircle) > 0) {
+							// If within circumcircle, we need to delete edge
+							auto faceNext = faceIt->GetAdjacentFaceCW(baseRight);
+							if (faceIt == faceNext) {
+								// This is the only face attached to the right base vertex
+								results.RemoveFace(faceIt);
+								faceIt = NULL;
+								right = true;
+							} else {
+								results.RemoveFace(faceIt);
+								faceIt = faceNext;
+							}
+							rightVertexQueue.push_front(nextCandidate);
+							rightCandidate = nextCandidate;
+						} else {
+							// Otherwise, this point is valid, and should be submitted as candidate
+							right = true;
+						}
+					} while (faceIt != NULL && !right);
+				}
 			}
 
 			takeLeft = left; takeRight = right;
@@ -349,7 +361,7 @@ namespace utils {
 					sortedVertices[start + 2]);
 				
 				if (newFace != NULL) {
-					for (uint8 i = 0u; i < newFace->NumVertices; i++)
+					for (uint8 i = 0u; i < newFace->VertexCount(); i++)
 						hull.AddVertex(newFace->Vertices[i]);
 				} else {
 					// The 3 points are colinear, add 2 edges instead
@@ -368,7 +380,7 @@ namespace utils {
 					sortedVertices[start],
 					sortedVertices[start + 1]);
 
-				for (uint8 i = 0u; i < newFace->NumVertices; i++)
+				for (uint8 i = 0u; i < newFace->VertexCount(); i++)
 					hull.AddVertex(newFace->Vertices[i]);
 			} else {
 				// This shouldn't ever happen

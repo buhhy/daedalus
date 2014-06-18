@@ -39,7 +39,7 @@ namespace terrain {
 	 */
 	struct BiomeRegionData {
 		BiomePointField PointDistribution;
-		utils::delaunay::DelaunayGraph DelaunayGraph;
+		utils::DelaunayGraph DelaunayGraph;
 
 		BiomeSizeVector BiomeGridSize;      // Size of the biome in grid cells
 		BiomeOffsetVector BiomeOffset;      // Biome offset from (0,0)

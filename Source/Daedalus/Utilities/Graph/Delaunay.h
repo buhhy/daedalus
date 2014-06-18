@@ -11,6 +11,6 @@ namespace utils {
 	 * http://www.geom.uiuc.edu/~samuelp/del_project.html
 	 */
 	void BuildDelaunay2D(
-		delaunay::DelaunayGraph & graph,
+		DelaunayGraph & graph,
 		const std::vector<Vector2<> > & inputPoints);
 }
