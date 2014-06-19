@@ -179,14 +179,32 @@ namespace utils {
 	}
 
 	/**
-	 * Retrieves the upper tangent of the provided left and right hulls.
+	 * Abstracts out the tangent finding algorithm since finding the top and bottom tangents
+	 * used much of the same code.
+	 * @param nextLeftIndex This function retrieves the next face index for the left hull, for
+	 *                      finding the top tangent, this means traversing the convex hull in
+	 *                      a CCW manner to find the top-right-most tangent vertex.
+	 * @param nextRightIndex This function is same as the above, but for the right hull, meaning
+	 *                       it should provide the opposite result to the next left index.
+	 * @param getWinding This function should get the triangle winding of the 3 provided
+	 *                   vertices: the next vertex on either side, the left vertex and the
+	 *                   right vertex. This function should return -1 when the next vertex is
+	 *                   on the inside of the tangent created by the left and right vertices,
+	 *                   0 for collinear points and 1 when the next vertex is outside of the
+	 *                   tangent line.
 	 */
-	Tangent UpperTangent(const ConvexHull & leftHull, const ConvexHull & rightHull	) {
+	Tangent FindTangent(
+		const ConvexHull & leftHull,
+		const ConvexHull & rightHull,
+		const std::function<uint64 (const ConvexHull &, uint64)> & nextLeftIndex,
+		const std::function<uint64 (const ConvexHull &, uint64)> & nextRightIndex,
+		const std::function<int8 (Vertex * const, Vertex * const, Vertex * const)> & getWinding
+	) {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
 		uint64 leftIndex = leftHull.RightVertexIndex();
 		uint64 rightIndex = rightHull.LeftVertexIndex();
-		uint64 nextLeft = leftHull.PrevIndex(leftIndex);
-		uint64 nextRight = rightHull.NextIndex(rightIndex);
+		uint64 nextLeft = nextLeftIndex(leftHull, leftIndex);
+		uint64 nextRight = nextRightIndex(rightHull, rightIndex);
 		
 		bool done;
 
@@ -195,8 +213,8 @@ namespace utils {
 			
 			// Loop until the next left vertex is below the tangent
 			while (true) {
-				int8 winding = IsCWWinding(
-					leftHull[nextLeft], rightHull[rightIndex], leftHull[leftIndex]);
+				int8 winding = getWinding(
+					leftHull[nextLeft], leftHull[leftIndex], rightHull[rightIndex]);
 
 				// If the next left is below the tangent, then we've reached the apex
 				if (winding < 0) {
@@ -211,14 +229,14 @@ namespace utils {
 					if (newDist >= oldDist)
 						break;
 				}
-				nextLeft = leftHull.PrevIndex(nextLeft);
-				leftIndex = leftHull.PrevIndex(leftIndex);
+				nextLeft = nextLeftIndex(leftHull, nextLeft);
+				leftIndex = nextLeftIndex(leftHull, leftIndex);
 			}
 			
 			// Loop until the next right vertex is below the tangent
 			while (true) {
-				int8 winding = IsCWWinding(
-					rightHull[nextRight], rightHull[rightIndex], leftHull[leftIndex]);
+				int8 winding = getWinding(
+					rightHull[nextRight], leftHull[leftIndex], rightHull[rightIndex]);
 
 				// If the next right is below the tangent, then we've reached the apex
 				if (winding < 0) {
@@ -233,8 +251,8 @@ namespace utils {
 					if (newDist >= oldDist)
 						break;
 				}
-				nextRight = rightHull.NextIndex(nextRight);
-				rightIndex = rightHull.NextIndex(rightIndex);
+				nextRight = nextRightIndex(rightHull, nextRight);
+				rightIndex = nextRightIndex(rightHull, rightIndex);
 				done = false;
 			}
 		} while (!done);
@@ -243,68 +261,39 @@ namespace utils {
 	}
 
 	/**
+	 * Retrieves the upper tangent of the provided left and right hulls.
+	 */
+	Tangent UpperTangent(const ConvexHull & leftHull, const ConvexHull & rightHull) {
+		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
+		return FindTangent(
+			leftHull, rightHull,
+			[] (const ConvexHull & leftHull, const uint64 index) {
+				return leftHull.PrevIndex(index);
+			},
+			[] (const ConvexHull & rightHull, const uint64 index) {
+				return rightHull.NextIndex(index);
+			},
+			[] (Vertex * const nextVert, Vertex * const leftVert, Vertex * const rightVert) {
+				return IsCWWinding(nextVert, rightVert, leftVert);
+			});
+	}
+
+	/**
 	 * Retrieves the lower tangent of the provided left and right hulls;
 	 */
 	Tangent LowerTangent(const ConvexHull & leftHull, const ConvexHull & rightHull) {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
-		uint64 leftIndex = leftHull.RightVertexIndex();
-		uint64 rightIndex = rightHull.LeftVertexIndex();
-		uint64 nextLeft = leftHull.NextIndex(leftIndex);
-		uint64 nextRight = rightHull.PrevIndex(rightIndex);
-		
-		bool done;
-		int8 winding;
-
-		do {
-			done = true;
-
-			// Loop until the next left vertex is above the tangent
-			while (true) {
-				winding = IsCWWinding(
-					leftHull[leftIndex], rightHull[rightIndex], leftHull[nextLeft]);
-
-				// If the next left is above the tangent, then we've reached the apex
-				if (winding < 0) {
-					break;
-				} else if (winding == 0) {
-					// In the case of collinear left, next left, and right points, select
-					// the point with the shortest distance
-					double newDist =
-						(leftHull[nextLeft]->Point - rightHull[rightIndex]->Point).Length2();
-					double oldDist =
-						(leftHull[leftIndex]->Point - rightHull[rightIndex]->Point).Length2();
-					if (newDist >= oldDist)
-						break;
-				}
-				nextLeft = leftHull.NextIndex(nextLeft);
-				leftIndex = leftHull.NextIndex(leftIndex);
-			}
-			
-			// Loop until the next right vertex is above the tangent
-			while (true) {
-				winding = IsCWWinding(
-					leftHull[leftIndex], rightHull[rightIndex], rightHull[nextRight]);
-
-				// If the next right is above the tangent, then we've reached the apex
-				if (winding < 0) {
-					break;
-				} else if (winding == 0) {
-					// In the case of collinear left, right, and next right points, select
-					// the point with the shortest distance
-					double newDist =
-						(rightHull[nextRight]->Point - leftHull[leftIndex]->Point).Length2();
-					double oldDist =
-						(rightHull[rightIndex]->Point - leftHull[leftIndex]->Point).Length2();
-					if (newDist >= oldDist)
-						break;
-				}
-				rightIndex = rightHull.PrevIndex(rightIndex);
-				nextRight = rightHull.PrevIndex(nextRight);
-				done = false;
-			}
-		} while (!done);
-
-		return std::make_pair(leftIndex, rightIndex);
+		return FindTangent(
+			leftHull, rightHull,
+			[] (const ConvexHull & leftHull, const uint64 index) {
+				return leftHull.NextIndex(index);
+			},
+			[] (const ConvexHull & rightHull, const uint64 index) {
+				return rightHull.PrevIndex(index);
+			},
+			[] (Vertex * const nextVert, Vertex * const leftVert, Vertex * const rightVert) {
+				return IsCWWinding(leftVert, rightVert, nextVert);
+			});
 	}
 
 	ConvexHull MergeConvexHulls(
@@ -389,6 +378,7 @@ namespace utils {
 				minSubdivisionDepth, subdivisionDepth + 1);
 			auto upperTangent = UpperTangent(leftHull, rightHull);
 			auto lowerTangent = LowerTangent(leftHull, rightHull);
+
 			if (subdivisionDepth >= minSubdivisionDepth) {
 				MergeDelaunay(
 					results, sortedVertices,
@@ -456,7 +446,7 @@ namespace utils {
 
 		// Run if at least 2 vertex
 		if (graph.VertexCount() > 1)
-			graph.ConvexHull = Divide(graph, copiedVertices, 0, graph.VertexCount() - 1, 0);
+			graph.ConvexHull = Divide(graph, copiedVertices, 0, graph.VertexCount() - 1, 4);
 		//Test(graph);
 	}
 }
