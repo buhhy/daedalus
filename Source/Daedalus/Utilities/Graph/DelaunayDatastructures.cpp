@@ -68,7 +68,7 @@ namespace utils {
 		Circle2D Face::GetCircumcircle() const {
 			if (IsDegenerate()) return Circle2D({ 0, 0 }, 0.0);
 			return CalculateCircumcircle(
-				Vertices[0]->Point, Vertices[1]->Point, Vertices[2]->Point);
+				Vertices[0]->GetPoint(), Vertices[1]->GetPoint(), Vertices[2]->GetPoint());
 		}
 
 
@@ -96,19 +96,19 @@ namespace utils {
 		
 		
 		int64 ConvexHull::LeftVertexIndex() const {
-			return MinIndex([] (Vertex * const v) { return v->Point.X; });
+			return MinIndex([] (Vertex * const v) { return v->GetPoint().X; });
 		}
 		
 		int64 ConvexHull::RightVertexIndex() const {
-			return MinIndex([] (Vertex * const v) { return -v->Point.X; });
+			return MinIndex([] (Vertex * const v) { return -v->GetPoint().X; });
 		}
 		
 		int64 ConvexHull::TopVertexIndex() const {
-			return MinIndex([] (Vertex * const v) { return v->Point.Y; });
+			return MinIndex([] (Vertex * const v) { return v->GetPoint().Y; });
 		}
 		
 		int64 ConvexHull::BottomVertexIndex() const {
-			return MinIndex([] (Vertex * const v) { return -v->Point.Y; });
+			return MinIndex([] (Vertex * const v) { return -v->GetPoint().Y; });
 		}
 
 		int64 ConvexHull::MinIndex(std::function<double (Vertex * const)> valueOf) const {
@@ -218,8 +218,8 @@ namespace utils {
 		uint64 index = 0;
 		Face * CCWFace = NULL, * CWFace = NULL;
 
-		Vector2<> CCWCompareEdge = pivotCWPoint->Point - pivotPoint->Point;
-		Vector2<> CWCompareEdge = pivotCCWPoint->Point - pivotPoint->Point;
+		Vector2<> CCWCompareEdge = pivotCWPoint->GetPoint() - pivotPoint->GetPoint();
+		Vector2<> CWCompareEdge = pivotCCWPoint->GetPoint() - pivotPoint->GetPoint();
 
 		// Traverse faces currently at pivot point in CCW fashion, keeping the smallest
 		// available CCW angle, as well as the smallest available CW angle.
@@ -239,7 +239,8 @@ namespace utils {
 				CCWFace = otherFace;
 				CCWMinAngle = -10;
 			} else {
-				auto angle = FindAngle(CCWCompareEdge, otherPivotCCW->Point - pivotPoint->Point);
+				auto angle = FindAngle(
+					CCWCompareEdge, otherPivotCCW->GetPoint() - pivotPoint->GetPoint());
 				// Account for rounding errors?
 				if (angle > M_PI * 2 - 1E-3) angle = 0;
 				if (angle < CCWMinAngle) {
@@ -255,7 +256,7 @@ namespace utils {
 				CWMinAngle = -10;
 				CWVertexIndex = otherPivotCCWIndex;
 			} else {
-				auto angle = FindAngle(otherPivotCW->Point - pivotPoint->Point, CWCompareEdge);
+				auto angle = FindAngle(otherPivotCW->GetPoint() - pivotPoint->GetPoint(), CWCompareEdge);
 				// Account for rounding errors?
 				if (angle > M_PI * 2 - 1E-3) angle = 0;
 				if (angle < CWMinAngle) {
@@ -282,7 +283,7 @@ namespace utils {
 		return std::make_pair((Face *) NULL, -1);
 	}
 
-	void DelaunayGraph::RemoveFace(Face * const face, const uint8 pivotIndex) {
+	void DelaunayGraph::AdjustRemovedFaceAdjacencies(Face * const face, const uint8 pivotIndex) {
 		Vertex * const pivot = face->Vertices[pivotIndex];
 		Face * const CCWFace = face->GetAdjacentFaceCCW(pivot);
 		Face * const CWFace = face->GetAdjacentFaceCW(pivot);
@@ -297,8 +298,21 @@ namespace utils {
 	}
 
 	Vertex * DelaunayGraph::AddVertex(Vertex * const vertex) {
+		auto id = vertex->VertexId();
 		Vertices.insert(vertex);
+		IdVertexMap.insert({ id, vertex });
+		if (id>= CurrentVertexId)
+			CurrentVertexId = id + 1;
 		return vertex;
+	}
+
+	Face * DelaunayGraph::AddFace(Face * const face) {
+		auto id = face->FaceId();
+		Faces.insert(face);
+		IdFaceMap.insert({ id, face });
+		if (id >= CurrentFaceId)
+			CurrentFaceId = id + 1;
+		return face;
 	}
 
 	Face * DelaunayGraph::AddFace(Vertex * const v1, Vertex * const v2) {
@@ -314,8 +328,8 @@ namespace utils {
 			if (adjust.first != NULL)
 				adjust.first->AdjacentFaces[adjust.second] = newFace;
 		}
-			
-		Faces.insert(newFace);
+
+		AddFace(newFace);
 
 		return newFace;
 	}
@@ -360,7 +374,7 @@ namespace utils {
 				adjust.first->AdjacentFaces[adjust.second] = newFace;
 		}
 
-		Faces.insert(newFace);
+		AddFace(newFace);
 
 		return newFace;
 	}
@@ -369,8 +383,9 @@ namespace utils {
 		if (Faces.count(face) == 0)
 			return false;
 		for (uint8 i = 0; i < face->VertexCount(); i++)
-			RemoveFace(face, i);
+			AdjustRemovedFaceAdjacencies(face, i);
 		Faces.erase(face);
+		IdFaceMap.erase(face->FaceId());
 		delete face;
 		return true;
 	}

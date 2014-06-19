@@ -26,6 +26,7 @@ namespace utils {
 		) : Point1(p1), Point2(p2), Point3(p3) {}
 	};
 
+	// TODO: get rid of this
 	struct GridCell {
 		float values[8];
 		Vector3<> points[8];

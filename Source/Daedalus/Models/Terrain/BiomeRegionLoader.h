@@ -24,8 +24,18 @@ namespace terrain {
 
 		BiomeGeneratorParameters BiomeGenParams;
 
-		TSharedPtr<BiomeRegionData> LoadBiomeRegionFromDisk(const BiomeOffsetVector & offset);
-		TSharedRef<BiomeRegionData> GenerateMissingBiomeRegion(const BiomeOffsetVector & offset);
+		TSharedPtr<BiomeRegionData> LoadBiomeRegionFromDisk(
+			const BiomeOffsetVector & offset) const;
+		TSharedRef<BiomeRegionData> GenerateMissingBiomeRegion(
+			const BiomeOffsetVector & offset) const;
+
+		void MergeRegionEdge(
+			const BiomeRegionData & r1, const BiomeRegionData & r2) const;
+		void MergeRegionCorner(
+			const BiomeRegionData & tl,
+			const BiomeRegionData & tr,
+			const BiomeRegionData & bl,
+			const BiomeRegionData & br) const;
 
 	public:
 		BiomeRegionLoader(const BiomeGeneratorParameters & params);

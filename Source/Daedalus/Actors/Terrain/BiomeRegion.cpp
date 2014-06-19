@@ -83,7 +83,7 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	std::vector<utils::Triangle> pointTries;
 	auto verts = graph.GetVertices();
 	for (auto v : verts) {
-		tempVector31.Reset(v->Point * scale, 0);
+		tempVector31.Reset(v->GetPoint() * scale, 0);
 		utils::CreatePoint(pointTries, tempVector31, 0.8);
 	}
 	for (auto it : pointTries) triangles.Add(FMeshTriangle(it, vertexColor));
@@ -95,8 +95,8 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	//	if (j == hull.size())
 	//		j = 0;
 
-	//	tempVector31.Reset(hull[i]->Point * scale, 0);
-	//	tempVector32.Reset(hull[j]->Point * scale, 0);
+	//	tempVector31.Reset(hull[i]->GetPoint() * scale, 0);
+	//	tempVector32.Reset(hull[j]->GetPoint() * scale, 0);
 	//	utils::CreateLine(edgeTries, tempVector31, tempVector32, 3);
 	//}
 	//for (auto it : edgeTries) triangles.Add(FMeshTriangle(it, edgeColor));
@@ -105,8 +105,8 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	std::vector<utils::Triangle> edgeTries;
 	auto edges = graph.GetUniqueEdges();
 	for (auto e : edges) {
-		tempVector31.Reset(e.Start->Point * scale, 0);
-		tempVector32.Reset(e.End->Point * scale, 0);
+		tempVector31.Reset(e.Start->GetPoint() * scale, 0);
+		tempVector32.Reset(e.End->GetPoint() * scale, 0);
 		utils::CreateLine(edgeTries, tempVector31, tempVector32, 0.25);
 	}
 	for (auto it : edgeTries) triangles.Add(FMeshTriangle(it, edgeColor));
@@ -116,9 +116,9 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	auto faces = graph.GetFaces();
 	for (auto f : faces) {
 		if (!f->IsDegenerate()) {
-			tempVector31.Reset(f->Vertices[0]->Point * scale, 0);
-			tempVector32.Reset(f->Vertices[1]->Point * scale, 0);
-			tempVector33.Reset(f->Vertices[2]->Point * scale, 0);
+			tempVector31.Reset(f->Vertices[0]->GetPoint() * scale, 0);
+			tempVector32.Reset(f->Vertices[1]->GetPoint() * scale, 0);
+			tempVector33.Reset(f->Vertices[2]->GetPoint() * scale, 0);
 			faceTries.push_back(utils::Triangle(tempVector31, tempVector32, tempVector33));
 		}
 	}

@@ -56,11 +56,11 @@ namespace utils {
 				faceIt = results.FindFace(leftCandidate, baseLeft);
 
 				if (faceIt == NULL || faceIt->VertexCount() < 3) {
-					left = FindWinding(baseRight->Point, baseLeft->Point, leftCandidate->Point) > 0;
+					left = FindWinding(baseRight->GetPoint(), baseLeft->GetPoint(), leftCandidate->GetPoint()) > 0;
 				} else {
 					do {
 						// Only accept candidates that form angles < 180
-						if (FindWinding(baseRight->Point, baseLeft->Point, leftCandidate->Point) <= 0)
+						if (FindWinding(baseRight->GetPoint(), baseLeft->GetPoint(), leftCandidate->GetPoint()) <= 0)
 							break;
 						nextCandidate = faceIt->GetCCWVertex(leftCandidate);
 						// If there is no next candidate, it must mean that there was no immediate face
@@ -71,9 +71,9 @@ namespace utils {
 							break;
 						}
 						circumcircle = CalculateCircumcircle(
-							leftCandidate->Point, baseRight->Point, baseLeft->Point);
+							leftCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint());
 						// For ambiguous points, don't delete
-						if (IsWithinCircumcircle(nextCandidate->Point, circumcircle) > 0) {
+						if (IsWithinCircumcircle(nextCandidate->GetPoint(), circumcircle) > 0) {
 							// If within circumcircle, we need to delete edge
 							auto faceNext = faceIt->GetAdjacentFaceCCW(baseLeft);
 							if (faceIt == faceNext) {
@@ -105,11 +105,11 @@ namespace utils {
 				faceIt = results.FindFace(rightCandidate, baseRight);
 
 				if (faceIt == NULL || faceIt->VertexCount() < 3) {
-					right = FindWinding(rightCandidate->Point, baseRight->Point, baseLeft->Point) > 0;
+					right = FindWinding(rightCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint()) > 0;
 				} else {
 					do {
 						// Only accept candidates that form angles < 180
-						if (FindWinding(rightCandidate->Point, baseRight->Point, baseLeft->Point) <= 0)
+						if (FindWinding(rightCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint()) <= 0)
 							break;
 						nextCandidate = faceIt->GetCWVertex(rightCandidate);
 						// If there is no next candidate, it must mean that there was no immediate face
@@ -120,9 +120,9 @@ namespace utils {
 							break;
 						}
 						circumcircle = CalculateCircumcircle(
-							rightCandidate->Point, baseRight->Point, baseLeft->Point);
+							rightCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint());
 						// For ambiguous points, don't delete
-						if (IsWithinCircumcircle(nextCandidate->Point, circumcircle) > 0) {
+						if (IsWithinCircumcircle(nextCandidate->GetPoint(), circumcircle) > 0) {
 							// If within circumcircle, we need to delete edge
 							auto faceNext = faceIt->GetAdjacentFaceCW(baseRight);
 							if (faceIt == faceNext) {
@@ -149,9 +149,9 @@ namespace utils {
 			if (takeLeft && takeRight) {
 				// If 2 potential candidates, select one of the 2 candidates, left first
 				circumcircle = CalculateCircumcircle(
-					leftCandidate->Point, baseRight->Point, baseLeft->Point);
+					leftCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint());
 
-				if (left && IsWithinCircumcircle(rightCandidate->Point, circumcircle) > 0) {
+				if (left && IsWithinCircumcircle(rightCandidate->GetPoint(), circumcircle) > 0) {
 					// If the right candidate is within the left circumcircle, right is selected
 					takeLeft = false;
 				} else {
@@ -222,10 +222,10 @@ namespace utils {
 				} else if (winding == 0) {
 					// In the case of collinear left, next left, and right points, select
 					// the point with the shortest distance
-					double newDist =
-						(leftHull[nextLeft]->Point - rightHull[rightIndex]->Point).Length2();
-					double oldDist =
-						(leftHull[leftIndex]->Point - rightHull[rightIndex]->Point).Length2();
+					double newDist = (leftHull[nextLeft]->GetPoint() -
+						rightHull[rightIndex]->GetPoint()).Length2();
+					double oldDist = (leftHull[leftIndex]->GetPoint() -
+						rightHull[rightIndex]->GetPoint()).Length2();
 					if (newDist >= oldDist)
 						break;
 				}
@@ -244,10 +244,10 @@ namespace utils {
 				} else if (winding == 0) {
 					// In the case of collinear left, right, and next right points, select
 					// the point with the shortest distance
-					double newDist =
-						(rightHull[nextRight]->Point - leftHull[leftIndex]->Point).Length2();
-					double oldDist =
-						(rightHull[rightIndex]->Point - leftHull[leftIndex]->Point).Length2();
+					double newDist = (rightHull[nextRight]->GetPoint() -
+						leftHull[leftIndex]->GetPoint()).Length2();
+					double oldDist = (rightHull[rightIndex]->GetPoint() -
+						leftHull[leftIndex]->GetPoint()).Length2();
 					if (newDist >= oldDist)
 						break;
 				}
@@ -418,7 +418,7 @@ namespace utils {
 			testVertices.begin(),
 			testVertices.end(),
 			[] (Vertex * const p1, Vertex * const p2) {
-				return p1->Point < p2->Point;
+				return p1->GetPoint() < p2->GetPoint();
 			});
 
 		for (auto i = 0u; i < testPoints.size(); i++)
@@ -428,25 +428,25 @@ namespace utils {
 	}
 
 	void BuildDelaunay2D(DelaunayGraph & graph, const std::vector<Vector2<> > & inputPoints) {
-		//std::vector<Vertex *> copiedVertices;
+		std::vector<Vertex *> copiedVertices;
 
-		//for (auto i = 0u; i < inputPoints.size(); i++)
-		//	copiedVertices.push_back(new Vertex(inputPoints[i], i));
+		for (auto i = 0u; i < inputPoints.size(); i++)
+			copiedVertices.push_back(new Vertex(inputPoints[i], i));
 
-		//// Sort by X from left to right, then Y from top down to resolve conflicts
-		//std::sort(
-		//	copiedVertices.begin(),
-		//	copiedVertices.end(),
-		//	[] (Vertex * const p1, Vertex * const p2) {
-		//		return p1->Point < p2->Point;
-		//	});
+		// Sort by X from left to right, then Y from top down to resolve conflicts
+		std::sort(
+			copiedVertices.begin(),
+			copiedVertices.end(),
+			[] (Vertex * const p1, Vertex * const p2) {
+				return p1->GetPoint() < p2->GetPoint();
+			});
 
-		//for (auto it = copiedVertices.cbegin(); it != copiedVertices.cend(); it++)
-		//	graph.AddVertex(*it);
+		for (auto it = copiedVertices.cbegin(); it != copiedVertices.cend(); it++)
+			graph.AddVertex(*it);
 
-		//// Run if at least 2 vertex
-		//if (graph.VertexCount() > 1)
-		//	graph.ConvexHull = Divide(graph, copiedVertices, 0, graph.VertexCount() - 1, 0);
-		Test(graph);
+		// Run if at least 2 vertex
+		if (graph.VertexCount() > 1)
+			graph.ConvexHull = Divide(graph, copiedVertices, 0, graph.VertexCount() - 1, 0);
+		//Test(graph);
 	}
 }

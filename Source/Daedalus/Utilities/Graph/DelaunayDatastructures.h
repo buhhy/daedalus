@@ -6,6 +6,7 @@
 #include <array>
 #include <deque>
 #include <unordered_set>
+#include <unordered_map>
 #include <functional>
 
 namespace utils {
@@ -17,18 +18,25 @@ namespace utils {
 		private:
 			uint64 NumFaces;
 			uint64 Id;
+			Vector2<> Point;
+			
+
+			Vertex(const Vector2<> & point, uint64 id, Face * inf, uint64 numFaces) :
+				Point(point), IncidentFace(inf), Id(id), NumFaces(numFaces)
+			{}
 
 		public:
-			Vector2<> Point;
 			Face * IncidentFace;
 
 			Vertex(const Vector2<> & point, uint64 id) :
-				Point(point), IncidentFace(NULL), Id(id), NumFaces(0)
+				Vertex(point, id, NULL, 0)
 			{}
+			Vertex(const Vertex & copy) : Vertex(copy.Point, copy.Id, NULL, copy.NumFaces) {}
 
 			uint64 AddFace(Face * const face);
 			uint64 RemoveFace(Face * const face);
 
+			inline Vector2<> GetPoint() const { return Point; }
 			inline uint64 VertexId() const { return Id; };
 			inline uint64 FaceCount() const { return NumFaces; }
 
@@ -78,11 +86,13 @@ namespace utils {
 
 			Face(Vertex * const v1, Vertex * const v2, Vertex * const v3, const uint64 id) :
 				Vertices({{ v1, v2, v3 }}),
-				AdjacentFaces({{ this, this, this }}),
+				AdjacentFaces({{ this, this, v3 == NULL ? NULL : this }}),
 				bIsDegenerate(v3 == NULL),
 				NumVertices(v3 == NULL ? 2 : 3),
 				Id(id)
 			{}
+
+			Face(const Face & copy) : Face(copy.Vertices[0], copy.Vertices[1], copy.Vertices[2], copy.Id) {}
 
 			inline uint8 GetCWVertexIndex(const uint8 current) const {
 				return (current + 1) % NumVertices;
@@ -137,6 +147,14 @@ namespace utils {
 				const bool isCw) const;
 		public:
 			ConvexHull() : bIsCollinear(false) {}
+			ConvexHull(std::vector<Vertex *> hullVertices) : HullVertices(hullVertices) {}
+
+			inline std::vector<Vertex *>::const_iterator CBegin() const {
+				return HullVertices.cbegin();
+			}
+			inline std::vector<Vertex *>::const_iterator CEnd() const {
+				return HullVertices.cend();
+			}
 
 			inline Vertex * operator [] (const uint64 index) { return HullVertices[index]; }
 			inline Vertex * const operator [] (const uint64 index) const {
@@ -145,6 +163,11 @@ namespace utils {
 
 			inline ConvexHull & operator = (const ConvexHull & other) {
 				HullVertices = other.HullVertices;
+				return *this;
+			}
+
+			inline ConvexHull & operator = (const std::vector<Vertex *> & other) {
+				HullVertices = other;
 				return *this;
 			}
 
@@ -189,7 +212,7 @@ namespace utils {
 		 * Returns 1: CW, 0: Colinear, -1: CCW
 		 */
 		inline int8 IsCWWinding(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
-			return FindWinding(v1->Point, v2->Point, v3->Point);
+			return FindWinding(v1->GetPoint(), v2->GetPoint(), v3->GetPoint());
 		}
 	}
 
@@ -197,6 +220,11 @@ namespace utils {
 	private:
 		std::unordered_set<delaunay::Vertex *> Vertices;
 		std::unordered_set<delaunay::Face *> Faces;
+
+		// These hashmaps are used for fast lookup of vertices and faces by ID, they should
+		// be kept up-to-date with the vertex and face lists.
+		std::unordered_map<uint64, delaunay::Vertex *> IdVertexMap;
+		std::unordered_map<uint64, delaunay::Face *> IdFaceMap;
 
 		uint64 CurrentFaceId;
 		uint64 CurrentVertexId;
@@ -209,13 +237,47 @@ namespace utils {
 		 */
 		std::pair<delaunay::Face *, int8> AdjustNewFaceAdjacencies(
 			delaunay::Face * const newFace, const uint8 pivotIndex);
-		void RemoveFace(delaunay::Face * const face, const uint8 pivotIndex);
+		void AdjustRemovedFaceAdjacencies(delaunay::Face * const face, const uint8 pivotIndex);
 		uint64 GetNextFaceId();
 
 	public:
 		delaunay::ConvexHull ConvexHull;
 
 		DelaunayGraph() : CurrentFaceId(0), CurrentVertexId(0) {}
+		
+		DelaunayGraph(const DelaunayGraph & copy) :
+			CurrentFaceId(copy.CurrentFaceId),
+			CurrentVertexId(copy.CurrentVertexId)
+		{
+			// Add all vertices and faces in the copy graph
+			for (auto it : copy.Vertices)
+				AddVertex(new delaunay::Vertex(*it));
+			for (auto it : copy.Faces)
+				AddFace(new delaunay::Face(*it));
+
+			// Set adjacencies for all faces and vertices
+			for (auto it : copy.Vertices) {
+				IdVertexMap.at(it->VertexId())->IncidentFace =
+					IdFaceMap.at(it->IncidentFace->FaceId());
+			}
+
+			for (auto it : copy.Faces) {
+				auto & face = IdFaceMap.at(it->FaceId());
+				for (uint8 i = 0; i < face->VertexCount(); i++)
+					face->AdjacentFaces[i] = IdFaceMap.at(it->AdjacentFaces[i]->FaceId());
+			}
+
+			// Set the convex hull
+			std::vector<delaunay::Vertex *> newHullVerts;
+			std::transform(
+				ConvexHull.CBegin(),
+				ConvexHull.CEnd(),
+				newHullVerts.begin(),
+				[&] (delaunay::Vertex * const vert) {
+					return IdVertexMap.at(vert->VertexId());
+				});
+			ConvexHull = newHullVerts;
+		}
 
 		~DelaunayGraph() {
 			for (auto it : Vertices) delete it;
@@ -233,7 +295,20 @@ namespace utils {
 
 		delaunay::Face * FindFace(delaunay::Vertex * const v1, delaunay::Vertex * const v2);
 
+		/**
+		 * Adds a pre-created vertex. The ID should be provide and be unique. The current
+		 * vertex ID will be updated to avoid duplicate IDs.
+		 * TODO: perhaps this should be made private
+		 */
 		delaunay::Vertex * AddVertex(delaunay::Vertex * const vertex);
+
+		/**
+		 * Adds a pre-created floating face. The ID should be provide and be unique. The current
+		 * face ID will be updated to avoid duplicate IDs. Unlike the other methods for adding
+		 * faces, this method will not update adjacencies and is more meant for initialization.
+		 * TODO: perhaps this should be made private
+		 */
+		delaunay::Face * AddFace(delaunay::Face * const face);
 		delaunay::Face * AddFace(delaunay::Vertex * const v1, delaunay::Vertex * const v2);
 
 		/**

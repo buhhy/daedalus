@@ -4,10 +4,11 @@
 #include "DataStructures.h"
 #include "Delaunay.h"
 
+#include <array>
 #include <vector>
 
 namespace terrain {
-	typedef std::vector<utils::Vector2<>> PointSet;
+	typedef std::vector<utils::Vector2<> > PointSet;
 
 	/**
 	 * Each biome cell contains a list of 2D points that will be used in a Delaunay
@@ -41,6 +42,11 @@ namespace terrain {
 		BiomePointField PointDistribution;
 		utils::DelaunayGraph DelaunayGraph;
 
+		// Indicates whether the 8 neighboring regions have been generated yet, the array is
+		// ordered as follows: [ top, top-right, right, bottom-right, bottom, bottom-left,
+		// left, top-left ], or [ Y+, XY+, X+, X+Y-, Y-, XY-, X-, X-Y+ ]
+		std::array<bool, 8> NeighborsLoaded;
+
 		BiomeSizeVector BiomeGridSize;      // Size of the biome in grid cells
 		BiomeOffsetVector BiomeOffset;      // Biome offset from (0,0)
 
@@ -50,7 +56,8 @@ namespace terrain {
 			const BiomeOffsetVector & biomeOffset
 		) : BiomeGridSize(biomeSize),
 			BiomeOffset(biomeOffset),
-			PointDistribution(biomeSize)
+			PointDistribution(biomeSize),
+			NeighborsLoaded(std::array<bool, 8>())
 		{
 			auto toY = PointDistribution.Depth - buffer - 1;
 			auto toX = PointDistribution.Width - buffer - 1;
