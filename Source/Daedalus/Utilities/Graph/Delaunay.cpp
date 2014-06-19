@@ -393,23 +393,23 @@ namespace utils {
 	void Test(DelaunayGraph & graph) {
 		std::vector<Vector2<> > testPoints;
 		std::vector<Vertex *> testVertices;
-		testPoints.push_back({ 0.1, 0.2 });
-		testPoints.push_back({ 0.2, 0.1 });
-		testPoints.push_back({ 0.2, 0.3 });
-		testPoints.push_back({ 0.2, 0.4 });
-		testPoints.push_back({ 0.3, 0.2 });
-		testPoints.push_back({ 0.4, 0.4 });
-		testPoints.push_back({ 0.5, 0.3 });
-		testPoints.push_back({ 0.6, 0.4 });
-		testPoints.push_back({ 0.6, 0.2 });
-		testPoints.push_back({ 0.6, 0.1 });
+		//testPoints.push_back({ 0.1, 0.2 });
+		//testPoints.push_back({ 0.2, 0.1 });
+		//testPoints.push_back({ 0.2, 0.3 });
+		//testPoints.push_back({ 0.2, 0.4 });
+		//testPoints.push_back({ 0.3, 0.2 });
+		//testPoints.push_back({ 0.4, 0.4 });
+		//testPoints.push_back({ 0.5, 0.3 });
+		//testPoints.push_back({ 0.6, 0.4 });
+		//testPoints.push_back({ 0.6, 0.2 });
+		//testPoints.push_back({ 0.6, 0.1 });
 
 		
-		//testPoints.push_back({ 0.1, 0.1 });
-		//testPoints.push_back({ 0.1, 0.2 });
-		//testPoints.push_back({ 0.1, 0.3 });
-		//testPoints.push_back({ 0.2, 0.1 });
-		//testPoints.push_back({ 0.3, 0.1 });
+		testPoints.push_back({ 0.1, 0.1 });
+		testPoints.push_back({ 0.1, 0.2 });
+		testPoints.push_back({ 0.1, 0.3 });
+		testPoints.push_back({ 0.2, 0.1 });
+		testPoints.push_back({ 0.3, 0.1 });
 
 		for (auto i = 0u; i < testPoints.size(); i++)
 			testVertices.push_back(new Vertex(testPoints[i], i));
@@ -428,25 +428,25 @@ namespace utils {
 	}
 
 	void BuildDelaunay2D(DelaunayGraph & graph, const std::vector<Vector2<> > & inputPoints) {
-		std::vector<Vertex *> copiedVertices;
+		//std::vector<Vertex *> copiedVertices;
 
-		for (auto i = 0u; i < inputPoints.size(); i++)
-			copiedVertices.push_back(new Vertex(inputPoints[i], i));
+		//for (auto i = 0u; i < inputPoints.size(); i++)
+		//	copiedVertices.push_back(new Vertex(inputPoints[i], i));
 
-		// Sort by X from left to right, then Y from top down to resolve conflicts
-		std::sort(
-			copiedVertices.begin(),
-			copiedVertices.end(),
-			[] (Vertex * const p1, Vertex * const p2) {
-				return p1->Point < p2->Point;
-			});
+		//// Sort by X from left to right, then Y from top down to resolve conflicts
+		//std::sort(
+		//	copiedVertices.begin(),
+		//	copiedVertices.end(),
+		//	[] (Vertex * const p1, Vertex * const p2) {
+		//		return p1->Point < p2->Point;
+		//	});
 
-		for (auto it = copiedVertices.cbegin(); it != copiedVertices.cend(); it++)
-			graph.AddVertex(*it);
+		//for (auto it = copiedVertices.cbegin(); it != copiedVertices.cend(); it++)
+		//	graph.AddVertex(*it);
 
-		// Run if at least 2 vertex
-		if (graph.VertexCount() > 1)
-			graph.ConvexHull = Divide(graph, copiedVertices, 0, graph.VertexCount() - 1, 4);
-		//Test(graph);
+		//// Run if at least 2 vertex
+		//if (graph.VertexCount() > 1)
+		//	graph.ConvexHull = Divide(graph, copiedVertices, 0, graph.VertexCount() - 1, 0);
+		Test(graph);
 	}
 }

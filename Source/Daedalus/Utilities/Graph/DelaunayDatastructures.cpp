@@ -89,18 +89,7 @@ namespace utils {
 				bIsCollinear = IsCWWinding(v0, vert, v1) == 0;
 			}
 
-			if (bIsCollinear) {
-				// If collinear, vertices should be inserted in increasing order, if the
-				// hull is just a line, don't sort it
-				auto insertIt = std::lower_bound(
-					HullVertices.begin(), HullVertices.end(), vert,
-					[] (Vertex * const arrElem, Vertex * const compare) {
-						return arrElem->Point < compare->Point;
-					});
-				HullVertices.insert(insertIt, vert);
-			} else {
-				HullVertices.push_back(vert);
-			}
+			HullVertices.push_back(vert);
 
 			return bIsCollinear;
 		}
@@ -143,8 +132,35 @@ namespace utils {
 			const bool isCW
 		) const {
 			uint64 c = 0, size = Size();
+			uint64 count = GetRange(start, end, isCW);
+			int8 direction = (isCW ? 1 : -1);
+
 			if (bIsCollinear) {
-				int8 direction = (isCW ? 1 : -1);
+				// If the hull is collinear, iterate in the original intended direction, then
+				// ping-pong when reaching an extreme rather than loop around
+				for (int64 i = start; c < count; c++, i += direction) {
+					deque.push_back((*this)[i]);
+					if (direction < 0 && i == 0 || direction > 0 && i == size - 1)
+						direction *= -1;
+				}
+				return count;
+			} else {
+				for (int64 i = start; c < count; c++, i += direction) {
+					if (i >= (signed) size) i -= size;
+					if (i < 0) i += size;
+					deque.push_back((*this)[i]);
+				}
+				return count;
+			}
+		}
+
+		uint64 ConvexHull::GetRange(
+			const uint64 start, const uint64 end,
+			const bool isCW
+		) const {
+			uint64 size = Size();
+			int8 direction = (isCW ? 1 : -1);
+			if (bIsCollinear) {
 				int64 compare = direction * (end - start);
 				uint64 count;
 				if (compare <= 0) {
@@ -155,24 +171,12 @@ namespace utils {
 				} else {
 					count = compare + 1;
 				}
-				// If the hull is collinear, iterate in the original intended direction, then
-				// ping-pong when reaching an extreme rather than loop around
-				for (int64 i = start; c < count; c++, i += direction) {
-					deque.push_back((*this)[i]);
-					if (direction < 0 && i == 0 || direction > 0 && i == size - 1)
-						direction *= -1;
-				}
+
 				return count;
 			} else {
-				int8 direction = (isCW ? 1 : -1);
 				uint64 count = (direction * (end - start) + size) % Size() + 1;
 				if (count == 1)
 					count += size;
-				for (int64 i = start; c < count; c++, i += direction) {
-					if (i >= (signed) size) i -= size;
-					if (i < 0) i += size;
-					deque.push_back((*this)[i]);
-				}
 				return count;
 			}
 		}

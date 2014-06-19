@@ -181,6 +181,8 @@ namespace utils {
 			int64 RightVertexIndex() const;
 			int64 TopVertexIndex() const;
 			int64 BottomVertexIndex() const;
+
+			uint64 GetRange(const uint64 start, const uint64 end, const bool isCW) const;
 		};
 
 		/**
