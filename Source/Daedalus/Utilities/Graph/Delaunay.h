@@ -15,4 +15,9 @@ namespace utils {
 	void BuildDelaunay2D(
 		DelaunayGraph & graph,
 		const InputVertexList & inputPoints);
+
+	void MergeDelaunayTileEdge(
+		DelaunayGraph & leftGraph, DelaunayGraph & rightGraph,
+		const uint64 lowerTangentLeft, const uint64 lowerTangentRight,
+		const uint64 upperTangentLeft, const uint64 upperTangentRight);
 }

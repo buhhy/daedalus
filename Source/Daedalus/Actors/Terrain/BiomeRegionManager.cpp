@@ -16,8 +16,6 @@ ADDGameState * ABiomeRegionManager::GetGameState() {
 
 void ABiomeRegionManager::UpdateBiomesAt(const FVector & playerPosition) {
 	terrain::BiomeOffsetVector offset;
-	FRotator defaultRotation(0, 0, 0);
-	FActorSpawnParameters defaultParameters;
 	auto chunkLoader = GetGameState()->BiomeRegionLoader;
 	auto genParams = chunkLoader->GetGeneratorParameters();
 
@@ -49,31 +47,55 @@ void ABiomeRegionManager::UpdateBiomesAt(const FVector & playerPosition) {
 			// Biome is cached already
 			if (LocalCache.count(offset) > 0) {
 			} else {
-				auto data = chunkLoader->GetBiomeRegionAt(offset);
-				auto position = To3D(genParams.ToRealCoordinates(data->BiomeOffset), RenderHeight);
-
-				UE_LOG(LogTemp, Error, TEXT("Placing biome at %f %f %f"), position.X, position.Y, position.Z)
-				ABiomeRegion * newRegion = GetWorld()->SpawnActor<ABiomeRegion>(
-					ABiomeRegion::StaticClass(), position, defaultRotation, defaultParameters);
-				newRegion->InitializeBiomeRegion(genParams.BiomeScale);
-				newRegion->SetBiomeRegionData(data);
-				LocalCache.insert({ offset, newRegion });
+				ReloadRegionAt(offset);
 			}
 		}
+	}
+}
+
+void ABiomeRegionManager::ReloadRegionAt(const terrain::BiomeOffsetVector & offset) {
+	auto chunkLoader = GetGameState()->BiomeRegionLoader;
+	auto genParams = chunkLoader->GetGeneratorParameters();
+	auto data = chunkLoader->GetBiomeRegionAt(offset);
+	auto position = To3D(genParams.ToRealCoordinates(data->BiomeOffset), RenderHeight);
+	FRotator defaultRotation(0, 0, 0);
+	FActorSpawnParameters defaultParameters;
+
+	UE_LOG(LogTemp, Error, TEXT("Placing biome at %f %f %f"), position.X, position.Y, position.Z)
+	ABiomeRegion * newRegion = GetWorld()->SpawnActor<ABiomeRegion>(
+		ABiomeRegion::StaticClass(), position, defaultRotation, defaultParameters);
+	newRegion->InitializeBiomeRegion(genParams.BiomeScale);
+	newRegion->SetBiomeRegionData(data);
+	LocalCache.insert({ offset, newRegion });
+}
+
+void ABiomeRegionManager::DeleteRegionAt(const terrain::BiomeOffsetVector & offset) {
+	if (LocalCache.count(offset) > 0) {
+		LocalCache.at(offset)->Destroy();
+		LocalCache.erase(offset);
 	}
 }
 
 void ABiomeRegionManager::BeginPlay() {
 	Super::BeginPlay();
 	GetGameState()->EventBus->AddListener(events::E_PlayerMovement, this);
+	GetGameState()->EventBus->AddListener(events::E_BiomeRegionUpdate, this);
 }
 
 void ABiomeRegionManager::HandleEvent(
 	const events::EventType type,
 	const TSharedRef<events::EventData> & data
 ) {
-	auto castedData = StaticCastSharedRef<events::EPlayerMovement>(data);
-	auto position = castedData->Source->GetActorLocation();
-	//UE_LOG(LogTemp, Warning, TEXT("Player position: %f %f %f"), position.X, position.Y, position.Z);
-	UpdateBiomesAt(position);
+	if (type == events::E_PlayerMovement) {
+		auto castedData = StaticCastSharedRef<events::EPlayerMovement>(data);
+		auto position = castedData->Source->GetActorLocation();
+		//UE_LOG(LogTemp, Warning, TEXT("Player position: %f %f %f"), position.X, position.Y, position.Z);
+		UpdateBiomesAt(position);
+	} else if (type == events::E_BiomeRegionUpdate) {
+		auto castedData = StaticCastSharedRef<events::EBiomeRegionUpdate>(data);
+		for (auto offset : castedData->UpdatedOffsets) {
+			DeleteRegionAt(offset);
+			//ReloadRegionAt(offset);
+		}
+	}
 }

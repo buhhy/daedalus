@@ -25,6 +25,8 @@ private:
 
 	ADDGameState * GetGameState();
 	void UpdateBiomesAt(const FVector & playerPosition);
+	void ReloadRegionAt(const terrain::BiomeOffsetVector & offset);
+	void DeleteRegionAt(const terrain::BiomeOffsetVector & offset);
 
 public:
 	virtual void HandleEvent(

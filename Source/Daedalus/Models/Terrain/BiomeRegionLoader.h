@@ -4,6 +4,7 @@
 #include "BiomeRegionData.h"
 #include "TerrainDataStructures.h"
 #include "DataStructures.h"
+#include "EventBus.h"
 
 namespace terrain {
 	typedef std::unordered_map<
@@ -23,22 +24,27 @@ namespace terrain {
 		BiomeRegionCache LoadedBiomeRegionCache;
 
 		BiomeGeneratorParameters BiomeGenParams;
+		TSharedRef<events::EventBus> EventBus;
+
 
 		TSharedPtr<BiomeRegionData> LoadBiomeRegionFromDisk(
 			const BiomeOffsetVector & offset) const;
 		TSharedRef<BiomeRegionData> GenerateMissingBiomeRegion(
 			const BiomeOffsetVector & offset) const;
 
-		void MergeRegionEdge(
-			const BiomeRegionData & r1, const BiomeRegionData & r2) const;
-		void MergeRegionCorner(
+		bool MergeRegionEdge(BiomeRegionData & r1, BiomeRegionData & r2);
+		bool MergeRegionCorner(
 			const BiomeRegionData & tl,
 			const BiomeRegionData & tr,
 			const BiomeRegionData & bl,
-			const BiomeRegionData & br) const;
+			const BiomeRegionData & br);
+		std::vector<BiomeOffsetVector> MergeRegion(
+			TSharedRef<BiomeRegionData> targetRegion, const BiomeOffsetVector & biomeOffset);
 
 	public:
-		BiomeRegionLoader(const BiomeGeneratorParameters & params);
+		BiomeRegionLoader(
+			const BiomeGeneratorParameters & params,
+			TSharedRef<events::EventBus> eventBus);
 		~BiomeRegionLoader();
 
 		const BiomeGeneratorParameters & GetGeneratorParameters() const;

@@ -18,10 +18,24 @@ namespace utils {
 		const Tangent & upperTangent,
 		const Tangent & lowerTangent
 	) {
-		bool isSame = &leftGraph == &rightGraph;
-		bool left, right;
+		const bool isSame = &leftGraph == &rightGraph;
+		bool foundLeft, foundRight;
 		bool takeLeft, takeRight;
 		bool isLeftDone = false, isRightDone = false;
+
+		const Vector2<int64> rightOffset = rightGraph.GraphOffset() - leftGraph.GraphOffset();
+
+		// If the left and right graphs are different, we need to the add an offset to the
+		// right graph since coordinates are local to the tile, and not absolute.
+		const auto addRightOffset = [&] (const Vector2<> & input) -> Vector2<> {
+			return isSame ? input : Vector2<>(rightOffset.X + input.X, rightOffset.Y + input.Y);
+		};
+
+		// Ditto for the left graph, however we use the left tile as (0, 0) for simplicity,
+		// so this is only useful when adding ghost vertices for the right tile.
+		const auto addLeftOffset = [&] (const Vector2<> & input) -> Vector2<> {
+			return isSame ? input : Vector2<>(-rightOffset.X + input.X, -rightOffset.Y + input.Y);
+		};
 
 		std::vector<std::array<Vertex *, 3> > leftAddedFaces;
 		std::vector<std::array<Vertex *, 3> > rightAddedFaces;
@@ -43,34 +57,42 @@ namespace utils {
 		Face * faceIt = NULL;
 
 		do {
-			left = false, right = false;
+			foundLeft = false, foundRight = false;
 
 			if (isLeftDone) {
 				// If left side is finished, there is no need to change the left candidate,
 				// it will always be the last one used
-				left = false;
+				foundLeft = false;
 			} else {
 				// Get left candidate
 				leftCandidate = leftVertexQueue.front();
 				faceIt = leftGraph.FindFace(leftCandidate, baseLeft);
 
 				if (faceIt == NULL || faceIt->VertexCount() < 3) {
-					left = FindWinding(baseRight->GetPoint(), baseLeft->GetPoint(), leftCandidate->GetPoint()) > 0;
+					foundLeft = FindWinding(
+						addRightOffset(baseRight->GetPoint()),
+						baseLeft->GetPoint(),
+						leftCandidate->GetPoint()) > 0;
 				} else {
 					do {
 						// Only accept candidates that form angles < 180
-						if (FindWinding(baseRight->GetPoint(), baseLeft->GetPoint(), leftCandidate->GetPoint()) <= 0)
+						if (FindWinding(
+								addRightOffset(baseRight->GetPoint()),
+								baseLeft->GetPoint(),
+								leftCandidate->GetPoint()) <= 0)
 							break;
 						nextCandidate = faceIt->GetCCWVertex(leftCandidate);
 						// If there is no next candidate, it must mean that there was no immediate face
 						// counter-clockwise from the current face. Thus there is at least a 180 deg
 						// angle to next possible candidate.
 						if (nextCandidate == NULL) {
-							left = true;
+							foundLeft = true;
 							break;
 						}
 						auto circumcircle = CalculateCircumcircle(
-							leftCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint());
+							leftCandidate->GetPoint(),
+							addRightOffset(baseRight->GetPoint()),
+							baseLeft->GetPoint());
 						// For ambiguous points, don't delete
 						if (IsWithinCircumcircle(nextCandidate->GetPoint(), circumcircle) > 0) {
 							// If within circumcircle, we need to delete edge
@@ -79,7 +101,7 @@ namespace utils {
 								// This is the only face attached to the left base vertex
 								leftGraph.RemoveFace(faceIt);
 								faceIt = NULL;
-								left = true;
+								foundLeft = true;
 							} else {
 								leftGraph.RemoveFace(faceIt);
 								faceIt = faceNext;
@@ -88,47 +110,56 @@ namespace utils {
 							leftCandidate = nextCandidate;
 						} else {
 							// Otherwise, this point is valid, and should be submitted as candidate
-							left = true;
+							foundLeft = true;
 						}
-					} while (faceIt != NULL && !left);
+					} while (faceIt != NULL && !foundLeft);
 				}
 			}
 
 			if (isRightDone) {
 				// If right side is finished, there is no need to change the right candidate,
 				// it will always be the last one used
-				right = false;
+				foundRight = false;
 			} else {
 				// Get right candidate
 				rightCandidate = rightVertexQueue.front();
 				faceIt = leftGraph.FindFace(rightCandidate, baseRight);
 
 				if (faceIt == NULL || faceIt->VertexCount() < 3) {
-					right = FindWinding(rightCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint()) > 0;
+					foundRight = FindWinding(
+						addRightOffset(rightCandidate->GetPoint()),
+						addRightOffset(baseRight->GetPoint()),
+						baseLeft->GetPoint()) > 0;
 				} else {
 					do {
 						// Only accept candidates that form angles < 180
-						if (FindWinding(rightCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint()) <= 0)
+						if (FindWinding(
+								addRightOffset(rightCandidate->GetPoint()),
+								addRightOffset(baseRight->GetPoint()),
+								baseLeft->GetPoint()) <= 0)
 							break;
 						nextCandidate = faceIt->GetCWVertex(rightCandidate);
 						// If there is no next candidate, it must mean that there was no immediate face
 						// clockwise from the current face. Thus there is at least a 180 deg angle to
 						// next possible candidate.
 						if (nextCandidate == NULL) {
-							right = true;
+							foundRight = true;
 							break;
 						}
 						auto circumcircle = CalculateCircumcircle(
-							rightCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint());
+							addRightOffset(rightCandidate->GetPoint()),
+							addRightOffset(baseRight->GetPoint()),
+							baseLeft->GetPoint());
 						// For ambiguous points, don't delete
-						if (IsWithinCircumcircle(nextCandidate->GetPoint(), circumcircle) > 0) {
+						if (IsWithinCircumcircle(
+								addRightOffset(nextCandidate->GetPoint()), circumcircle) > 0) {
 							// If within circumcircle, we need to delete edge
 							auto faceNext = faceIt->GetAdjacentFaceCW(baseRight);
 							if (faceIt == faceNext) {
 								// This is the only face attached to the right base vertex
 								leftGraph.RemoveFace(faceIt);
 								faceIt = NULL;
-								right = true;
+								foundRight = true;
 							} else {
 								leftGraph.RemoveFace(faceIt);
 								faceIt = faceNext;
@@ -137,24 +168,27 @@ namespace utils {
 							rightCandidate = nextCandidate;
 						} else {
 							// Otherwise, this point is valid, and should be submitted as candidate
-							right = true;
+							foundRight = true;
 						}
-					} while (faceIt != NULL && !right);
+					} while (faceIt != NULL && !foundRight);
 				}
 			}
 
-			takeLeft = left; takeRight = right;
+			takeLeft = foundLeft; takeRight = foundRight;
 
 			if (takeLeft && takeRight) {
 				// If 2 potential candidates, select one of the 2 candidates, left first
 				auto circumcircle = CalculateCircumcircle(
-					leftCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint());
+					leftCandidate->GetPoint(),
+					addRightOffset(baseRight->GetPoint()),
+					baseLeft->GetPoint());
 
-				if (left && IsWithinCircumcircle(rightCandidate->GetPoint(), circumcircle) > 0) {
+				if (foundLeft && IsWithinCircumcircle(
+						addRightOffset(rightCandidate->GetPoint()), circumcircle) > 0) {
 					// If the right candidate is within the left circumcircle, right is selected
 					takeLeft = false;
 				} else {
-				// Otherwise, left candidate is selected
+					// Otherwise, left candidate is selected
 					takeRight = false;
 				}
 			}
@@ -445,5 +479,17 @@ namespace utils {
 		if (graph.VertexCount() > 1)
 			graph.ConvexHull = Divide(graph, copiedVertices, 0, graph.VertexCount() - 1, 0);
 		//Test(graph);
+	}
+
+	void MergeDelaunayTileEdge(
+		DelaunayGraph & leftGraph, DelaunayGraph & rightGraph,
+		const uint64 lowerTangentLeft, const uint64 lowerTangentRight,
+		const uint64 upperTangentLeft, const uint64 upperTangentRight
+	) {
+		MergeDelaunay(
+			leftGraph, rightGraph,
+			leftGraph.ConvexHull, rightGraph.ConvexHull,
+			Tangent(upperTangentLeft, upperTangentRight),
+			Tangent(lowerTangentLeft, lowerTangentRight));
 	}
 }

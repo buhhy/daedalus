@@ -9,7 +9,6 @@
 #include <unordered_map>
 
 namespace terrain {
-	typedef std::pair<utils::Vector2<>, uint64> BiomeCellVertexWithId;
 	typedef utils::Vector2<> BiomeCellVertex;
 	typedef std::unordered_map<uint64, BiomeCellVertex> PointMap;
 	typedef std::vector<uint64> PointIds;

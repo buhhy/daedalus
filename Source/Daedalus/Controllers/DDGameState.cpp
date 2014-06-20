@@ -14,8 +14,7 @@ ADDGameState::ADDGameState(const class FPostConstructInitializeProperties& PCIP)
 		1,               // MaxPointsPerCell
 		1000.0          // BiomeScale
 	}),
+	EventBus(new events::EventBus()),
 	ChunkLoader(new terrain::ChunkLoader(TerrainGenParams)),
-	BiomeRegionLoader(new terrain::BiomeRegionLoader(BiomeGenParams))
-{
-	EventBus = NewObject<UEventBus>();
-}
+	BiomeRegionLoader(new terrain::BiomeRegionLoader(BiomeGenParams, EventBus))
+{}

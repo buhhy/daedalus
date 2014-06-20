@@ -58,7 +58,7 @@ namespace utils {
 			}
 
 			assert(curFace->GetAdjacentFaceCCW(sharedVertex) == this &&
-				"GetAdjacentFaceCW: face does not loop around vertex correctly");
+				"Face::GetAdjacentFaceCW: face does not loop around vertex correctly");
 
 			return nextFace == NULL ? NULL : curFace;
 		}
@@ -121,7 +121,7 @@ namespace utils {
 			return MinIndex([] (Vertex * const v) { return -v->GetPoint().Y; });
 		}
 
-		int64 ConvexHull::MinIndex(std::function<double (Vertex * const)> valueOf) const {
+		int64 ConvexHull::MinIndex(const std::function<double (Vertex * const)> & valueOf) const {
 			if (HullVertices.empty())
 				return -1;
 			uint64 minIndex = 0;
@@ -203,19 +203,21 @@ namespace utils {
 	DelaunayGraph::DelaunayGraph(const DelaunayGraph & copy) :
 		CurrentFaceId(copy.CurrentFaceId),
 		CurrentVertexId(copy.CurrentVertexId),
-		Id(copy.Id)
+		Offset(copy.Offset)
 	{
 		// Add all vertices and faces in the copy graph
 		for (auto it : copy.Vertices)
 			AddVertex(new delaunay::Vertex(*it));
+		// TODO: this doesn't deep copy right now
 		for (auto it : copy.Faces)
 			AddFace(new delaunay::Face(*it));
 
 		// Set adjacencies for all faces and vertices
-		for (auto it : copy.Vertices) {
-			IdVertexMap.at(it->VertexId())->IncidentFace =
-				IdFaceMap.at(it->IncidentFace->FaceId());
-		}
+		// TODO: this is not working properly yet
+		//for (auto it : copy.Vertices) {
+		//	IdVertexMap.at(it->VertexId())->GetIncidentFace() =
+		//		IdFaceMap.at(it->GetIncidentFace()->FaceId());
+		//}
 
 		for (auto it : copy.Faces) {
 			auto & face = IdFaceMap.at(it->FaceId());
@@ -246,7 +248,7 @@ namespace utils {
 		const auto pivotCWPoint = newFace->Vertices[pivotCWIndex];
 		const auto pivotCCWPoint = newFace->Vertices[pivotCCWIndex];
 
-		Face * otherFace = pivotPoint->IncidentFace;
+		Face * otherFace = pivotPoint->GetIncidentFace();
 
 		// If pivot point has no faces yet, assign the new one
 		pivotPoint->AddFace(newFace);
@@ -338,9 +340,8 @@ namespace utils {
 		pivot->RemoveFace(face);
 	}
 
-	uint64 DelaunayGraph::GetNextFaceId() {
-		return CurrentFaceId++;
-	}
+	uint64 DelaunayGraph::GetNextFaceId() { return CurrentFaceId++; }
+	uint64 DelaunayGraph::GetNextVertexId() { return CurrentVertexId++; }
 
 	Vertex * DelaunayGraph::AddVertex(Vertex * const vertex) {
 		auto id = vertex->VertexId();
@@ -351,10 +352,6 @@ namespace utils {
 		return vertex;
 	}
 
-	Vertex * DelaunayGraph::AddVertex(const Vector2<> & point, const uint64 id) {
-		return AddVertex(new Vertex(Id, point, id));
-	}
-
 	Face * DelaunayGraph::AddFace(Face * const face) {
 		auto id = face->FaceId();
 		Faces.insert(face);
@@ -362,6 +359,35 @@ namespace utils {
 		if (id >= CurrentFaceId)
 			CurrentFaceId = id + 1;
 		return face;
+	}
+
+	delaunay::Vertex * DelaunayGraph::AddGhostVertex(delaunay::Vertex * const vertex) {
+		if (vertex->ParentGraphOffset() == Offset) {
+			// Local vertex
+			return vertex;
+		} else {
+			// Foreign vertex, we need to duplicate and change ownernship, and add offset
+			auto point = vertex->GetPoint();
+			auto offset = vertex->ParentGraphOffset() - Offset;
+			auto lid = GetNextVertexId();
+			auto newVertex = new Vertex(
+				vertex->ParentGraphOffset(),
+				{ point.X + offset.X, point.Y + offset.Y },
+				lid, vertex->VertexId());
+			Vertices.insert(newVertex);
+			IdVertexMap.insert({ lid, newVertex });
+			return newVertex;
+		}
+	}
+
+	delaunay::Face * DelaunayGraph::AddGhostFace(delaunay::Face * const face) {
+		GhostFaces.insert(face);
+		IdGhostFaceMap.insert({ face->FaceId(), face });
+		return face;
+	}
+
+	Vertex * DelaunayGraph::AddVertex(const Vector2<> & point, const uint64 id) {
+		return AddVertex(new Vertex(Offset, point, id));
 	}
 
 	Face * DelaunayGraph::AddFace(Vertex * const v1, Vertex * const v2) {
@@ -384,15 +410,16 @@ namespace utils {
 	}
 
 	Face * DelaunayGraph::AddFace(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
-		Vertex * inV1 = v1;
-		Vertex * inV2 = v2;
-		Vertex * inV3 = v3;
+		uint64 ghostCount = GhostVertices.size();
+		Vertex * inV1 = AddGhostVertex(v1);
+		Vertex * inV2 = AddGhostVertex(v2);
+		Vertex * inV3 = AddGhostVertex(v3);
+		ghostCount = GhostVertices.size() - ghostCount;
 
 		// Insert face with clockwise vertex winding order
 		auto winding = IsCWWinding(v1, v2, v3);
 		if (winding < 0) {
-			inV2 = v3;
-			inV3 = v2;
+			std::swap(inV2, inV3);
 		} else if (winding == 0) {
 			// Don't create colinear triangles
 			return NULL;
@@ -423,7 +450,10 @@ namespace utils {
 				adjust.first->AdjacentFaces[adjust.second] = newFace;
 		}
 
-		AddFace(newFace);
+		/*if (ghostCount > 0)
+			AddGhostFace(newFace);
+		else*/
+			AddFace(newFace);
 
 		return newFace;
 	}
@@ -440,18 +470,22 @@ namespace utils {
 	}
 		
 	Face * DelaunayGraph::FindFace(Vertex * const v1, Vertex * const v2) {
-		Face * curFace = v1->IncidentFace;
+		Face * curFace = v1->GetIncidentFace();
 
 		if (curFace == NULL)
 			return NULL;
 
 		bool found = false;
-		do {
+		auto numFaces = v1->FaceCount();
+		for (uint64 c = 0; c < numFaces; c++) {
 			found = curFace->FindVertex(v1) != -1 && curFace->FindVertex(v2) != -1;
 			if (found)
 				break;
 			curFace = curFace->GetAdjacentFaceCCW(v1);
-		} while (curFace != v1->IncidentFace);
+		}
+
+		assert((found || curFace->GetAdjacentFaceCCW(v1) == v1->GetIncidentFace()) &&
+			"DelaunayGraph::FindFace: face does not loop around vertex correctly");
 
 		if (found)
 			return curFace;

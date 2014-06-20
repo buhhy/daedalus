@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GameFramework/GameState.h"
-#include "EventBus/EventBus.h"
+#include "EventBus.h"
 #include "ChunkLoader.h"
 #include "BiomeRegionLoader.h"
 #include "TerrainDataStructures.h"
@@ -20,9 +20,7 @@ private:
 	terrain::BiomeGeneratorParameters BiomeGenParams;
 
 public:
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = Game)
-		UEventBus * EventBus;
-
+	TSharedRef<events::EventBus> EventBus;
 	TSharedRef<terrain::ChunkLoader> ChunkLoader;
 	TSharedRef<terrain::BiomeRegionLoader> BiomeRegionLoader;
 };

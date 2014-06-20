@@ -9,10 +9,33 @@
 #include <unordered_map>
 #include <functional>
 
+/**
+ * Typedefs for hash.
+ */
 namespace utils {
 	namespace delaunay {
-		typedef Vector2<int64> DelaunayId;
+		typedef Vector2<int64> DelaunayId;                   // Positional ID
+		typedef std::pair<DelaunayId, uint64> GhostId;       // Position & local ID aggregate
+	}
+}
 
+namespace std {
+	template <>
+	struct hash<utils::delaunay::GhostId> {
+		size_t operator()(const utils::delaunay::GhostId & g) const {
+			int64 seed = 0;
+			std::hashCombine(seed, hash<utils::Vector2<int64>>()(g.first));
+			std::hashCombine(seed, g.second);
+			return seed;
+		}
+	};
+}
+
+/**
+ * Data structures for a tileable infinite Delaunay triangulation.
+ */
+namespace utils {
+	namespace delaunay {
 		class Face;
 		class ConvexHull;
 
@@ -20,31 +43,45 @@ namespace utils {
 		private:
 			uint64 NumFaces;
 			uint64 Id;
+			uint64 ForeignId;      // Local ID of the vertex in the foreign graph
 			Vector2<> Point;
+			bool bIsForeign;
 			
-			DelaunayId GraphId;
+			DelaunayId GraphOffset;
+			Face * IncidentFace;
 
 			Vertex(
 				const DelaunayId & gid, const Vector2<> & point,
-				const uint64 id, Face * const inf, const uint64 numFaces
-			) : GraphId(gid), Point(point), IncidentFace(inf), Id(id), NumFaces(numFaces)
+				const uint64 id, const uint64 fid, bool isForeign,
+				Face * const inf, const uint64 numFaces
+			) : GraphOffset(gid), Point(point), IncidentFace(inf),
+				Id(id), ForeignId(fid), bIsForeign(isForeign), NumFaces(numFaces)
 			{}
 
 		public:
-			Face * IncidentFace;
-
 			Vertex(const DelaunayId & gid, const Vector2<> & point, const uint64 id) :
-				Vertex(gid, point, id, NULL, 0)
+				Vertex(gid, point, id, 0, false, NULL, 0)
+			{}
+			Vertex(
+				const DelaunayId & gid, const Vector2<> & point,
+				const uint64 id, const uint64 fid
+			) : Vertex(gid, point, id, fid, true, NULL, 0)
 			{}
 			Vertex(const Vertex & copy) :
-				Vertex(copy.GraphId, copy.Point, copy.Id, NULL, copy.NumFaces) {}
+				Vertex(copy.GraphOffset, copy.Point, copy.Id, copy.ForeignId,
+					copy.bIsForeign, NULL, copy.NumFaces)
+			{}
 
 			uint64 AddFace(Face * const face);
 			uint64 RemoveFace(Face * const face);
 
-			inline Vector2<> GetPoint() const { return Point; }
+			inline Face * const GetIncidentFace() const { return IncidentFace; }
+			inline const DelaunayId & ParentGraphOffset() const { return GraphOffset; }
+			inline const Vector2<> & GetPoint() const { return Point; }
 			inline uint64 VertexId() const { return Id; };
+			inline uint64 ForeignVertexId() const { return ForeignId; }
 			inline uint64 FaceCount() const { return NumFaces; }
+			inline bool IsForeign() const { return bIsForeign; }
 
 			inline bool operator == (const Vertex & other) const {
 				return other.VertexId() == VertexId();
@@ -88,7 +125,9 @@ namespace utils {
 			inline uint64 FaceId() const { return Id; }
 
 			/** Creates a degenerate face */
-			Face(Vertex * const v1, Vertex * const v2, const uint64 id) : Face(v1, v2, NULL, id) {}
+			Face(Vertex * const v1, Vertex * const v2, const uint64 id) :
+				Face(v1, v2, NULL, id)
+			{}
 
 			Face(Vertex * const v1, Vertex * const v2, Vertex * const v3, const uint64 id) :
 				Vertices({{ v1, v2, v3 }}),
@@ -205,7 +244,7 @@ namespace utils {
 			 */
 			bool AddVertex(Vertex * const vert);
 			int64 FindVertexById(const uint64 id) const;
-			int64 MinIndex(std::function<double (Vertex * const)> valueOf) const;
+			int64 MinIndex(const std::function<double (Vertex * const)> & valueOf) const;
 
 			int64 LeftVertexIndex() const;
 			int64 RightVertexIndex() const;
@@ -227,16 +266,25 @@ namespace utils {
 	private:
 		std::unordered_set<delaunay::Vertex *> Vertices;
 		std::unordered_set<delaunay::Face *> Faces;
+		
+		// Ghost vertices are located in another possibly adjacent Delaunay graph.
+		std::unordered_set<delaunay::Vertex *> GhostVertices;
+		// Ghost faces contain at least 1 local vertex and at least 1 ghost vertex.
+		std::unordered_set<delaunay::Face *> GhostFaces;
 
 		// These hashmaps are used for fast lookup of vertices and faces by ID, they should
 		// be kept up-to-date with the vertex and face lists.
 		std::unordered_map<uint64, delaunay::Vertex *> IdVertexMap;
 		std::unordered_map<uint64, delaunay::Face *> IdFaceMap;
 
+		// Corresponding ID hashmaps for ghost vertices and faces.
+		std::unordered_map<delaunay::GhostId, delaunay::Vertex *> IdGhostVertexMap;
+		std::unordered_map<uint64, delaunay::Face *> IdGhostFaceMap;
+
 		uint64 CurrentFaceId;
 		uint64 CurrentVertexId;
 
-		delaunay::DelaunayId Id;
+		delaunay::DelaunayId Offset;
 		
 		/**
 		 * Adjusts the adjacency pointer of the new face to point to the closest CCW face
@@ -248,27 +296,38 @@ namespace utils {
 			delaunay::Face * const newFace, const uint8 pivotIndex);
 		void AdjustRemovedFaceAdjacencies(delaunay::Face * const face, const uint8 pivotIndex);
 		uint64 GetNextFaceId();
+		uint64 GetNextVertexId();
 
 		/**
 		 * Adds a pre-created vertex. The ID should be provide and be unique. The current
 		 * vertex ID will be updated to avoid duplicate IDs.
-		 * TODO: perhaps this should be made private
 		 */
 		delaunay::Vertex * AddVertex(delaunay::Vertex * const vertex);
+
+		/**
+		 * Adds the provided vertex as a ghost vertex into the current graph. This means
+		 * duplicating the other vertex with this graph as the new owner.
+		 * @param vertex Vertex to add, foreign vertices will be duplicated.
+		 */
+		delaunay::Vertex * AddGhostVertex(delaunay::Vertex * const vertex);
 
 		/**
 		 * Adds a pre-created floating face. The ID should be provide and be unique. The current
 		 * face ID will be updated to avoid duplicate IDs. Unlike the other methods for adding
 		 * faces, this method will not update adjacencies and is more meant for initialization.
-		 * TODO: perhaps this should be made private
 		 */
 		delaunay::Face * AddFace(delaunay::Face * const face);
+
+		/**
+		 * 
+		 */
+		delaunay::Face * AddGhostFace(delaunay::Face * const face);
 
 	public:
 		delaunay::ConvexHull ConvexHull;
 
 		DelaunayGraph(const delaunay::DelaunayId id) :
-			CurrentFaceId(0), CurrentVertexId(0), Id(id) {}
+			CurrentFaceId(0), CurrentVertexId(0), Offset(id) {}
 		
 		DelaunayGraph(const DelaunayGraph & copy);
 
@@ -281,6 +340,7 @@ namespace utils {
 
 		inline uint64 VertexCount() const { return Vertices.size(); }
 		inline uint64 FaceCount() const { return Faces.size(); }
+		inline delaunay::DelaunayId GraphOffset() const { return Offset; }
 
 		const std::vector<delaunay::Vertex const *> GetVertices() const;
 		const std::vector<delaunay::Face const *> GetFaces() const;

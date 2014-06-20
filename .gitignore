@@ -1,5 +1,6 @@
 *.sdf
 *.sln
+*.sln.DotSettings.user
 *.suo
 *.opensdf
 *.xcodeproj
