@@ -266,20 +266,11 @@ namespace utils {
 	private:
 		std::unordered_set<delaunay::Vertex *> Vertices;
 		std::unordered_set<delaunay::Face *> Faces;
-		
-		// Ghost vertices are located in another possibly adjacent Delaunay graph.
-		std::unordered_set<delaunay::Vertex *> GhostVertices;
-		// Ghost faces contain at least 1 local vertex and at least 1 ghost vertex.
-		std::unordered_set<delaunay::Face *> GhostFaces;
 
 		// These hashmaps are used for fast lookup of vertices and faces by ID, they should
 		// be kept up-to-date with the vertex and face lists.
 		std::unordered_map<uint64, delaunay::Vertex *> IdVertexMap;
 		std::unordered_map<uint64, delaunay::Face *> IdFaceMap;
-
-		// Corresponding ID hashmaps for ghost vertices and faces.
-		std::unordered_map<delaunay::GhostId, delaunay::Vertex *> IdGhostVertexMap;
-		std::unordered_map<uint64, delaunay::Face *> IdGhostFaceMap;
 
 		uint64 CurrentFaceId;
 		uint64 CurrentVertexId;
@@ -317,11 +308,6 @@ namespace utils {
 		 * faces, this method will not update adjacencies and is more meant for initialization.
 		 */
 		delaunay::Face * AddFace(delaunay::Face * const face);
-
-		/**
-		 * 
-		 */
-		delaunay::Face * AddGhostFace(delaunay::Face * const face);
 
 	public:
 		delaunay::ConvexHull ConvexHull;

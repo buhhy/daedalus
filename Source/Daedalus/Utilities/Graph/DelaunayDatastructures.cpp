@@ -380,12 +380,6 @@ namespace utils {
 		}
 	}
 
-	delaunay::Face * DelaunayGraph::AddGhostFace(delaunay::Face * const face) {
-		GhostFaces.insert(face);
-		IdGhostFaceMap.insert({ face->FaceId(), face });
-		return face;
-	}
-
 	Vertex * DelaunayGraph::AddVertex(const Vector2<> & point, const uint64 id) {
 		return AddVertex(new Vertex(Offset, point, id));
 	}
@@ -410,14 +404,12 @@ namespace utils {
 	}
 
 	Face * DelaunayGraph::AddFace(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
-		uint64 ghostCount = GhostVertices.size();
 		Vertex * inV1 = AddGhostVertex(v1);
 		Vertex * inV2 = AddGhostVertex(v2);
 		Vertex * inV3 = AddGhostVertex(v3);
-		ghostCount = GhostVertices.size() - ghostCount;
 
 		// Insert face with clockwise vertex winding order
-		auto winding = IsCWWinding(v1, v2, v3);
+		auto winding = IsCWWinding(inV1, inV2, inV3);
 		if (winding < 0) {
 			std::swap(inV2, inV3);
 		} else if (winding == 0) {
@@ -428,9 +420,9 @@ namespace utils {
 		// Check if any degenerate faces exist with the current vertices, if so, adjust
 		// that edge to become a triangle rather than creating one from scratch
 		std::array<Face *, 3> faces = {{
-			FindFace(v1, v2),
-			FindFace(v2, v3),
-			FindFace(v3, v1)
+			FindFace(inV1, inV2),
+			FindFace(inV2, inV3),
+			FindFace(inV3, inV1)
 		}};
 
 		for (auto f : faces)
@@ -450,10 +442,7 @@ namespace utils {
 				adjust.first->AdjacentFaces[adjust.second] = newFace;
 		}
 
-		/*if (ghostCount > 0)
-			AddGhostFace(newFace);
-		else*/
-			AddFace(newFace);
+		AddFace(newFace);
 
 		return newFace;
 	}

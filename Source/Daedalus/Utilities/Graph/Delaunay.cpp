@@ -123,7 +123,7 @@ namespace utils {
 			} else {
 				// Get right candidate
 				rightCandidate = rightVertexQueue.front();
-				faceIt = leftGraph.FindFace(rightCandidate, baseRight);
+				faceIt = rightGraph.FindFace(rightCandidate, baseRight);
 
 				if (faceIt == NULL || faceIt->VertexCount() < 3) {
 					foundRight = FindWinding(
@@ -157,11 +157,11 @@ namespace utils {
 							auto faceNext = faceIt->GetAdjacentFaceCW(baseRight);
 							if (faceIt == faceNext) {
 								// This is the only face attached to the right base vertex
-								leftGraph.RemoveFace(faceIt);
+								rightGraph.RemoveFace(faceIt);
 								faceIt = NULL;
 								foundRight = true;
 							} else {
-								leftGraph.RemoveFace(faceIt);
+								rightGraph.RemoveFace(faceIt);
 								faceIt = faceNext;
 							}
 							rightVertexQueue.push_front(nextCandidate);

@@ -95,7 +95,7 @@ void ABiomeRegionManager::HandleEvent(
 		auto castedData = StaticCastSharedRef<events::EBiomeRegionUpdate>(data);
 		for (auto offset : castedData->UpdatedOffsets) {
 			DeleteRegionAt(offset);
-			//ReloadRegionAt(offset);
+			ReloadRegionAt(offset);
 		}
 	}
 }
