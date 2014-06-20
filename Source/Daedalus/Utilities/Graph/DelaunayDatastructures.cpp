@@ -94,6 +94,11 @@ namespace utils {
 			return bIsCollinear;
 		}
 		
+		int64 ConvexHull::FindVertexById(const uint64 id) const {
+			for (uint64 i = 0; i < Size(); i++)
+				if (HullVertices[i]->VertexId() == id) return i;
+			return -1;
+		}
 		
 		int64 ConvexHull::LeftVertexIndex() const {
 			return MinIndex([] (Vertex * const v) { return v->GetPoint().X; });

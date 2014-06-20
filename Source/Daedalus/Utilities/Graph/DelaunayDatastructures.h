@@ -198,6 +198,7 @@ namespace utils {
 			 * if the new point is collinear.
 			 */
 			bool AddVertex(Vertex * const vert);
+			int64 FindVertexById(const uint64 id) const;
 			int64 MinIndex(std::function<double (Vertex * const)> valueOf) const;
 
 			int64 LeftVertexIndex() const;

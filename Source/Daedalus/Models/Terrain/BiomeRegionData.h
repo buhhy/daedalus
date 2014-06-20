@@ -6,9 +6,13 @@
 
 #include <array>
 #include <vector>
+#include <unordered_map>
 
 namespace terrain {
-	typedef std::vector<utils::Vector2<> > PointSet;
+	typedef std::pair<utils::Vector2<>, uint64> BiomeCellVertexWithId;
+	typedef utils::Vector2<> BiomeCellVertex;
+	typedef std::unordered_map<uint64, BiomeCellVertex> PointMap;
+	typedef std::vector<uint64> PointIds;
 
 	/**
 	 * Each biome cell contains a list of 2D points that will be used in a Delaunay
@@ -17,17 +21,14 @@ namespace terrain {
 	 * border has been used in an adjacent region merge.
 	 */
 	struct BiomeCellData {
-	public:
-		PointSet Points;
+		PointIds PointIds;
 		bool IsFinalized;
 
 		BiomeCellData(): IsFinalized(false) {}
 
 		~BiomeCellData() {}
 
-		void AddPoint(const utils::Vector2<> & point) {
-			Points.push_back(point);
-		}
+		inline void AddPoint(const uint64 id) { PointIds.push_back(id); }
 	};
 
 	typedef utils::Tensor2<BiomeCellData> BiomePointField;
@@ -39,6 +40,12 @@ namespace terrain {
 	 * cells. Each biome cell contains a least 1 Delaunay point for more even triangulations.
 	 */
 	struct BiomeRegionData {
+	private:
+		uint64 CurrentVertexId;
+		inline uint64 GetNextId() { return CurrentVertexId++; }
+
+	public:
+		PointMap Points;
 		BiomePointField PointDistribution;
 		utils::DelaunayGraph DelaunayGraph;
 
@@ -57,6 +64,7 @@ namespace terrain {
 		) : BiomeGridSize(biomeSize),
 			BiomeOffset(biomeOffset),
 			PointDistribution(biomeSize),
+			CurrentVertexId(0),
 			NeighborsLoaded(std::array<bool, 8>())
 		{
 			auto toY = PointDistribution.Depth - buffer - 1;
@@ -70,12 +78,15 @@ namespace terrain {
 
 		~BiomeRegionData() {}
 
-		void InsertPoint(
+		uint64 InsertPoint(
 			const uint64 x,
 			const uint64 y,
 			const utils::Vector2<> & point
 		) {
-			PointDistribution.Get(x, y).AddPoint(point);
+			auto id = GetNextId();
+			Points.insert({ id, point });
+			PointDistribution.Get(x, y).AddPoint(id);
+			return id;
 		}
 	};
 }

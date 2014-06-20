@@ -427,11 +427,11 @@ namespace utils {
 		graph.ConvexHull = Divide(graph, testVertices, 0, graph.VertexCount() - 1, 0);
 	}
 
-	void BuildDelaunay2D(DelaunayGraph & graph, const std::vector<Vector2<> > & inputPoints) {
+	void BuildDelaunay2D(DelaunayGraph & graph, const InputVertexList & inputPoints) {
 		std::vector<Vertex *> copiedVertices;
 
 		for (auto i = 0u; i < inputPoints.size(); i++)
-			copiedVertices.push_back(new Vertex(inputPoints[i], i));
+			copiedVertices.push_back(new Vertex(inputPoints[i].first, inputPoints[i].second));
 
 		// Sort by X from left to right, then Y from top down to resolve conflicts
 		std::sort(
