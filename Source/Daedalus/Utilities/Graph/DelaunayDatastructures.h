@@ -246,39 +246,7 @@ namespace utils {
 
 		DelaunayGraph() : CurrentFaceId(0), CurrentVertexId(0) {}
 		
-		DelaunayGraph(const DelaunayGraph & copy) :
-			CurrentFaceId(copy.CurrentFaceId),
-			CurrentVertexId(copy.CurrentVertexId)
-		{
-			// Add all vertices and faces in the copy graph
-			for (auto it : copy.Vertices)
-				AddVertex(new delaunay::Vertex(*it));
-			for (auto it : copy.Faces)
-				AddFace(new delaunay::Face(*it));
-
-			// Set adjacencies for all faces and vertices
-			for (auto it : copy.Vertices) {
-				IdVertexMap.at(it->VertexId())->IncidentFace =
-					IdFaceMap.at(it->IncidentFace->FaceId());
-			}
-
-			for (auto it : copy.Faces) {
-				auto & face = IdFaceMap.at(it->FaceId());
-				for (uint8 i = 0; i < face->VertexCount(); i++)
-					face->AdjacentFaces[i] = IdFaceMap.at(it->AdjacentFaces[i]->FaceId());
-			}
-
-			// Set the convex hull
-			std::vector<delaunay::Vertex *> newHullVerts;
-			std::transform(
-				ConvexHull.CBegin(),
-				ConvexHull.CEnd(),
-				newHullVerts.begin(),
-				[&] (delaunay::Vertex * const vert) {
-					return IdVertexMap.at(vert->VertexId());
-				});
-			ConvexHull = newHullVerts;
-		}
+		DelaunayGraph(const DelaunayGraph & copy);
 
 		~DelaunayGraph() {
 			for (auto it : Vertices) delete it;

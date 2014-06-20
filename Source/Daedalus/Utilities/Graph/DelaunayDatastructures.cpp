@@ -2,6 +2,7 @@
 #include "DelaunayDatastructures.h"
 
 #include <algorithm>
+#include <assert.h>
 
 namespace utils {
 	namespace delaunay {
@@ -47,13 +48,17 @@ namespace utils {
 		Face * Face::GetAdjacentFaceCW(Vertex * const sharedVertex) {
 			// Since we don't have a pointer to the CW face, we need to loop around the
 			// shared vertex until we find the last face before this face again
-			Face * curFace;
+			Face * curFace = NULL;
 			Face * nextFace = this;
+			const auto fcount = sharedVertex->FaceCount();
 
-			do {
+			for (uint64 c = 0; c < fcount; c++) {
 				curFace = nextFace;
 				nextFace = nextFace->GetAdjacentFaceCCW(sharedVertex);
-			} while (nextFace != this && nextFace != NULL);
+			}
+
+			assert(curFace->GetAdjacentFaceCCW(sharedVertex) == this &&
+				"GetAdjacentFaceCW: face does not loop around vertex correctly");
 
 			return nextFace == NULL ? NULL : curFace;
 		}
@@ -195,6 +200,40 @@ namespace utils {
 	 *********************************************************************/
 
 
+	DelaunayGraph::DelaunayGraph(const DelaunayGraph & copy) :
+		CurrentFaceId(copy.CurrentFaceId),
+		CurrentVertexId(copy.CurrentVertexId)
+	{
+		// Add all vertices and faces in the copy graph
+		for (auto it : copy.Vertices)
+			AddVertex(new delaunay::Vertex(*it));
+		for (auto it : copy.Faces)
+			AddFace(new delaunay::Face(*it));
+
+		// Set adjacencies for all faces and vertices
+		for (auto it : copy.Vertices) {
+			IdVertexMap.at(it->VertexId())->IncidentFace =
+				IdFaceMap.at(it->IncidentFace->FaceId());
+		}
+
+		for (auto it : copy.Faces) {
+			auto & face = IdFaceMap.at(it->FaceId());
+			for (uint8 i = 0; i < face->VertexCount(); i++)
+				face->AdjacentFaces[i] = IdFaceMap.at(it->AdjacentFaces[i]->FaceId());
+		}
+
+		// Set the convex hull
+		std::vector<delaunay::Vertex *> newHullVerts;
+		std::transform(
+			ConvexHull.CBegin(),
+			ConvexHull.CEnd(),
+			newHullVerts.begin(),
+			[&] (delaunay::Vertex * const vert) {
+				return IdVertexMap.at(vert->VertexId());
+			});
+		ConvexHull = newHullVerts;
+	}
+	
 	std::pair<Face *, int8> DelaunayGraph::AdjustNewFaceAdjacencies(
 		Face * const newFace,
 		const uint8 pivotIndex
