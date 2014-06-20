@@ -11,20 +11,20 @@ namespace utils {
 	typedef std::pair<uint64, uint64> Tangent;
 
 	void MergeDelaunay(
-		DelaunayGraph & results,
-		const std::vector<Vertex *> & sortedVertices,
+		DelaunayGraph & leftGraph,
+		DelaunayGraph & rightGraph,
 		const ConvexHull & leftHull,
 		const ConvexHull & rightHull,
-		const uint64 start1, const uint64 end1,
-		const uint64 start2, const uint64 end2,
 		const Tangent & upperTangent,
 		const Tangent & lowerTangent
 	) {
+		bool isSame = &leftGraph == &rightGraph;
 		bool left, right;
 		bool takeLeft, takeRight;
 		bool isLeftDone = false, isRightDone = false;
 
-		std::vector<std::array<Vertex *, 3> > addedFaces;
+		std::vector<std::array<Vertex *, 3> > leftAddedFaces;
+		std::vector<std::array<Vertex *, 3> > rightAddedFaces;
 		std::deque<Vertex *> leftVertexQueue;
 		std::deque<Vertex *> rightVertexQueue;
 
@@ -41,7 +41,6 @@ namespace utils {
 		
 		Vertex * leftCandidate = NULL, * rightCandidate = NULL, * nextCandidate = NULL;
 		Face * faceIt = NULL;
-		utils::Circle2D circumcircle;
 
 		do {
 			left = false, right = false;
@@ -53,7 +52,7 @@ namespace utils {
 			} else {
 				// Get left candidate
 				leftCandidate = leftVertexQueue.front();
-				faceIt = results.FindFace(leftCandidate, baseLeft);
+				faceIt = leftGraph.FindFace(leftCandidate, baseLeft);
 
 				if (faceIt == NULL || faceIt->VertexCount() < 3) {
 					left = FindWinding(baseRight->GetPoint(), baseLeft->GetPoint(), leftCandidate->GetPoint()) > 0;
@@ -70,7 +69,7 @@ namespace utils {
 							left = true;
 							break;
 						}
-						circumcircle = CalculateCircumcircle(
+						auto circumcircle = CalculateCircumcircle(
 							leftCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint());
 						// For ambiguous points, don't delete
 						if (IsWithinCircumcircle(nextCandidate->GetPoint(), circumcircle) > 0) {
@@ -78,11 +77,11 @@ namespace utils {
 							auto faceNext = faceIt->GetAdjacentFaceCCW(baseLeft);
 							if (faceIt == faceNext) {
 								// This is the only face attached to the left base vertex
-								results.RemoveFace(faceIt);
+								leftGraph.RemoveFace(faceIt);
 								faceIt = NULL;
 								left = true;
 							} else {
-								results.RemoveFace(faceIt);
+								leftGraph.RemoveFace(faceIt);
 								faceIt = faceNext;
 							}
 							leftVertexQueue.push_front(nextCandidate);
@@ -102,7 +101,7 @@ namespace utils {
 			} else {
 				// Get right candidate
 				rightCandidate = rightVertexQueue.front();
-				faceIt = results.FindFace(rightCandidate, baseRight);
+				faceIt = leftGraph.FindFace(rightCandidate, baseRight);
 
 				if (faceIt == NULL || faceIt->VertexCount() < 3) {
 					right = FindWinding(rightCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint()) > 0;
@@ -119,7 +118,7 @@ namespace utils {
 							right = true;
 							break;
 						}
-						circumcircle = CalculateCircumcircle(
+						auto circumcircle = CalculateCircumcircle(
 							rightCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint());
 						// For ambiguous points, don't delete
 						if (IsWithinCircumcircle(nextCandidate->GetPoint(), circumcircle) > 0) {
@@ -127,11 +126,11 @@ namespace utils {
 							auto faceNext = faceIt->GetAdjacentFaceCW(baseRight);
 							if (faceIt == faceNext) {
 								// This is the only face attached to the right base vertex
-								results.RemoveFace(faceIt);
+								leftGraph.RemoveFace(faceIt);
 								faceIt = NULL;
 								right = true;
 							} else {
-								results.RemoveFace(faceIt);
+								leftGraph.RemoveFace(faceIt);
 								faceIt = faceNext;
 							}
 							rightVertexQueue.push_front(nextCandidate);
@@ -148,7 +147,7 @@ namespace utils {
 
 			if (takeLeft && takeRight) {
 				// If 2 potential candidates, select one of the 2 candidates, left first
-				circumcircle = CalculateCircumcircle(
+				auto circumcircle = CalculateCircumcircle(
 					leftCandidate->GetPoint(), baseRight->GetPoint(), baseLeft->GetPoint());
 
 				if (left && IsWithinCircumcircle(rightCandidate->GetPoint(), circumcircle) > 0) {
@@ -161,11 +160,11 @@ namespace utils {
 			}
 
 			if (takeRight) {
-				addedFaces.push_back({{ rightCandidate, baseRight, baseLeft }});
+				rightAddedFaces.push_back({{ rightCandidate, baseRight, baseLeft }});
 				rightVertexQueue.pop_front();
 				baseRight = rightCandidate;
 			} else if (takeLeft) {
-				addedFaces.push_back({{ leftCandidate, baseRight, baseLeft }});
+				leftAddedFaces.push_back({{ leftCandidate, baseRight, baseLeft }});
 				leftVertexQueue.pop_front();
 				baseLeft = leftCandidate;
 			}
@@ -174,8 +173,10 @@ namespace utils {
 			isRightDone = rightVertexQueue.empty();
 		} while ((takeLeft || takeRight) && (!isLeftDone || !isRightDone));
 
-		for (auto f : addedFaces)
-			results.AddFace(f[0], f[1], f[2]);
+		for (auto f : leftAddedFaces)
+			leftGraph.AddFace(f[0], f[1], f[2]);
+		for (auto f : rightAddedFaces)
+			rightGraph.AddFace(f[0], f[1], f[2]);
 	}
 
 	/**
@@ -381,18 +382,17 @@ namespace utils {
 
 			if (subdivisionDepth >= minSubdivisionDepth) {
 				MergeDelaunay(
-					results, sortedVertices,
+					results, results,
 					leftHull, rightHull,
-					start, half, half + 1, end,
 					upperTangent, lowerTangent);
 			}
 			return MergeConvexHulls(leftHull, rightHull, upperTangent, lowerTangent);
 		}
 	}
 
-	void Test(DelaunayGraph & graph) {
-		std::vector<Vector2<> > testPoints;
-		std::vector<Vertex *> testVertices;
+	//void Test(DelaunayGraph & graph) {
+	//	std::vector<Vector2<> > testPoints;
+	//	std::vector<Vertex *> testVertices;
 		//testPoints.push_back({ 0.1, 0.2 });
 		//testPoints.push_back({ 0.2, 0.1 });
 		//testPoints.push_back({ 0.2, 0.3 });
@@ -405,33 +405,33 @@ namespace utils {
 		//testPoints.push_back({ 0.6, 0.1 });
 
 		
-		testPoints.push_back({ 0.1, 0.1 });
-		testPoints.push_back({ 0.1, 0.2 });
-		testPoints.push_back({ 0.1, 0.3 });
-		testPoints.push_back({ 0.2, 0.1 });
-		testPoints.push_back({ 0.3, 0.1 });
+	//	testPoints.push_back({ 0.1, 0.1 });
+	//	testPoints.push_back({ 0.1, 0.2 });
+	//	testPoints.push_back({ 0.1, 0.3 });
+	//	testPoints.push_back({ 0.2, 0.1 });
+	//	testPoints.push_back({ 0.3, 0.1 });
 
-		for (auto i = 0u; i < testPoints.size(); i++)
-			testVertices.push_back(new Vertex(testPoints[i], i));
+	//	for (auto i = 0u; i < testPoints.size(); i++)
+	//		testVertices.push_back(new Vertex(testPoints[i], i));
 
-		std::sort(
-			testVertices.begin(),
-			testVertices.end(),
-			[] (Vertex * const p1, Vertex * const p2) {
-				return p1->GetPoint() < p2->GetPoint();
-			});
+	//	std::sort(
+	//		testVertices.begin(),
+	//		testVertices.end(),
+	//		[] (Vertex * const p1, Vertex * const p2) {
+	//			return p1->GetPoint() < p2->GetPoint();
+	//		});
 
-		for (auto i = 0u; i < testPoints.size(); i++)
-			graph.AddVertex(testVertices[i]);
+	//	for (auto i = 0u; i < testPoints.size(); i++)
+	//		graph.AddVertex(testVertices[i]);
 
-		graph.ConvexHull = Divide(graph, testVertices, 0, graph.VertexCount() - 1, 0);
-	}
+	//	graph.ConvexHull = Divide(graph, testVertices, 0, graph.VertexCount() - 1, 0);
+	//}
 
 	void BuildDelaunay2D(DelaunayGraph & graph, const InputVertexList & inputPoints) {
 		std::vector<Vertex *> copiedVertices;
 
 		for (auto i = 0u; i < inputPoints.size(); i++)
-			copiedVertices.push_back(new Vertex(inputPoints[i].first, inputPoints[i].second));
+			copiedVertices.push_back(graph.AddVertex(inputPoints[i].first, inputPoints[i].second));
 
 		// Sort by X from left to right, then Y from top down to resolve conflicts
 		std::sort(
@@ -440,9 +440,6 @@ namespace utils {
 			[] (Vertex * const p1, Vertex * const p2) {
 				return p1->GetPoint() < p2->GetPoint();
 			});
-
-		for (auto it = copiedVertices.cbegin(); it != copiedVertices.cend(); it++)
-			graph.AddVertex(*it);
 
 		// Run if at least 2 vertex
 		if (graph.VertexCount() > 1)

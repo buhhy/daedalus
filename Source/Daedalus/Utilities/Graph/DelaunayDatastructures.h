@@ -11,6 +11,8 @@
 
 namespace utils {
 	namespace delaunay {
+		typedef Vector2<int64> DelaunayId;
+
 		class Face;
 		class ConvexHull;
 
@@ -20,18 +22,22 @@ namespace utils {
 			uint64 Id;
 			Vector2<> Point;
 			
+			DelaunayId GraphId;
 
-			Vertex(const Vector2<> & point, uint64 id, Face * inf, uint64 numFaces) :
-				Point(point), IncidentFace(inf), Id(id), NumFaces(numFaces)
+			Vertex(
+				const DelaunayId & gid, const Vector2<> & point,
+				const uint64 id, Face * const inf, const uint64 numFaces
+			) : GraphId(gid), Point(point), IncidentFace(inf), Id(id), NumFaces(numFaces)
 			{}
 
 		public:
 			Face * IncidentFace;
 
-			Vertex(const Vector2<> & point, uint64 id) :
-				Vertex(point, id, NULL, 0)
+			Vertex(const DelaunayId & gid, const Vector2<> & point, const uint64 id) :
+				Vertex(gid, point, id, NULL, 0)
 			{}
-			Vertex(const Vertex & copy) : Vertex(copy.Point, copy.Id, NULL, copy.NumFaces) {}
+			Vertex(const Vertex & copy) :
+				Vertex(copy.GraphId, copy.Point, copy.Id, NULL, copy.NumFaces) {}
 
 			uint64 AddFace(Face * const face);
 			uint64 RemoveFace(Face * const face);
@@ -229,6 +235,8 @@ namespace utils {
 
 		uint64 CurrentFaceId;
 		uint64 CurrentVertexId;
+
+		delaunay::DelaunayId Id;
 		
 		/**
 		 * Adjusts the adjacency pointer of the new face to point to the closest CCW face
@@ -241,10 +249,26 @@ namespace utils {
 		void AdjustRemovedFaceAdjacencies(delaunay::Face * const face, const uint8 pivotIndex);
 		uint64 GetNextFaceId();
 
+		/**
+		 * Adds a pre-created vertex. The ID should be provide and be unique. The current
+		 * vertex ID will be updated to avoid duplicate IDs.
+		 * TODO: perhaps this should be made private
+		 */
+		delaunay::Vertex * AddVertex(delaunay::Vertex * const vertex);
+
+		/**
+		 * Adds a pre-created floating face. The ID should be provide and be unique. The current
+		 * face ID will be updated to avoid duplicate IDs. Unlike the other methods for adding
+		 * faces, this method will not update adjacencies and is more meant for initialization.
+		 * TODO: perhaps this should be made private
+		 */
+		delaunay::Face * AddFace(delaunay::Face * const face);
+
 	public:
 		delaunay::ConvexHull ConvexHull;
 
-		DelaunayGraph() : CurrentFaceId(0), CurrentVertexId(0) {}
+		DelaunayGraph(const delaunay::DelaunayId id) :
+			CurrentFaceId(0), CurrentVertexId(0), Id(id) {}
 		
 		DelaunayGraph(const DelaunayGraph & copy);
 
@@ -262,22 +286,9 @@ namespace utils {
 		const std::vector<delaunay::Face const *> GetFaces() const;
 		const std::vector<delaunay::Edge> GetUniqueEdges() const;
 
+		delaunay::Vertex * AddVertex(const Vector2<> & point, const uint64 id);
+
 		delaunay::Face * FindFace(delaunay::Vertex * const v1, delaunay::Vertex * const v2);
-
-		/**
-		 * Adds a pre-created vertex. The ID should be provide and be unique. The current
-		 * vertex ID will be updated to avoid duplicate IDs.
-		 * TODO: perhaps this should be made private
-		 */
-		delaunay::Vertex * AddVertex(delaunay::Vertex * const vertex);
-
-		/**
-		 * Adds a pre-created floating face. The ID should be provide and be unique. The current
-		 * face ID will be updated to avoid duplicate IDs. Unlike the other methods for adding
-		 * faces, this method will not update adjacencies and is more meant for initialization.
-		 * TODO: perhaps this should be made private
-		 */
-		delaunay::Face * AddFace(delaunay::Face * const face);
 		delaunay::Face * AddFace(delaunay::Vertex * const v1, delaunay::Vertex * const v2);
 
 		/**

@@ -79,10 +79,10 @@ namespace terrain {
 			lowerLimit2 = getCornerHullVertexId(*region2, false, false, limit);
 		} else if (direction.X == 0 && direction.Y == 1) {
 			// Merge down
-			upperLimit1 = getCornerHullVertexId(*region1, false, true, limit);
-			upperLimit2 = getCornerHullVertexId(*region2, false, false, limit);
-			lowerLimit1 = getCornerHullVertexId(*region1, true, true, limit);
-			lowerLimit2 = getCornerHullVertexId(*region2, true, false, limit);
+			lowerLimit1 = getCornerHullVertexId(*region2, false, false, limit);
+			lowerLimit2 = getCornerHullVertexId(*region1, false, true, limit);
+			upperLimit1 = getCornerHullVertexId(*region2, true, false, limit);
+			upperLimit2 = getCornerHullVertexId(*region1, true, true, limit);
 		}
 		UE_LOG(LogTemp, Warning, TEXT("Merging edges: (%ld %ld) - (%ld %ld)"),
 			region1->BiomeOffset.X, region1->BiomeOffset.Y,

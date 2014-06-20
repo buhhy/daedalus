@@ -31,7 +31,7 @@ void ABiomeRegionManager::UpdateBiomesAt(const FVector & playerPosition) {
 	int64 toY = playerChunkPos.Y + RenderDistance;
 
 	// Once the player leaves an area, the chunks are cleared
-	for (auto chunkKey = LocalCache.begin(); chunkKey != LocalCache.end(); ) {
+	/*for (auto chunkKey = LocalCache.begin(); chunkKey != LocalCache.end(); ) {
 		if (chunkKey->first.X > toX || chunkKey->first.Y > toY ||
 			chunkKey->first.X < fromX || chunkKey->first.Y < fromY) {
 
@@ -40,7 +40,7 @@ void ABiomeRegionManager::UpdateBiomesAt(const FVector & playerPosition) {
 		} else {
 			++chunkKey;
 		}
-	}
+	}*/
 
 	// Begin preloading biomes for the area the player is near
 	for (int64 x = fromX; x <= toX; x++) {

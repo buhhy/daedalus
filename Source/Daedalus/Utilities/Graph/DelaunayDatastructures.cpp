@@ -202,7 +202,8 @@ namespace utils {
 
 	DelaunayGraph::DelaunayGraph(const DelaunayGraph & copy) :
 		CurrentFaceId(copy.CurrentFaceId),
-		CurrentVertexId(copy.CurrentVertexId)
+		CurrentVertexId(copy.CurrentVertexId),
+		Id(copy.Id)
 	{
 		// Add all vertices and faces in the copy graph
 		for (auto it : copy.Vertices)
@@ -348,6 +349,10 @@ namespace utils {
 		if (id>= CurrentVertexId)
 			CurrentVertexId = id + 1;
 		return vertex;
+	}
+
+	Vertex * DelaunayGraph::AddVertex(const Vector2<> & point, const uint64 id) {
+		return AddVertex(new Vertex(Id, point, id));
 	}
 
 	Face * DelaunayGraph::AddFace(Face * const face) {

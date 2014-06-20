@@ -64,6 +64,7 @@ namespace terrain {
 		) : BiomeGridSize(biomeSize),
 			BiomeOffset(biomeOffset),
 			PointDistribution(biomeSize),
+			DelaunayGraph(biomeOffset),
 			CurrentVertexId(0),
 			NeighborsLoaded(std::array<bool, 8>())
 		{
