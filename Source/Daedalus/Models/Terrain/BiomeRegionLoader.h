@@ -21,6 +21,8 @@ namespace terrain {
 	 */
 	class BiomeRegionLoader {
 	private:
+		typedef std::pair<utils::Vector2<>, uint64> VertexWithHullIndex;
+
 		BiomeRegionCache LoadedBiomeRegionCache;
 
 		BiomeGeneratorParameters BiomeGenParams;
@@ -31,6 +33,13 @@ namespace terrain {
 			const BiomeOffsetVector & offset) const;
 		TSharedRef<BiomeRegionData> GenerateMissingBiomeRegion(
 			const BiomeOffsetVector & offset) const;
+
+		TSharedPtr<const VertexWithHullIndex> BiomeRegionLoader::GetCornerHullVertex(
+			const BiomeRegionData & data,
+			const bool cornerX,
+			const bool cornerY,
+			const uint8 limit
+		) const;
 
 		bool MergeRegionEdge(BiomeRegionData & r1, BiomeRegionData & r2);
 		bool MergeRegionCorner(

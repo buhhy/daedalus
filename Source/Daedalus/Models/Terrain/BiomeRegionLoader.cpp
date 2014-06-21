@@ -7,63 +7,61 @@
 #include <random>
 
 namespace terrain {
+	typedef std::pair<utils::Vector2<>, uint64> VertexWithHullIndex;
+
 	BiomeRegionLoader::BiomeRegionLoader(
 		const BiomeGeneratorParameters & params,
 		TSharedRef<events::EventBus> eventBus
-	) : BiomeGenParams(params), EventBus(eventBus)
+	) : BiomeGenParams(params), EventBus(eventBus), CornerLimit(2)
 	{}
 
 	BiomeRegionLoader::~BiomeRegionLoader() {
 		LoadedBiomeRegionCache.empty();
 	}
 
-	bool BiomeRegionLoader::MergeRegionEdge(BiomeRegionData & r1, BiomeRegionData & r2) {
-		typedef std::pair<utils::Vector2<>, uint64> VertexWithIndex;
-		auto getCornerHullVertexId = [&] (
-			const BiomeRegionData & data,
-			const bool cornerX,
-			const bool cornerY,
-			const uint8 limit
-		) -> TSharedPtr<const VertexWithIndex> {
-			const int8 dirX = cornerX ? -1 : 1;
-			const int8 dirY = cornerY ? -1 : 1;
-			const uint64 startX = cornerX ? data.BiomeGridSize.X - 1 : 0;
-			const uint64 startY = cornerY ? data.BiomeGridSize.Y - 1 : 0;
-			int8 accumX = 0, accumY = 0;
-			const VertexWithIndex * vertex = NULL;
-			bool found;
+	TSharedPtr<const VertexWithHullIndex> BiomeRegionLoader::GetCornerHullVertex(
+		const BiomeRegionData & data,
+		const bool cornerX,
+		const bool cornerY
+	) const {
+		const int8 dirX = cornerX ? -1 : 1;
+		const int8 dirY = cornerY ? -1 : 1;
+		const uint64 startX = cornerX ? data.BiomeGridSize.X - 1 : 0;
+		const uint64 startY = cornerY ? data.BiomeGridSize.Y - 1 : 0;
+		int8 accumX = 0, accumY = 0;
+		const VertexWithHullIndex * vertex = NULL;
+		bool found;
 
-			do {
-				found = false;
-				const auto & pointIds =
-					data.PointDistribution.Get(startX + accumX, startY + accumY).PointIds;
-				for (uint64 i = 0; i < pointIds.size(); i++) {
-					auto value = data.DelaunayGraph.ConvexHull.FindVertexById(pointIds[i]);
-					if (value != -1) {
-						found = true;
-						vertex = new VertexWithIndex(data.Points.at(pointIds[i]), value);
-					}
+		do {
+			found = false;
+			const auto & pointIds =
+				data.PointDistribution.Get(startX + accumX, startY + accumY).PointIds;
+			for (uint64 i = 0; i < pointIds.size(); i++) {
+				auto value = data.DelaunayGraph.ConvexHull.FindVertexById(pointIds[i]);
+				if (value != -1) {
+					found = true;
+					vertex = new VertexWithHullIndex(data.Points.at(pointIds[i]), value);
 				}
-				if (accumX * accumX > accumY * accumY)
-					accumY += dirY;
-				else
-					accumX += dirX;
-			} while (!found && (accumX < limit && accumY < limit));
-
-			if (found)
-				return MakeShareable(vertex);
+			}
+			if (accumX * accumX > accumY * accumY)
+				accumY += dirY;
 			else
-				return NULL;
-		};
+				accumX += dirX;
+		} while (!found && (accumX < CornerLimit && accumY < CornerLimit));
 
-		// TODO: implement
+		if (found)
+			return MakeShareable(vertex);
+		else
+			return NULL;
+	};
+
+	bool BiomeRegionLoader::MergeRegionEdge(BiomeRegionData & r1, BiomeRegionData & r2) {
 		auto direction = r2.BiomeOffset - r1.BiomeOffset;
 		auto * region1 = &r1, * region2 = &r2;
-		auto limit = 2;
-		TSharedPtr<const VertexWithIndex> upperLimit1 = NULL;
-		TSharedPtr<const VertexWithIndex> upperLimit2 = NULL;
-		TSharedPtr<const VertexWithIndex> lowerLimit1 = NULL;
-		TSharedPtr<const VertexWithIndex> lowerLimit2 = NULL;
+		TSharedPtr<const VertexWithHullIndex> upperLimit1 = NULL;
+		TSharedPtr<const VertexWithHullIndex> upperLimit2 = NULL;
+		TSharedPtr<const VertexWithHullIndex> lowerLimit1 = NULL;
+		TSharedPtr<const VertexWithHullIndex> lowerLimit2 = NULL;
 
 		if (direction.X == -1 && direction.Y == 0 || direction.X == 0 && direction.Y == -1) {
 			std::swap(region1, region2);
@@ -73,16 +71,16 @@ namespace terrain {
 
 		if (direction.X == 1 && direction.Y == 0) {
 			// Merge right
-			lowerLimit1 = getCornerHullVertexId(*region1, true, false, limit);
-			lowerLimit2 = getCornerHullVertexId(*region2, false, false, limit);
-			upperLimit1 = getCornerHullVertexId(*region1, true, true, limit);
-			upperLimit2 = getCornerHullVertexId(*region2, false, true, limit);
+			lowerLimit1 = GetCornerHullVertex(*region1, true, false);
+			lowerLimit2 = GetCornerHullVertex(*region2, false, false);
+			upperLimit1 = GetCornerHullVertex(*region1, true, true);
+			upperLimit2 = GetCornerHullVertex(*region2, false, true);
 		} else if (direction.X == 0 && direction.Y == 1) {
 			// Merge up
-			lowerLimit1 = getCornerHullVertexId(*region1, true, true, limit);
-			lowerLimit2 = getCornerHullVertexId(*region2, true, false, limit);
-			upperLimit1 = getCornerHullVertexId(*region1, false, true, limit);
-			upperLimit2 = getCornerHullVertexId(*region2, false, false, limit);
+			lowerLimit1 = GetCornerHullVertex(*region1, true, true);
+			lowerLimit2 = GetCornerHullVertex(*region2, true, false);
+			upperLimit1 = GetCornerHullVertex(*region1, false, true);
+			upperLimit2 = GetCornerHullVertex(*region2, false, false);
 		}
 
 		// Logging output
@@ -112,12 +110,32 @@ namespace terrain {
 	}
 
 	bool BiomeRegionLoader::MergeRegionCorner(
-		const BiomeRegionData & tl,
-		const BiomeRegionData & tr,
-		const BiomeRegionData & bl,
-		const BiomeRegionData & br
+		BiomeRegionData & tl,
+		BiomeRegionData & tr,
+		BiomeRegionData & bl,
+		BiomeRegionData & br
 	) {
-		// TODO: implement
+		const uint8 size = 4;
+		std::array<BiomeRegionData *, size> data = {{ &tl, &tr, &bl, &br }};
+		std::array<TSharedPtr<VertexWithHullIndex>, size> vertices = {{
+			GetCornerHullVertex(tl, true, false),
+			GetCornerHullVertex(tr, false, false),
+			GetCornerHullVertex(bl, true, true),
+			GetCornerHullVertex(br, false, true)
+		}};
+		std::array<utils::Vector2<>, size> points;
+
+		// Get all 4 points with offsets
+		for (uint8 i = 0; i < size; i++) {
+			auto offset = data[i]->BiomeOffset - tl.BiomeOffset;
+			points[i] = vertices[i]->first + offset.Cast<double>();
+		}
+
+		// Determine which cross-edge to use by checking for collinearity and circumcircles
+		for (uint8 i = 0; i < size; i++) {
+		}
+
+		// TODO: implement edge flipping
 		UE_LOG(LogTemp, Warning, TEXT("Merging corners: (%ld %ld) - (%ld %ld) - (%ld %ld) - (%ld %ld)"),
 			tl.BiomeOffset.X, tl.BiomeOffset.Y, tr.BiomeOffset.X, tr.BiomeOffset.Y,
 			bl.BiomeOffset.X, bl.BiomeOffset.Y, br.BiomeOffset.X, br.BiomeOffset.Y)
