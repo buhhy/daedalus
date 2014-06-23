@@ -492,4 +492,36 @@ namespace utils {
 			Tangent(upperTangentLeft, upperTangentRight),
 			Tangent(lowerTangentLeft, lowerTangentRight));
 	}
+
+	void MergeDelaunayTileCorner(std::array<std::pair<DelaunayGraph *, uint64>, 4> & graphs) {
+		const uint8 size = 4;
+		std::array<utils::Vector2<>, size> points;
+		std::array<Vertex *, size> vertices;
+
+		// Get all 4 points with offsets to the top-left graph
+		for (uint8 i = 0; i < size; i++) {
+			auto & graph = graphs[i];
+			auto offset = graph.first->GraphOffset() - graphs[0].first->GraphOffset();
+			auto vertex = graph.first->ConvexHull[graph.second];
+			vertices[i] = vertex;
+			points[i] = vertex->GetPoint() + offset.Cast<double>();
+		}
+
+		// Determine which cross-edge to use by checking for collinearity and circumcircles
+		uint8 p1, p2, p3, p4;
+		auto & basePoints = points[0];
+		auto circumcircle = utils::CalculateCircumcircle(
+			points[0], points[1], points[2]);
+		if (utils::IsWithinCircumcircle(points[3], circumcircle)) {
+			p1 = 1; p2 = 3; p3 = 0; p4 = 2;
+		} else {
+			p1 = 0; p2 = 1; p3 = 2; p4 = 3;
+		}
+
+		for (uint8 i = 0; i < size; i++) {
+			auto & graph = graphs[i].first;
+			graph->AddFace(vertices[p1], vertices[p2], vertices[p3]);
+			graph->AddFace(vertices[p4], vertices[p3], vertices[p2]);
+		}
+	}
 }

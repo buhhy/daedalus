@@ -23,6 +23,7 @@ namespace terrain {
 	private:
 		typedef std::pair<utils::Vector2<>, uint64> VertexWithHullIndex;
 
+		uint8 CornerLimit;
 		BiomeRegionCache LoadedBiomeRegionCache;
 
 		BiomeGeneratorParameters BiomeGenParams;
@@ -37,16 +38,14 @@ namespace terrain {
 		TSharedPtr<const VertexWithHullIndex> BiomeRegionLoader::GetCornerHullVertex(
 			const BiomeRegionData & data,
 			const bool cornerX,
-			const bool cornerY,
-			const uint8 limit
-		) const;
+			const bool cornerY) const;
 
 		bool MergeRegionEdge(BiomeRegionData & r1, BiomeRegionData & r2);
 		bool MergeRegionCorner(
-			const BiomeRegionData & tl,
-			const BiomeRegionData & tr,
-			const BiomeRegionData & bl,
-			const BiomeRegionData & br);
+			BiomeRegionData & tl,
+			BiomeRegionData & tr,
+			BiomeRegionData & bl,
+			BiomeRegionData & br);
 		std::vector<BiomeOffsetVector> MergeRegion(
 			TSharedRef<BiomeRegionData> targetRegion, const BiomeOffsetVector & biomeOffset);
 

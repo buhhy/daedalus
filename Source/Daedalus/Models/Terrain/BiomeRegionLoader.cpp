@@ -117,23 +117,19 @@ namespace terrain {
 	) {
 		const uint8 size = 4;
 		std::array<BiomeRegionData *, size> data = {{ &tl, &tr, &bl, &br }};
-		std::array<TSharedPtr<VertexWithHullIndex>, size> vertices = {{
+		std::array<TSharedPtr<const VertexWithHullIndex>, size> vertices = {{
 			GetCornerHullVertex(tl, true, false),
 			GetCornerHullVertex(tr, false, false),
 			GetCornerHullVertex(bl, true, true),
 			GetCornerHullVertex(br, false, true)
 		}};
-		std::array<utils::Vector2<>, size> points;
 
-		// Get all 4 points with offsets
-		for (uint8 i = 0; i < size; i++) {
-			auto offset = data[i]->BiomeOffset - tl.BiomeOffset;
-			points[i] = vertices[i]->first + offset.Cast<double>();
-		}
+		std::array<std::pair<utils::DelaunayGraph *, uint64>, size> input;
 
-		// Determine which cross-edge to use by checking for collinearity and circumcircles
-		for (uint8 i = 0; i < size; i++) {
-		}
+		for (uint8 i = 0; i < size; i++)
+			input[i] = std::make_pair(&data[i]->DelaunayGraph, vertices[i]->second);
+
+		utils::MergeDelaunayTileCorner(input);
 
 		// TODO: implement edge flipping
 		UE_LOG(LogTemp, Warning, TEXT("Merging corners: (%ld %ld) - (%ld %ld) - (%ld %ld) - (%ld %ld)"),

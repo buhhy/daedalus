@@ -20,4 +20,12 @@ namespace utils {
 		DelaunayGraph & leftGraph, DelaunayGraph & rightGraph,
 		const uint64 lowerTangentLeft, const uint64 lowerTangentRight,
 		const uint64 upperTangentLeft, const uint64 upperTangentRight);
+
+	/**
+	 * @param graphs An array containing the 4 corner Delaunay graphs in the following
+	 *               order: top-left, top-right, bottom-left, bottom-right. The second
+	 *               value in the pair contains the index of the point in the convex hull
+	 *               that is used in the merging procedure.
+	 */
+	void MergeDelaunayTileCorner(std::array<std::pair<DelaunayGraph *, uint64>, 4> & graphs);
 }
