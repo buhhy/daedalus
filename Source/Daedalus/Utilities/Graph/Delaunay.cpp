@@ -518,10 +518,13 @@ namespace utils {
 			p1 = 0; p2 = 1; p3 = 2; p4 = 3;
 		}
 
+		// Add these 2 filler faces to every size
 		for (uint8 i = 0; i < size; i++) {
 			auto & graph = graphs[i].first;
 			graph->AddFace(vertices[p1], vertices[p2], vertices[p3]);
 			graph->AddFace(vertices[p4], vertices[p3], vertices[p2]);
 		}
+
+		// TODO: implement edge flipping to ensure correctness
 	}
 }
