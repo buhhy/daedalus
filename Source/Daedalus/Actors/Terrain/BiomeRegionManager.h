@@ -16,7 +16,7 @@ class ABiomeRegionManager : public AActor, public IEventListener {
 
 private:
 	typedef std::unordered_map <
-		terrain::BiomeOffsetVector, ABiomeRegion *
+		terrain::BiomeRegionOffsetVector, ABiomeRegion *
 	> BiomeRegionCache;
 
 	BiomeRegionCache LocalCache;
@@ -25,8 +25,8 @@ private:
 
 	ADDGameState * GetGameState();
 	void UpdateBiomesAt(const FVector & playerPosition);
-	void ReloadRegionAt(const terrain::BiomeOffsetVector & offset);
-	void DeleteRegionAt(const terrain::BiomeOffsetVector & offset);
+	void ReloadRegionAt(const terrain::BiomeRegionOffsetVector & offset);
+	void DeleteRegionAt(const terrain::BiomeRegionOffsetVector & offset);
 
 public:
 	virtual void HandleEvent(

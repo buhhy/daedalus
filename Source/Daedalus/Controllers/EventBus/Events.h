@@ -22,9 +22,9 @@ namespace events {
 	};
 
 	struct EBiomeRegionUpdate : public EventData {
-		std::vector<terrain::BiomeOffsetVector> UpdatedOffsets;
+		std::vector<terrain::BiomeRegionOffsetVector> UpdatedOffsets;
 		EBiomeRegionUpdate() {}
-		EBiomeRegionUpdate(const std::vector<terrain::BiomeOffsetVector> & offs) :
+		EBiomeRegionUpdate(const std::vector<terrain::BiomeRegionOffsetVector> & offs) :
 			UpdatedOffsets(offs) {}
 	};
 }

@@ -7,9 +7,12 @@ namespace utils {
 		T Y;
 
 		Vector2() {}
-		Vector2(T x, T y): X(x), Y(y) {}
+		Vector2(const T & x, const T & y): X(x), Y(y) {}
+		Vector2(const FVector & fv): Vector2(fv.X, fv.Y) {}
+		Vector2(const Vector2<T> & copy): Vector2(copy.X, copy.Y) {}
 
-		inline void Reset(T x, T y) { X = x; Y = y; }
+		inline void Reset(const T & x, const T & y) { X = x; Y = y; }
+		inline void Reset(const Vector2<T> & other) { Reset(other.X, other.Y); }
 
 		/** Dot product. */
 		template <typename T1>

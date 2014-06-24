@@ -15,12 +15,12 @@ ADDGameState * ABiomeRegionManager::GetGameState() {
 }
 
 void ABiomeRegionManager::UpdateBiomesAt(const FVector & playerPosition) {
-	terrain::BiomeOffsetVector offset;
+	terrain::BiomeRegionOffsetVector offset;
 	auto chunkLoader = GetGameState()->BiomeRegionLoader;
 	auto genParams = chunkLoader->GetGeneratorParameters();
 
 	// Get player's current chunk location
-	auto playerChunkPos = genParams.ToChunkCoordinates(To2D(playerPosition));
+	auto playerChunkPos = genParams.ToBiomeRegionCoordinates(utils::Vector2<>(playerPosition));
 
 	int64 fromX = playerChunkPos.X - RenderDistance;
 	int64 fromY = playerChunkPos.Y - RenderDistance;
@@ -53,11 +53,11 @@ void ABiomeRegionManager::UpdateBiomesAt(const FVector & playerPosition) {
 	}
 }
 
-void ABiomeRegionManager::ReloadRegionAt(const terrain::BiomeOffsetVector & offset) {
+void ABiomeRegionManager::ReloadRegionAt(const terrain::BiomeRegionOffsetVector & offset) {
 	auto chunkLoader = GetGameState()->BiomeRegionLoader;
 	auto genParams = chunkLoader->GetGeneratorParameters();
 	auto data = chunkLoader->GetBiomeRegionAt(offset);
-	auto position = To3D(genParams.ToRealCoordinates(data->BiomeOffset), RenderHeight);
+	auto position = genParams.ToRealCoordinates(data->BiomeOffset).ToFVector(RenderHeight);
 	FRotator defaultRotation(0, 0, 0);
 	FActorSpawnParameters defaultParameters;
 
@@ -69,7 +69,7 @@ void ABiomeRegionManager::ReloadRegionAt(const terrain::BiomeOffsetVector & offs
 	LocalCache.insert({ offset, newRegion });
 }
 
-void ABiomeRegionManager::DeleteRegionAt(const terrain::BiomeOffsetVector & offset) {
+void ABiomeRegionManager::DeleteRegionAt(const terrain::BiomeRegionOffsetVector & offset) {
 	if (LocalCache.count(offset) > 0) {
 		LocalCache.at(offset)->Destroy();
 		LocalCache.erase(offset);

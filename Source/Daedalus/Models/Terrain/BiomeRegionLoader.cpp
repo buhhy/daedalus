@@ -21,8 +21,7 @@ namespace terrain {
 
 	TSharedPtr<const VertexWithHullIndex> BiomeRegionLoader::GetCornerHullVertex(
 		const BiomeRegionData & data,
-		const bool cornerX,
-		const bool cornerY
+		const bool cornerX, const bool cornerY
 	) const {
 		const int8 dirX = cornerX ? -1 : 1;
 		const int8 dirY = cornerY ? -1 : 1;
@@ -87,15 +86,6 @@ namespace terrain {
 		UE_LOG(LogTemp, Warning, TEXT("Merging edges: (%ld %ld) - (%ld %ld)"),
 			region1->BiomeOffset.X, region1->BiomeOffset.Y,
 			region2->BiomeOffset.X, region2->BiomeOffset.Y)
-
-		if (upperLimit1.IsValid() && upperLimit2.IsValid())
-			UE_LOG(LogTemp, Warning, TEXT("Upper limit: %ld:(%f %f) - %ld:(%f %f)"),
-				upperLimit1->second, upperLimit1->first.X, upperLimit1->first.Y,
-				upperLimit2->second, upperLimit2->first.X, upperLimit2->first.Y)
-		if (lowerLimit1.IsValid() && lowerLimit2.IsValid())
-			UE_LOG(LogTemp, Warning, TEXT("Lower limit: %ld:(%f %f) - %ld:(%f %f)"),
-				lowerLimit1->second, lowerLimit1->first.X, lowerLimit1->first.Y,
-				lowerLimit2->second, lowerLimit2->first.X, lowerLimit2->first.Y)
 		
 		// Merge the 2 regions
 		if (upperLimit1.IsValid() && upperLimit2.IsValid() &&
@@ -104,16 +94,20 @@ namespace terrain {
 				region1->DelaunayGraph, region2->DelaunayGraph,
 				lowerLimit1->second, lowerLimit2->second,
 				upperLimit1->second, upperLimit2->second);
+			
+			// Set the neighbor flags
+			region1->NeighborsLoaded.Set(direction.X + 1, direction.Y + 1, true);
+			region2->NeighborsLoaded.Set(-direction.X + 1, -direction.Y + 1, true);
+
 			return true;
 		}
+
 		return false;
 	}
 
 	bool BiomeRegionLoader::MergeRegionCorner(
-		BiomeRegionData & tl,
-		BiomeRegionData & tr,
-		BiomeRegionData & bl,
-		BiomeRegionData & br
+		BiomeRegionData & tl, BiomeRegionData & tr,
+		BiomeRegionData & bl, BiomeRegionData & br
 	) {
 		const uint8 size = 4;
 		std::array<BiomeRegionData *, size> data = {{ &tl, &tr, &bl, &br }};
@@ -130,6 +124,12 @@ namespace terrain {
 			input[i] = std::make_pair(&data[i]->DelaunayGraph, vertices[i]->second);
 
 		utils::MergeDelaunayTileCorner(input);
+		
+		// Set the neighbor flags
+		tl.NeighborsLoaded.Set(2, 0, true);
+		tr.NeighborsLoaded.Set(0, 0, true);
+		bl.NeighborsLoaded.Set(2, 2, true);
+		br.NeighborsLoaded.Set(0, 2, true);
 
 		UE_LOG(LogTemp, Warning, TEXT("Merging corners: (%ld %ld) - (%ld %ld) - (%ld %ld) - (%ld %ld)"),
 			tl.BiomeOffset.X, tl.BiomeOffset.Y, tr.BiomeOffset.X, tr.BiomeOffset.Y,
@@ -138,13 +138,13 @@ namespace terrain {
 		return false;
 	}
 	
-	std::vector<BiomeOffsetVector> BiomeRegionLoader::MergeRegion(
+	std::vector<BiomeRegionOffsetVector> BiomeRegionLoader::MergeRegion(
 		TSharedRef<BiomeRegionData> targetRegion,
-		const BiomeOffsetVector & biomeOffset
+		const BiomeRegionOffsetVector & biomeOffset
 	) {
 		// Update neighbor's neighbor generation cache
 		utils::Tensor2<TSharedPtr<BiomeRegionData> > neighbors(3, 3, NULL);
-		BiomeOffsetVector nOffset;
+		BiomeRegionOffsetVector nOffset;
 
 		// Load up the neighboring biome regions if they haven't already been cached
 		for (int8 offY = -1; offY <= 1; offY++) {
@@ -160,7 +160,7 @@ namespace terrain {
 		}
 		neighbors.Set(1, 1, targetRegion);
 
-		std::vector<BiomeOffsetVector> mergedRegions;
+		std::vector<BiomeRegionOffsetVector> mergedRegions;
 
 		// Merge shared edges
 		for (int8 offY = -1; offY <= 1; offY++) {
@@ -192,14 +192,14 @@ namespace terrain {
 	}
 
 	TSharedPtr<BiomeRegionData> BiomeRegionLoader::LoadBiomeRegionFromDisk(
-		const BiomeOffsetVector & offset
+		const BiomeRegionOffsetVector & offset
 	) const {
 		// TODO: implement disk loading
 		return TSharedPtr<BiomeRegionData>(NULL);
 	}
 
 	TSharedRef<BiomeRegionData> BiomeRegionLoader::GenerateMissingBiomeRegion(
-		const BiomeOffsetVector & biomeOffset
+		const BiomeRegionOffsetVector & biomeOffset
 	) const {
 		// TODO: implement disk saving
 		auto data = new BiomeRegionData(
@@ -247,7 +247,7 @@ namespace terrain {
 	}
 
 	TSharedRef<BiomeRegionData> BiomeRegionLoader::GetBiomeRegionAt(
-		const BiomeOffsetVector & offset
+		const BiomeRegionOffsetVector & offset
 	) {
 		//UE_LOG(LogTemp, Error, TEXT("Loading chunk at offset: %d %d %d"), offset.X, offset.Y, offset.Z);
 		if (LoadedBiomeRegionCache.count(offset) > 0) {
@@ -277,5 +277,44 @@ namespace terrain {
 
 	const BiomeGeneratorParameters & BiomeRegionLoader::GetGeneratorParameters() const {
 		return BiomeGenParams;
+	}
+
+	BiomeVertexId BiomeRegionLoader::FindNearestBiomeId(const utils::Vector2<> point) {
+		// Convert into region coordinates
+		const auto offset = BiomeGenParams.ToBiomeRegionCoordinates(point);
+		const auto position = BiomeGenParams.GetInnerRegionPosition(point, offset);
+		const auto foundResults = GetBiomeRegionAt(offset)->FindNearestPoint(position);
+		const auto & regionSize = BiomeGenParams.BiomeGridCellSize;
+
+		const auto & foundGridOffset = std::get<1>(foundResults);
+		const int8 startX = foundGridOffset.X < 2 ? -1 : 0;
+		const int8 startY = foundGridOffset.Y < 2 ? -1 : 0;
+		const int8 endX = foundGridOffset.X >= regionSize.X - 2 ? 1 : 0;
+		const int8 endY = foundGridOffset.Y >= regionSize.Y - 2 ? 1 : 0;
+
+		BiomeRegionOffsetVector foundGlobalOffset(offset);
+		uint64 vid = std::get<0>(foundResults);
+		double min = std::get<2>(foundResults);
+
+		// If the found vertex is on the very edge of that particular region, then we must
+		// search surrounding regions to ensure we have the nearest possible vertex to
+		// the given location.
+		for (int8 x = startX; x <= endX; x++) {
+			for (int8 y = startY; y <= endY; y++) {
+				if (x != 0 || y != 0) {
+					auto newOffsetVector = BiomeRegionOffsetVector(offset.X + x, offset.Y + y);
+					auto compare = GetBiomeRegionAt(newOffsetVector)
+						->FindNearestPoint({ position.X + x, position.Y + y });
+					auto dist = std::get<2>(compare);
+					if (min > dist) {
+						min = dist;
+						vid = std::get<0>(compare);
+						foundGlobalOffset.Reset(newOffsetVector);
+					}
+				}
+			}
+		}
+
+		return BiomeVertexId(foundGlobalOffset, vid);
 	}
 }

@@ -8,6 +8,25 @@
 #include <vector>
 
 namespace utils {
+	// Equivalent to the Scala Option construct which can be a Some or None value
+	template <typename T>
+	struct Option {
+	private:
+		TSharedPtr<T> Value;
+	public:
+		Option() : Value(NULL) {}
+		Option(const T & value) : Value(new T(value)) {}
+		bool IsValid() const { return Value->IsValid(); }
+		T & Get() { return *Value; }
+		const T & Get() const { return *Value; }
+	};
+	
+	template <typename T>
+	inline Option<T> None() { return Option<T>(); }
+	
+	template <typename T>
+	inline Option<T> Some(const T & value) { return Option<T>(value); }
+
 	struct Circle2D {
 		Vector2<> Center;
 		float Radius;
@@ -53,17 +72,20 @@ namespace utils {
 	template<typename T>
 	struct Tensor2 {
 		std::vector<T> Data;
-		uint32 Width;		// X
-		uint32 Depth;		// Y
+		uint32 Width;        // X
+		uint32 Depth;        // Y
 
 		Tensor2() : Tensor2(0, 0) {}
-		Tensor2(const Vector2<uint64> & size) : Tensor2(size.X, size.Y) {}
-		Tensor2(const Vector2<uint64> & size, const T & value) :
+		Tensor2(const Vector2<uint16> & size) : Tensor2(size.X, size.Y) {}
+		Tensor2(const Vector2<uint16> & size, const T & value) :
+			Tensor2(size.X, size.Y, value) {}
+		Tensor2(const Vector2<uint32> & size) : Tensor2(size.X, size.Y) {}
+		Tensor2(const Vector2<uint32> & size, const T & value) :
 			Tensor2(size.X, size.Y, value) {}
 
-		Tensor2(uint64 width, uint64 depth) :
+		Tensor2(uint32 width, uint32 depth) :
 			Width(width), Depth(depth), Data(width * depth) {}
-		Tensor2(uint64 width, uint64 depth, const T & value) :
+		Tensor2(uint32 width, uint32 depth, const T & value) :
 			Width(width), Depth(depth), Data(width * depth, value) {}
 
 		Tensor2 & Reset(uint32 Width, uint32 Depth, const T & value) {
@@ -94,18 +116,21 @@ namespace utils {
 	template<typename T>
 	struct Tensor3 {
 		std::vector<T> Data;
-		uint32 Width;		// X
-		uint32 Depth;		// Y
-		uint32 Height;		// Z
+		uint32 Width;       // X
+		uint32 Depth;       // Y
+		uint32 Height;      // Z
 
 		Tensor3() : Tensor3(0, 0, 0) {}
-		Tensor3(const Vector3<uint64> & size) : Tensor3(size.X, size.Y, size.Z) {}
-		Tensor3(const Vector3<uint64> & size, const T & value) :
+		Tensor3(const Vector3<uint16> & size) : Tensor3(size.X, size.Y, size.Z) {}
+		Tensor3(const Vector3<uint16> & size, const T & value) :
+			Tensor3(size.X, size.Y, size.Z, value) {}
+		Tensor3(const Vector3<uint32> & size) : Tensor3(size.X, size.Y, size.Z) {}
+		Tensor3(const Vector3<uint32> & size, const T & value) :
 			Tensor3(size.X, size.Y, size.Z, value) {}
 
-		Tensor3(uint64 width, uint64 depth, uint64 height) :
+		Tensor3(uint32 width, uint32 depth, uint32 height) :
 			Width(width), Height(height), Depth(depth), Data(width * height * depth) {}
-		Tensor3(uint64 width, uint64 depth, uint64 height, const T & value) :
+		Tensor3(uint32 width, uint32 depth, uint32 height, const T & value) :
 			Width(width), Height(height), Depth(depth), Data(width * height * depth, value) {}
 
 		Tensor3 & Reset(uint32 Width, uint32 Height, uint32 Depth, const T & value) {

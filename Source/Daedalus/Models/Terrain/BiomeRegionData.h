@@ -38,7 +38,7 @@ namespace terrain {
 	 * at a larger scale than terrain chunks and will be subdivided evenly into many biome
 	 * cells. Each biome cell contains a least 1 Delaunay point for more even triangulations.
 	 */
-	struct BiomeRegionData {
+	class BiomeRegionData {
 	private:
 		uint64 CurrentVertexId;
 		inline uint64 GetNextId() { return CurrentVertexId++; }
@@ -48,45 +48,22 @@ namespace terrain {
 		BiomePointField PointDistribution;
 		utils::DelaunayGraph DelaunayGraph;
 
-		// Indicates whether the 8 neighboring regions have been generated yet, the array is
-		// ordered as follows: [ top, top-right, right, bottom-right, bottom, bottom-left,
-		// left, top-left ], or [ Y+, XY+, X+, X+Y-, Y-, XY-, X-, X-Y+ ]
-		std::array<bool, 8> NeighborsLoaded;
+		// Indicates whether the 8 neighboring regions have been generated yet, (0, 0) is
+		// bottom left, (2, 2) is top right.
+		utils::Tensor2<bool> NeighborsLoaded;
 
-		BiomeSizeVector BiomeGridSize;      // Size of the biome in grid cells
-		BiomeOffsetVector BiomeOffset;      // Biome offset from (0,0)
+		BiomeRegionSizeVector BiomeGridSize;      // Size of the biome in grid cells
+		BiomeRegionOffsetVector BiomeOffset;      // Biome offset from (0,0)
 
 		BiomeRegionData(
 			const uint16 buffer,
-			const BiomeSizeVector & biomeSize,
-			const BiomeOffsetVector & biomeOffset
-		) : BiomeGridSize(biomeSize),
-			BiomeOffset(biomeOffset),
-			PointDistribution(biomeSize),
-			DelaunayGraph(biomeOffset),
-			CurrentVertexId(0),
-			NeighborsLoaded(std::array<bool, 8>())
-		{
-			auto toY = PointDistribution.Depth - buffer - 1;
-			auto toX = PointDistribution.Width - buffer - 1;
-			// Create buffer border around biome region
-			for (auto y = buffer; y <= toY; y++) {
-				for (auto x = buffer; x <= toX; x++)
-					PointDistribution.Get(x, y).IsFinalized = true;
-			}
-		}
+			const BiomeRegionSizeVector & biomeSize,
+			const BiomeRegionOffsetVector & biomeOffset);
 
 		~BiomeRegionData() {}
 
-		uint64 InsertPoint(
-			const uint64 x,
-			const uint64 y,
-			const utils::Vector2<> & point
-		) {
-			auto id = GetNextId();
-			Points.insert({ id, point });
-			PointDistribution.Get(x, y).AddPoint(id);
-			return id;
-		}
+		uint64 InsertPoint(const uint64 x, const uint64 y, const utils::Vector2<> & point);
+		std::tuple<uint64, BiomeRegionGridVector, double> FindNearestPoint(
+			utils::Vector2<> offset) const;
 	};
 }

@@ -3,7 +3,7 @@
 #include "DataStructures.h"
 
 namespace terrain {
-	typedef utils::Vector3<uint64> ChunkSizeVector;
+	typedef utils::Vector3<uint16> ChunkSizeVector;
 	typedef utils::Vector3<int64> ChunkOffsetVector;
 
 	struct TerrainGeneratorParameters {
@@ -27,27 +27,42 @@ namespace terrain {
 	};
 
 
-	typedef utils::Vector2<int64> BiomeOffsetVector;
-	typedef utils::Vector2<uint64> BiomeSizeVector;
+	typedef utils::Vector2<int64> BiomeRegionOffsetVector;   // Offset vector for biome regions
+	typedef utils::Vector2<uint16> BiomeRegionSizeVector;    // TODO: remove this
+	typedef utils::Vector2<uint16> BiomeRegionGridVector;    // Offset vector within a region
+	typedef std::pair<BiomeRegionOffsetVector, uint64> BiomeVertexId;
 
 	struct BiomeGeneratorParameters {
-		BiomeSizeVector BiomeGridCellSize;
+		BiomeRegionSizeVector BiomeGridCellSize;
 		int64 Seed;
 		uint64 BufferSize;			// Number of buffer cells for Delaunay graph merging
 		uint16 MinPointsPerCell;
 		uint16 MaxPointsPerCell;
 		double BiomeScale;			// Maps biome grid to real world coordinates
 
-		const FVector2D ToRealCoordinates(const BiomeOffsetVector & offset) const {
-			return FVector2D(
+		inline const utils::Vector2<> ToRealCoordinates(
+			const BiomeRegionOffsetVector & offset
+		) const {
+			return utils::Vector2<>(
 				(int64) offset.X * BiomeScale,
 				(int64) offset.Y * BiomeScale);
 		}
 
-		const BiomeOffsetVector ToChunkCoordinates(const FVector2D & position) const {
-			return BiomeOffsetVector(
+		inline const BiomeRegionOffsetVector ToBiomeRegionCoordinates(
+			const utils::Vector2<> & position
+		) const {
+			return BiomeRegionOffsetVector(
 				FMath::Floor(position.X / BiomeScale),
 				FMath::Floor(position.Y / BiomeScale));
+		}
+
+		inline const utils::Vector2<> GetInnerRegionPosition(
+			const utils::Vector2<> & position,
+			const BiomeRegionOffsetVector & regionOffset
+		) const {
+			return utils::Vector2<>(
+				position.X / BiomeScale - regionOffset.X,
+				position.Y / BiomeScale - regionOffset.Y);
 		}
 	};
 }
