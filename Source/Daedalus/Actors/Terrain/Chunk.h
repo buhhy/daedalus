@@ -22,6 +22,8 @@ private:
 public:
 	UPROPERTY()
 		TSubobjectPtr<UGeneratedMeshComponent> Mesh;
+	UPROPERTY()
+		UMaterial * TestMaterial;
 
 	void InitializeChunk(const terrain::TerrainGeneratorParameters & params);
 	void SetChunkData(const TSharedPtr<terrain::ChunkData> & chunkData);

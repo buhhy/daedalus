@@ -78,8 +78,8 @@ void ABiomeRegionManager::DeleteRegionAt(const terrain::BiomeRegionOffsetVector 
 
 void ABiomeRegionManager::BeginPlay() {
 	Super::BeginPlay();
-	GetGameState()->EventBus->AddListener(events::E_PlayerMovement, this);
-	GetGameState()->EventBus->AddListener(events::E_BiomeRegionUpdate, this);
+	//GetGameState()->EventBus->AddListener(events::E_PlayerMovement, this);
+	//GetGameState()->EventBus->AddListener(events::E_BiomeRegionUpdate, this);
 }
 
 void ABiomeRegionManager::HandleEvent(

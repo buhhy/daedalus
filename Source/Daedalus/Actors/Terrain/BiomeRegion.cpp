@@ -53,7 +53,6 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	TArray<FMeshTriangle> triangles;
 	FVector multiplyVector(scale, scale, scale);
 	FVector displacementVector;
-	FMeshTriangle tempTri;
 	displacementVector.Set(RegionData->BiomeOffset.X, RegionData->BiomeOffset.Y, 0);
 	
 	// Draw grid lines

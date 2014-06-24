@@ -20,7 +20,7 @@ namespace terrain {
 		const utils::Vector3<int64> & offset
 	) {
 		auto data = new ChunkData(TerrainGenParams.GridCellCount, offset);
-		SetDefaultHeight(*data, 2);
+		SetDefaultHeight(*data, 15.0);
 		return TSharedRef<ChunkData>(data);
 	}
 
@@ -43,7 +43,7 @@ namespace terrain {
 	}
 
 	void ChunkLoader::SetDefaultHeight(ChunkData & data, int32 height) {
-		auto chunkHeight = TerrainGenParams.GridCellCount;
+		auto chunkHeight = TerrainGenParams.ChunkScale;
 		if (((data.ChunkOffset.Z + 1) * (int64) chunkHeight) < height) {
 			data.DensityData.Fill(1.0);			// Completely filled block
 			//UE_LOG(LogTemp, Error, TEXT("Ground chunk"));
@@ -52,7 +52,8 @@ namespace terrain {
 			//UE_LOG(LogTemp, Error, TEXT("Air chunk"));
 		} else {
 			//UE_LOG(LogTemp, Error, TEXT("Mixed chunk"));
-			auto localHeight = height - chunkHeight * data.ChunkOffset.Z;
+			auto localHeight = std::round(
+				TerrainGenParams.GridCellCount * (height / chunkHeight - data.ChunkOffset.Z));
 			for (uint32 x = 0; x < data.ChunkFieldSize; x++) {
 				for (uint32 y = 0; y < data.ChunkFieldSize; y++) {
 					for (uint32 z = 0; z < data.ChunkFieldSize && z < localHeight; z++)

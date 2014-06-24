@@ -6,10 +6,8 @@ AChunk::AChunk(const class FPostConstructInitializeProperties & PCIP)
 	: Super(PCIP) {
 
 	Mesh = PCIP.CreateDefaultSubobject<UGeneratedMeshComponent>(this, TEXT("GeneratedMesh"));
-	static ConstructorHelpers::FObjectFinder<UMaterial> wut(TEXT("Material'/Game/TestMaterial.TestMaterial'"));
-	//auto material = UMaterialInstanceDynamic::Create((UMaterial *) wut.Object, this);
-	//material->SetVectorParameterValue(FName(TEXT("TestProperty")), FLinearColor(1.0, 0.0, 0.0, 1.0));
-	//Mesh->SetMaterial(0, material);
+	TestMaterial = ConstructorHelpers::FObjectFinder<UMaterial>(
+		TEXT("Material'/Game/TestMaterial.TestMaterial'")).Object;
 	RootComponent = Mesh;
 }
 
@@ -24,17 +22,18 @@ void AChunk::SetChunkData(const TSharedPtr<terrain::ChunkData> & chunkData) {
 }
 
 void AChunk::GenerateChunkMesh() {
+	auto material = UMaterialInstanceDynamic::Create((UMaterial *) TestMaterial, this);
+
 	uint32 size = TerrainGenParams.GridCellCount;
 
-	float unitSize = TerrainGenParams.ChunkScale;
+	double scale = TerrainGenParams.ChunkScale / size;
 
-	TArray<FMeshTriangle> triangles;
 	TArray<utils::Triangle> tempTris;
-	FVector multiplyVector(unitSize, unitSize, unitSize);
-	FVector displacementVector;
+	utils::Vector3<> displacementVector;
 
 	utils::GridCell gridCell;
 	auto & density = ChunkData->DensityData;
+	std::vector<utils::Triangle> triangles;
 
 	for (uint32 x = 0; x < size; x++) {
 		for (uint32 y = 0; y < size; y++) {
@@ -52,18 +51,23 @@ void AChunk::GenerateChunkMesh() {
 				tempTris.Reset();
 				utils::MarchingCube(tempTris, 0.5, gridCell);
 
-				displacementVector.Set(x, y, z);
+				displacementVector.Reset(x, y, z);
 
 				for (auto it = tempTris.CreateConstIterator(); it; ++it) {
-					FMeshTriangle tri;
-					tri.Vertex0 = (it->Point1.ToFVector() + displacementVector) * multiplyVector;
-					tri.Vertex1 = (it->Point2.ToFVector() + displacementVector) * multiplyVector;
-					tri.Vertex2 = (it->Point3.ToFVector() + displacementVector) * multiplyVector;
-					triangles.Add(tri);
+					utils::Triangle tri(
+						(it->Point1 + displacementVector) * scale,
+						(it->Point2 + displacementVector) * scale,
+						(it->Point3 + displacementVector) * scale);
+					triangles.push_back(tri);
 				}
 			}
 		}
 	}
 
-	Mesh->SetGeneratedMeshTriangles(triangles);
+	if (triangles.size() > 0) {
+		TArray<FMeshTriangle> meshTriangles;
+		for (auto it : triangles)
+			meshTriangles.Add(FMeshTriangle(it, material));
+		Mesh->SetGeneratedMeshTriangles(meshTriangles);
+	}
 }
