@@ -48,8 +48,7 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 
 	double scale = BiomeGridScale;
 
-	uint32 w = RegionData->BiomeGridSize.X;
-	uint32 d = RegionData->BiomeGridSize.Y;
+	uint32 size = RegionData->BiomeGridSize;
 
 	TArray<FMeshTriangle> triangles;
 	FVector multiplyVector(scale, scale, scale);
@@ -61,15 +60,15 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	std::vector<utils::Triangle> gridTries;
 	utils::Vector3<> tempVector31, tempVector32, tempVector33;
 	// Y lines
-	for (auto y = 0u; y < d; y++) {
-		double lineY = (scale * y) / d;
+	for (auto y = 0u; y < size; y++) {
+		double lineY = (scale * y) / size;
 		tempVector31.Reset(0, lineY, 0);
 		tempVector32.Reset(scale, lineY, 0);
 		utils::CreateLine(gridTries, tempVector31, tempVector32, 0.2);
 	}
 	// X lines
-	for (auto x = 0u; x < w; x++) {
-		double lineX = (scale * x) / d;
+	for (auto x = 0u; x < size; x++) {
+		double lineX = (scale * x) / size;
 		tempVector31.Reset(lineX, 0, 0);
 		tempVector32.Reset(lineX, scale, 0);
 		utils::CreateLine(gridTries, tempVector31, tempVector32, 0.2);

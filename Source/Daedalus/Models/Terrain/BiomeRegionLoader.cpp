@@ -25,8 +25,8 @@ namespace terrain {
 	) const {
 		const int8 dirX = cornerX ? -1 : 1;
 		const int8 dirY = cornerY ? -1 : 1;
-		const uint64 startX = cornerX ? data.BiomeGridSize.X - 1 : 0;
-		const uint64 startY = cornerY ? data.BiomeGridSize.Y - 1 : 0;
+		const uint64 startX = cornerX ? data.BiomeGridSize - 1 : 0;
+		const uint64 startY = cornerY ? data.BiomeGridSize - 1 : 0;
 		int8 accumX = 0, accumY = 0;
 		const VertexWithHullIndex * vertex = NULL;
 		bool found;
@@ -203,7 +203,7 @@ namespace terrain {
 	) const {
 		// TODO: implement disk saving
 		auto data = new BiomeRegionData(
-			BiomeGenParams.BufferSize, BiomeGenParams.BiomeGridCellSize, biomeOffset);
+			BiomeGenParams.BufferSize, BiomeGenParams.GridCellCount, biomeOffset);
 		auto dataRef = TSharedRef<BiomeRegionData>(data);
 
 		// Initialize Mersenne Twister PRNG with seed, this guarantees each region will
@@ -219,20 +219,19 @@ namespace terrain {
 		uint16 numPoints = 0;
 		utils::Vector2<> point;
 		utils::Vector2<> offset;
-		utils::Vector2<> biomeRegionSize = BiomeGenParams.BiomeGridCellSize.Cast<double>();
 
 		// Run Delaunay triangulation algorithm
 		std::vector<std::pair<BiomeCellVertex, uint64> > vertexList;
 		
 		// Create uniform random point distribution, and insert vertices into aggregate list
-		for (auto y = 0; y < BiomeGenParams.BiomeGridCellSize.Y; y++) {
-			for (auto x = 0; x < BiomeGenParams.BiomeGridCellSize.X; x++) {
+		for (auto y = 0u; y < BiomeGenParams.GridCellCount; y++) {
+			for (auto x = 0u; x < BiomeGenParams.GridCellCount; x++) {
 				numPoints = randNumPoints();
 				offset.Reset(x, y);
 				for (auto n = numPoints - 1; n >= 0; n--) {
 					// Set point X, Y to random point within cell
 					point.Reset(randPosition(), randPosition());
-					point = (point + offset) / biomeRegionSize;
+					point = (point + offset) / (double) BiomeGenParams.GridCellCount;
 					auto id = data->InsertPoint(x, y, point);
 
 					// Align X, Y relative to entire region
@@ -284,13 +283,12 @@ namespace terrain {
 		const auto offset = BiomeGenParams.ToBiomeRegionCoordinates(point);
 		const auto position = BiomeGenParams.GetInnerRegionPosition(point, offset);
 		const auto foundResults = GetBiomeRegionAt(offset)->FindNearestPoint(position);
-		const auto & regionSize = BiomeGenParams.BiomeGridCellSize;
 
 		const auto & foundGridOffset = std::get<1>(foundResults);
 		const int8 startX = foundGridOffset.X < 2 ? -1 : 0;
 		const int8 startY = foundGridOffset.Y < 2 ? -1 : 0;
-		const int8 endX = foundGridOffset.X >= regionSize.X - 2 ? 1 : 0;
-		const int8 endY = foundGridOffset.Y >= regionSize.Y - 2 ? 1 : 0;
+		const int8 endX = foundGridOffset.X >= BiomeGenParams.GridCellCount - 2 ? 1 : 0;
+		const int8 endY = foundGridOffset.Y >= BiomeGenParams.GridCellCount - 2 ? 1 : 0;
 
 		BiomeRegionOffsetVector foundGlobalOffset(offset);
 		uint64 vid = std::get<0>(foundResults);

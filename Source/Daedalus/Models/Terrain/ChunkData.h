@@ -15,17 +15,17 @@ namespace terrain {
 		utils::Tensor3<float> DensityData;
 		utils::Tensor3<uint64> MaterialData;
 
-		ChunkSizeVector ChunkGridSize;			// Size of the chunk in polygons
-		ChunkSizeVector ChunkFieldSize;			// Size of the chunk scalar field
+		uint32 ChunkGridSize;			// Size of the chunk in polygons
+		uint32 ChunkFieldSize;			// Size of the chunk scalar field
 		ChunkOffsetVector ChunkOffset;
 
 		ChunkData(
-			const ChunkSizeVector & chunkSize,
+			const uint32 chunkSize,
 			const ChunkOffsetVector & chunkOffset
 		) : ChunkGridSize(chunkSize),
-			ChunkFieldSize(chunkSize + uint16(1)),
-			DensityData(chunkSize + uint16(1), 0),
-			MaterialData(chunkSize + uint16(1), 0),
+			ChunkFieldSize(chunkSize + 1),
+			DensityData(chunkSize + 1, 0),
+			MaterialData(chunkSize + 1, 0),
 			ChunkOffset(chunkOffset) {}
 
 		~ChunkData() {}

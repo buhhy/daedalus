@@ -24,9 +24,7 @@ void AChunk::SetChunkData(const TSharedPtr<terrain::ChunkData> & chunkData) {
 }
 
 void AChunk::GenerateChunkMesh() {
-	uint32 w = TerrainGenParams.ChunkGridCellSize.X;
-	uint32 h = TerrainGenParams.ChunkGridCellSize.Y;
-	uint32 d = TerrainGenParams.ChunkGridCellSize.Z;
+	uint32 size = TerrainGenParams.GridCellCount;
 
 	float unitSize = TerrainGenParams.ChunkScale;
 
@@ -38,9 +36,9 @@ void AChunk::GenerateChunkMesh() {
 	utils::GridCell gridCell;
 	auto & density = ChunkData->DensityData;
 
-	for (uint32 x = 0; x < w; x++) {
-		for (uint32 y = 0; y < d; y++) {
-			for (uint32 z = 0; z < h; z++) {
+	for (uint32 x = 0; x < size; x++) {
+		for (uint32 y = 0; y < size; y++) {
+			for (uint32 z = 0; z < size; z++) {
 				gridCell.Initialize(
 					density.Get(x, y, z),
 					density.Get(x, y, z + 1),

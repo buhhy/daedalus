@@ -76,6 +76,9 @@ namespace utils {
 		uint32 Depth;        // Y
 
 		Tensor2() : Tensor2(0, 0) {}
+		Tensor2(const uint32 size) : Tensor2(size, size) {}
+		Tensor2(const uint32 size, const T & value) : Tensor2(size, size, value) {}
+
 		Tensor2(const Vector2<uint16> & size) : Tensor2(size.X, size.Y) {}
 		Tensor2(const Vector2<uint16> & size, const T & value) :
 			Tensor2(size.X, size.Y, value) {}
@@ -121,6 +124,8 @@ namespace utils {
 		uint32 Height;      // Z
 
 		Tensor3() : Tensor3(0, 0, 0) {}
+		Tensor3(const uint32 size) : Tensor3(size, size, size) {}
+		Tensor3(const uint32 size, const T & value) : Tensor3(size, size, size, value) {}
 		Tensor3(const Vector3<uint16> & size) : Tensor3(size.X, size.Y, size.Z) {}
 		Tensor3(const Vector3<uint16> & size, const T & value) :
 			Tensor3(size.X, size.Y, size.Z, value) {}

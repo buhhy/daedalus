@@ -6,7 +6,7 @@
 namespace terrain {
 	BiomeRegionData::BiomeRegionData(
 		const uint16 buffer,
-		const BiomeRegionSizeVector & biomeSize,
+		const uint32 biomeSize,
 		const BiomeRegionOffsetVector & biomeOffset
 	) : BiomeGridSize(biomeSize),
 		BiomeOffset(biomeOffset),
@@ -39,13 +39,13 @@ namespace terrain {
 	std::tuple<uint64, BiomeRegionGridVector, double> BiomeRegionData::FindNearestPoint(
 		utils::Vector2<> offset
 	) const {
-		double xpos = offset.X * BiomeGridSize.X;
-		double ypos = offset.Y * BiomeGridSize.Y;
+		double xpos = offset.X * BiomeGridSize;
+		double ypos = offset.Y * BiomeGridSize;
 
-		uint16 xstart = std::max((uint16) std::floor(xpos) - 2, 0);
-		uint16 xend = std::min((uint16) std::ceil(xpos) + 2, BiomeGridSize.X - 1);
-		uint16 ystart = std::max((uint16) std::floor(ypos) - 2, 0);
-		uint16 yend = std::min((uint16) std::ceil(ypos) + 2, BiomeGridSize.Y - 1);
+		uint16 xstart = std::max((uint32) std::floor(xpos) - 2, 0u);
+		uint16 xend = std::min((uint32) std::ceil(xpos) + 2, BiomeGridSize - 1);
+		uint16 ystart = std::max((uint32) std::floor(ypos) - 2, 0u);
+		uint16 yend = std::min((uint32) std::ceil(ypos) + 2, BiomeGridSize - 1);
 
 		double min = 5.0;
 		uint64 vid = 0;

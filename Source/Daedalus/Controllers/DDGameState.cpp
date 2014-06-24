@@ -5,9 +5,9 @@
 ADDGameState::ADDGameState(const class FPostConstructInitializeProperties& PCIP)
 	: Super(PCIP),
 	Seed(12345678),
-	TerrainGenParams({ { 16, 16, 16 }, Seed, 40.0 }),
+	TerrainGenParams({ 16, Seed, 40.0 }),
 	BiomeGenParams({
-		{ 16, 16 },      // BiomeGridCellSize
+		16,              // BiomeGridCellSize
 		Seed,            // Seed
 		3,               // BufferSize
 		1,               // MinPointsPerCell

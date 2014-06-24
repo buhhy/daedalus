@@ -52,12 +52,12 @@ namespace terrain {
 		// bottom left, (2, 2) is top right.
 		utils::Tensor2<bool> NeighborsLoaded;
 
-		BiomeRegionSizeVector BiomeGridSize;      // Size of the biome in grid cells
+		uint32 BiomeGridSize;                     // Size of the biome in grid cells
 		BiomeRegionOffsetVector BiomeOffset;      // Biome offset from (0,0)
 
 		BiomeRegionData(
 			const uint16 buffer,
-			const BiomeRegionSizeVector & biomeSize,
+			const uint32 biomeSize,
 			const BiomeRegionOffsetVector & biomeOffset);
 
 		~BiomeRegionData() {}
