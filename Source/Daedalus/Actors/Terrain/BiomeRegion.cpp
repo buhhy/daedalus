@@ -32,7 +32,9 @@ void ABiomeRegion::InitializeBiomeRegion(const float scale) {
 	BiomeGridScale = scale;
 }
 
-void ABiomeRegion::SetBiomeRegionData(const TSharedPtr<terrain::BiomeRegionData> & BiomeRegionData) {
+void ABiomeRegion::SetBiomeRegionData(
+	const std::shared_ptr<terrain::BiomeRegionData> & BiomeRegionData
+) {
 	RegionData = NULL;
 	RegionData = BiomeRegionData;
 	GenerateBiomeRegionMesh();

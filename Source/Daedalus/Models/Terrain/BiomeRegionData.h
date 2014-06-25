@@ -58,9 +58,8 @@ namespace terrain {
 	 */
 	struct BiomeCellData {
 		PointIds PointIds;
-		bool IsFinalized;
 
-		BiomeCellData(): IsFinalized(false) {}
+		BiomeCellData() {}
 
 		~BiomeCellData() {}
 

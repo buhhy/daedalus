@@ -5,14 +5,16 @@
 #include "Vector3.h"
 #include "Vector4.h"
 #include "Matrix4.h"
+
 #include <vector>
+#include <memory>
 
 namespace utils {
 	// Equivalent to the Scala Option construct which can be a Some or None value
 	template <typename T>
 	struct Option {
 	private:
-		TSharedPtr<T> Value;
+		std::unique_ptr<T> Value;
 	public:
 		Option() : Value(NULL) {}
 		Option(const T & value) : Value(new T(value)) {}

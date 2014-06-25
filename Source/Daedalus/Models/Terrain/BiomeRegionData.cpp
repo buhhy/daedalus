@@ -17,11 +17,6 @@ namespace terrain {
 	{
 		auto toY = PointDistribution.Depth - buffer - 1;
 		auto toX = PointDistribution.Width - buffer - 1;
-		// Create buffer border around biome region
-		for (auto y = buffer; y <= toY; y++) {
-			for (auto x = buffer; x <= toX; x++)
-				PointDistribution.Get(x, y).IsFinalized = true;
-		}
 		// This region is technically always laoded, hence set to true
 		NeighborsLoaded.Set(1, 1, true);
 	}

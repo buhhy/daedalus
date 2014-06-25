@@ -6,10 +6,12 @@
 #include "DataStructures.h"
 #include "EventBus.h"
 
+#include <memory>
+
 namespace terrain {
 	typedef std::unordered_map<
 		terrain::BiomeRegionOffsetVector,
-		TSharedRef<BiomeRegionData>
+		std::shared_ptr<BiomeRegionData>
 	> BiomeRegionCache;
 
 	/**
@@ -27,15 +29,15 @@ namespace terrain {
 		BiomeRegionCache LoadedBiomeRegionCache;
 
 		BiomeGeneratorParameters BiomeGenParams;
-		TSharedRef<events::EventBus> EventBus;
+		std::shared_ptr<events::EventBus> EventBus;
 
 
-		TSharedPtr<BiomeRegionData> LoadBiomeRegionFromDisk(
+		std::shared_ptr<BiomeRegionData> LoadBiomeRegionFromDisk(
 			const BiomeRegionOffsetVector & offset) const;
-		TSharedRef<BiomeRegionData> GenerateMissingBiomeRegion(
+		std::shared_ptr<BiomeRegionData> GenerateMissingBiomeRegion(
 			const BiomeRegionOffsetVector & offset) const;
 
-		TSharedPtr<const VertexWithHullIndex> BiomeRegionLoader::GetCornerHullVertex(
+		std::shared_ptr<const VertexWithHullIndex> BiomeRegionLoader::GetCornerHullVertex(
 			const BiomeRegionData & data,
 			const bool cornerX, const bool cornerY) const;
 
@@ -46,16 +48,20 @@ namespace terrain {
 			BiomeRegionData & bl,
 			BiomeRegionData & br);
 		std::vector<BiomeRegionOffsetVector> MergeRegion(
-			TSharedRef<BiomeRegionData> targetRegion, const BiomeRegionOffsetVector & biomeOffset);
+			std::shared_ptr<BiomeRegionData> targetRegion, const BiomeRegionOffsetVector & biomeOffset);
 
 	public:
 		BiomeRegionLoader(
 			const BiomeGeneratorParameters & params,
-			TSharedRef<events::EventBus> eventBus);
+			std::shared_ptr<events::EventBus> eventBus);
 		~BiomeRegionLoader();
+		
 
-		const BiomeGeneratorParameters & GetGeneratorParameters() const;
-		TSharedRef<BiomeRegionData> GetBiomeRegionAt(const BiomeRegionOffsetVector & offset);
+		const BiomeGeneratorParameters & GetGeneratorParameters() const {
+			return BiomeGenParams;
+		}
+
+		std::shared_ptr<BiomeRegionData> GetBiomeRegionAt(const BiomeRegionOffsetVector & offset);
 		BiomeId BiomeRegionLoader::FindNearestBiomeId(const utils::Vector2<> point);
 	};
 }

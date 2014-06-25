@@ -5,6 +5,9 @@
 #include "ChunkLoader.h"
 #include "BiomeRegionLoader.h"
 #include "TerrainDataStructures.h"
+
+#include <memory>
+
 #include "DDGameState.generated.h"
 
 /**
@@ -20,7 +23,7 @@ private:
 	terrain::BiomeGeneratorParameters BiomeGenParams;
 
 public:
-	TSharedRef<events::EventBus> EventBus;
-	TSharedRef<terrain::ChunkLoader> ChunkLoader;
-	TSharedRef<terrain::BiomeRegionLoader> BiomeRegionLoader;
+	std::shared_ptr<events::EventBus> EventBus;
+	std::shared_ptr<terrain::ChunkLoader> ChunkLoader;
+	std::shared_ptr<terrain::BiomeRegionLoader> BiomeRegionLoader;
 };

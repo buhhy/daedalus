@@ -5,6 +5,9 @@
 #include "BiomeRegionData.h"
 #include "TerrainDataStructures.h"
 #include "DataStructures.h"
+
+#include <memory>
+
 #include "BiomeRegion.generated.h"
 
 /**
@@ -16,7 +19,7 @@ class ABiomeRegion : public AActor {
 	GENERATED_UCLASS_BODY()
 
 private:
-	TSharedPtr<terrain::BiomeRegionData> RegionData;
+	std::shared_ptr<terrain::BiomeRegionData> RegionData;
 	float BiomeGridScale;
 	float RenderHeight;
 	void GenerateBiomeRegionMesh();
@@ -28,5 +31,5 @@ public:
 		UMaterial * TestMaterial;
 
 	void InitializeBiomeRegion(const float scale);
-	void SetBiomeRegionData(const TSharedPtr<terrain::BiomeRegionData> & BiomeRegionData);
+	void SetBiomeRegionData(const std::shared_ptr<terrain::BiomeRegionData> & BiomeRegionData);
 };
