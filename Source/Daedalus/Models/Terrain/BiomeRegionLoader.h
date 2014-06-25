@@ -56,6 +56,6 @@ namespace terrain {
 
 		const BiomeGeneratorParameters & GetGeneratorParameters() const;
 		TSharedRef<BiomeRegionData> GetBiomeRegionAt(const BiomeRegionOffsetVector & offset);
-		BiomeVertexId BiomeRegionLoader::FindNearestBiomeId(const utils::Vector2<> point);
+		BiomeId BiomeRegionLoader::FindNearestBiomeId(const utils::Vector2<> point);
 	};
 }

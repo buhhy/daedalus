@@ -26,12 +26,12 @@ namespace terrain {
 		NeighborsLoaded.Set(1, 1, true);
 	}
 
-	uint64 BiomeRegionData::InsertPoint(
+	uint64 BiomeRegionData::AddBiome(
 		const uint64 x, const uint64 y,
-		const utils::Vector2<> & point
+		const BiomeCellVertex & position
 	) {
 		auto id = GetNextId();
-		Points.insert({ id, point });
+		Biomes.insert({ id, std::unique_ptr<BiomeData>(new BiomeData(BuildId(id), position)) });
 		PointDistribution.Get(x, y).AddPoint(id);
 		return id;
 	}
@@ -53,7 +53,7 @@ namespace terrain {
 		for (uint16 x = xstart; x <= xend; x++) {
 			for (uint16 y = ystart; y <= yend; y++) {
 				for (auto id : PointDistribution.Get(x, y).PointIds) {
-					double dist = (offset - Points.at(id)).Length2();
+					double dist = (offset - Biomes.at(id)->GetLocalPosition()).Length2();
 					if (dist < min) {
 						min = dist;
 						vid = id;

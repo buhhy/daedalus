@@ -28,7 +28,7 @@ namespace terrain {
 
 	typedef utils::Vector2<int64> BiomeRegionOffsetVector;   // Offset vector for biome regions
 	typedef utils::Vector2<uint16> BiomeRegionGridVector;    // Offset vector within a region
-	typedef std::pair<BiomeRegionOffsetVector, uint64> BiomeVertexId;
+	typedef std::pair<BiomeRegionOffsetVector, uint64> BiomeId;
 
 	struct BiomeGeneratorParameters {
 		uint32 GridCellCount;       // Number of grid cells along a single edge of the square

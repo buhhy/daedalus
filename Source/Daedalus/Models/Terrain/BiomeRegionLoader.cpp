@@ -39,7 +39,8 @@ namespace terrain {
 				auto value = data.DelaunayGraph.ConvexHull.FindVertexById(pointIds[i]);
 				if (value != -1) {
 					found = true;
-					vertex = new VertexWithHullIndex(data.Points.at(pointIds[i]), value);
+					vertex = new VertexWithHullIndex(
+						data.GetBiomeAt(pointIds[i])->GetLocalPosition(), value);
 				}
 			}
 			if (accumX * accumX > accumY * accumY)
@@ -217,7 +218,7 @@ namespace terrain {
 			std::uniform_real_distribution<double>(0.1, 0.9), std::mt19937(mtSeed));
 
 		uint16 numPoints = 0;
-		utils::Vector2<> point;
+		BiomeCellVertex point;
 		utils::Vector2<> offset;
 
 		// Run Delaunay triangulation algorithm
@@ -232,7 +233,7 @@ namespace terrain {
 					// Set point X, Y to random point within cell
 					point.Reset(randPosition(), randPosition());
 					point = (point + offset) / (double) BiomeGenParams.GridCellCount;
-					auto id = data->InsertPoint(x, y, point);
+					auto id = data->AddBiome(x, y, point);
 
 					// Align X, Y relative to entire region
 					vertexList.push_back(std::make_pair(point, id));
@@ -278,7 +279,7 @@ namespace terrain {
 		return BiomeGenParams;
 	}
 
-	BiomeVertexId BiomeRegionLoader::FindNearestBiomeId(const utils::Vector2<> point) {
+	BiomeId BiomeRegionLoader::FindNearestBiomeId(const utils::Vector2<> point) {
 		// Convert into region coordinates
 		const auto offset = BiomeGenParams.ToBiomeRegionCoordinates(point);
 		const auto position = BiomeGenParams.GetInnerRegionPosition(point, offset);
@@ -313,6 +314,6 @@ namespace terrain {
 			}
 		}
 
-		return BiomeVertexId(foundGlobalOffset, vid);
+		return BiomeId(foundGlobalOffset, vid);
 	}
 }
