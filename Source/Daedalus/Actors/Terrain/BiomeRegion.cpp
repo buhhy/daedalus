@@ -47,7 +47,9 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	auto edgeColor = ColoredMaterial(TestMaterial, this, FLinearColor(0.55, 0.1, 0.1));
 	auto faceColor = ColoredMaterial(TestMaterial, this, FLinearColor(0.1, 0.1, 0.55));
 
-
+	float gridLineWidth = 0.25;
+	float pointSize = 0.9;
+	float edgeWidth = 0.6;
 	double scale = BiomeGridScale;
 
 	uint32 size = RegionData->BiomeGridSize;
@@ -65,14 +67,14 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 		double lineY = (scale * y) / size;
 		tempVector31.Reset(0, lineY, 0);
 		tempVector32.Reset(scale, lineY, 0);
-		utils::CreateLine(gridTries, tempVector31, tempVector32, 0.2);
+		utils::CreateLine(gridTries, tempVector31, tempVector32, gridLineWidth);
 	}
 	// X lines
 	for (auto x = 0u; x < size; x++) {
 		double lineX = (scale * x) / size;
 		tempVector31.Reset(lineX, 0, 0);
 		tempVector32.Reset(lineX, scale, 0);
-		utils::CreateLine(gridTries, tempVector31, tempVector32, 0.2);
+		utils::CreateLine(gridTries, tempVector31, tempVector32, gridLineWidth);
 	}
 	for (auto it : gridTries)
 		triangles.Add(FMeshTriangle(it, gridColor));
@@ -84,7 +86,7 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	auto verts = graph.GetVertices();
 	for (auto v : verts) {
 		tempVector31.Reset(v->GetPoint() * scale, 0);
-		utils::CreatePoint(pointTries, tempVector31, 0.8);
+		utils::CreatePoint(pointTries, tempVector31, pointSize);
 	}
 	for (auto it : pointTries) triangles.Add(FMeshTriangle(it, vertexColor));
 
@@ -107,7 +109,7 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	for (auto e : edges) {
 		tempVector31.Reset(e.Start->GetPoint() * scale, 0);
 		tempVector32.Reset(e.End->GetPoint() * scale, 0);
-		utils::CreateLine(edgeTries, tempVector31, tempVector32, 0.25);
+		utils::CreateLine(edgeTries, tempVector31, tempVector32, edgeWidth);
 	}
 	for (auto it : edgeTries) triangles.Add(FMeshTriangle(it, edgeColor));
 

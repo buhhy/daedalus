@@ -42,7 +42,11 @@ namespace terrain {
 
 	public:
 		BiomeData(const BiomeId & gid, const BiomeCellVertex & position) :
-			GlobalId(gid), LocalPosition(position) {}
+			GlobalId(gid),
+			LocalPosition(position),
+			Elevation(0), Rainfall(0),
+			TerrainType(T_PLAINS), VegetationType(V_BARREN)
+		{}
 
 		const BiomeCellVertex & GetLocalPosition() const { return LocalPosition; }
 		const BiomeId & GlobalBiomeId() const { return GlobalId; }
@@ -76,6 +80,9 @@ namespace terrain {
 	 */
 	class BiomeRegionData {
 	private:
+		bool bIsGraphGenerated;
+		bool bIsBiomesGenerated;
+
 		uint64 CurrentVertexId;
 		BiomeDataMap Biomes;
 
@@ -90,7 +97,7 @@ namespace terrain {
 
 		// Indicates whether the 8 neighboring regions have been generated yet, (0, 0) is
 		// bottom left, (2, 2) is top right.
-		utils::Tensor2<bool> NeighborsLoaded;
+		utils::Tensor2<bool> NeighboursMerged;
 
 		uint32 BiomeGridSize;                     // Size of the biome in grid cells
 		BiomeRegionOffsetVector BiomeOffset;      // Biome offset from (0,0)
@@ -111,8 +118,24 @@ namespace terrain {
 			return Biomes.at(localBiomeId).get();
 		}
 
+		inline bool AllNeighboursLoaded() const {
+			bool done = true;
+			for (uint8 x = 0; x < NeighboursMerged.Width; x++) {
+				for (uint8 y = 0; y < NeighboursMerged.Depth; y++) {
+					if (!NeighboursMerged.Get(x, y)) {
+						done = false;
+						break;
+					}
+				}
+			}
+			return done;
+		}
+
 
 		uint64 AddBiome(const uint64 x, const uint64 y, const BiomeCellVertex & position);
+
+		void GenerateDelaunayGraph();
+
 		std::tuple<uint64, BiomeRegionGridVector, double> FindNearestPoint(
 			utils::Vector2<> offset) const;
 	};

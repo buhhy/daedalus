@@ -1,4 +1,4 @@
-#include "Daedalus.h"
+#include <Daedalus.h>
 #include "DelaunayDatastructures.h"
 
 #include <algorithm>
@@ -11,13 +11,13 @@ namespace utils {
 		 *********************************************************************/
 
 
-		uint64 Vertex::AddFace(Face * const face) {
+		uint64_t Vertex::AddFace(Face * const face) {
 			if (IncidentFace == NULL)
 				IncidentFace = face;
 			return ++NumFaces;
 		}
 
-		uint64 Vertex::RemoveFace(Face * const face) {
+		uint64_t Vertex::RemoveFace(Face * const face) {
 			if (face == IncidentFace) {
 				if (NumFaces == 1)
 					IncidentFace = NULL;
@@ -33,14 +33,14 @@ namespace utils {
 		 *********************************************************************/
 		
 
-		int8 Face::FindVertex(Vertex * const vertex) const {
-			for (int8 i = NumVertices - 1; i >= 0; i--)
+		int8_t Face::FindVertex(Vertex * const vertex) const {
+			for (int8_t i = NumVertices - 1; i >= 0; i--)
 				if (Vertices[i] == vertex) return i;
 			return -1;
 		}
 
-		int8 Face::FindFace(Face * const face) const {
-			for (int8 i = NumVertices - 1; i >= 0; i--)
+		int8_t Face::FindFace(Face * const face) const {
+			for (int8_t i = NumVertices - 1; i >= 0; i--)
 				if (AdjacentFaces[i] == face) return i;
 			return -1;
 		}
@@ -52,9 +52,11 @@ namespace utils {
 			Face * nextFace = this;
 			const auto fcount = sharedVertex->FaceCount();
 
-			for (uint64 c = 0; c < fcount; c++) {
+			for (uint64_t c = 0; c < fcount; c++) {
 				curFace = nextFace;
 				nextFace = nextFace->GetAdjacentFaceCCW(sharedVertex);
+				if (nextFace == NULL)
+					int i = 5;
 			}
 
 			assert(curFace->GetAdjacentFaceCCW(sharedVertex) == this &&
@@ -64,7 +66,7 @@ namespace utils {
 		}
 
 		Face * Face::GetAdjacentFaceCCW(Vertex * const sharedVertex) {
-			int8 found = FindVertex(sharedVertex);
+			int8_t found = FindVertex(sharedVertex);
 			// Shared vertex doesn't actually exist in this face
 			if (found == -1) return NULL;
 			return AdjacentFaces[GetCCWVertexIndex(found)];
@@ -99,34 +101,34 @@ namespace utils {
 			return bIsCollinear;
 		}
 		
-		int64 ConvexHull::FindVertexById(const uint64 id) const {
-			for (uint64 i = 0; i < Size(); i++)
+		int32_t ConvexHull::FindVertexById(const uint32_t id) const {
+			for (uint32_t i = 0; i < Size(); i++)
 				if (HullVertices[i]->VertexId() == id) return i;
 			return -1;
 		}
 		
-		int64 ConvexHull::LeftVertexIndex() const {
+		uint32_t ConvexHull::LeftVertexIndex() const {
 			return MinIndex([] (Vertex * const v) { return v->GetPoint().X; });
 		}
 		
-		int64 ConvexHull::RightVertexIndex() const {
+		uint32_t ConvexHull::RightVertexIndex() const {
 			return MinIndex([] (Vertex * const v) { return -v->GetPoint().X; });
 		}
 		
-		int64 ConvexHull::TopVertexIndex() const {
+		uint32_t ConvexHull::TopVertexIndex() const {
 			return MinIndex([] (Vertex * const v) { return v->GetPoint().Y; });
 		}
 		
-		int64 ConvexHull::BottomVertexIndex() const {
+		uint32_t ConvexHull::BottomVertexIndex() const {
 			return MinIndex([] (Vertex * const v) { return -v->GetPoint().Y; });
 		}
 
-		int64 ConvexHull::MinIndex(const std::function<double (Vertex * const)> & valueOf) const {
+		uint32_t ConvexHull::MinIndex(const std::function<double (Vertex * const)> & valueOf) const {
 			if (HullVertices.empty())
-				return -1;
-			uint64 minIndex = 0;
+				return 0;
+			uint32_t minIndex = 0;
 			double threshold = valueOf(HullVertices[0]);
-			for (uint64 i = 1u; i < HullVertices.size(); i++) {
+			for (uint32_t i = 1u; i < HullVertices.size(); i++) {
 				auto value = valueOf(HullVertices[i]);
 				if (value < threshold) {
 					minIndex = i;
@@ -136,55 +138,55 @@ namespace utils {
 			return minIndex;
 		}
 
-		uint64 ConvexHull::GetSequence(
+		uint32_t ConvexHull::GetSequence(
 			std::deque<Vertex *> & deque,
-			const uint64 start, const uint64 end,
+			const uint32_t start, const uint32_t end,
 			const bool isCW
 		) const {
-			uint64 c = 0, size = Size();
-			uint64 count = GetRange(start, end, isCW);
-			int8 direction = (isCW ? 1 : -1);
+			uint32_t c = 0, size = Size();
+			uint32_t count = GetRange(start, end, isCW);
+			int8_t direction = (isCW ? 1 : -1);
 
 			if (bIsCollinear) {
 				// If the hull is collinear, iterate in the original intended direction, then
 				// ping-pong when reaching an extreme rather than loop around
-				for (int64 i = start; c < count; c++, i += direction) {
-					deque.push_back((*this)[i]);
+				for (int64_t i = start; c < count; c++, i += direction) {
+					deque.push_back((*this)[(unsigned) i]);
 					if (direction < 0 && i == 0 || direction > 0 && i == size - 1)
 						direction *= -1;
 				}
 				return count;
 			} else {
-				for (int64 i = start; c < count; c++, i += direction) {
+				for (int64_t i = start; c < count; c++, i += direction) {
 					if (i >= (signed) size) i -= size;
 					if (i < 0) i += size;
-					deque.push_back((*this)[i]);
+					deque.push_back((*this)[(unsigned) i]);
 				}
 				return count;
 			}
 		}
 
-		uint64 ConvexHull::GetRange(
-			const uint64 start, const uint64 end,
+		uint32_t ConvexHull::GetRange(
+			const uint32_t start, const uint32_t end,
 			const bool isCW
 		) const {
-			uint64 size = Size();
-			int8 direction = (isCW ? 1 : -1);
+			uint32_t size = Size();
+			int8_t direction = (isCW ? 1 : -1);
 			if (bIsCollinear) {
-				int64 compare = direction * (end - start);
-				uint64 count;
+				int64_t compare = direction * (end - start);
+				uint32_t count;
 				if (compare <= 0) {
 					if (isCW)
 						count = (2 * (size - 1)) - end - start + 1;
 					else
 						count = end + start + 1;
 				} else {
-					count = compare + 1;
+					count = (unsigned)(compare + 1);
 				}
 
 				return count;
 			} else {
-				uint64 count = (direction * (end - start) + size) % Size() + 1;
+				uint32_t count = (direction * (end - start) + size) % Size() + 1;
 				if (count == 1)
 					count += size;
 				return count;
@@ -221,7 +223,7 @@ namespace utils {
 
 		for (auto it : copy.Faces) {
 			auto & face = IdFaceMap.at(it->FaceId());
-			for (uint8 i = 0; i < face->VertexCount(); i++)
+			for (uint8_t i = 0; i < face->VertexCount(); i++)
 				face->AdjacentFaces[i] = IdFaceMap.at(it->AdjacentFaces[i]->FaceId());
 		}
 
@@ -237,12 +239,12 @@ namespace utils {
 		ConvexHull = newHullVerts;
 	}
 	
-	std::pair<Face *, int8> DelaunayGraph::AdjustNewFaceAdjacencies(
+	std::pair<Face *, int8_t> DelaunayGraph::AdjustNewFaceAdjacencies(
 		Face * const newFace,
-		const uint8 pivotIndex
+		const uint8_t pivotIndex
 	) {
-		int8 pivotCWIndex = newFace->GetCWVertexIndex(pivotIndex);
-		int8 pivotCCWIndex = newFace->GetCCWVertexIndex(pivotIndex);
+		int8_t pivotCWIndex = newFace->GetCWVertexIndex(pivotIndex);
+		int8_t pivotCCWIndex = newFace->GetCCWVertexIndex(pivotIndex);
 
 		const auto pivotPoint = newFace->Vertices[pivotIndex];
 		const auto pivotCWPoint = newFace->Vertices[pivotCWIndex];
@@ -261,8 +263,8 @@ namespace utils {
 		// immediate CCW face.
 			
 		double CCWMinAngle = 10.0, CWMinAngle = 10.0;
-		int8 CWVertexIndex = -1;
-		uint64 index = 0;
+		int8_t CWVertexIndex = -1;
+		uint64_t index = 0;
 		Face * CCWFace = NULL, * CWFace = NULL;
 
 		Vector2<> CCWCompareEdge = pivotCWPoint->GetPoint() - pivotPoint->GetPoint();
@@ -271,9 +273,9 @@ namespace utils {
 		// Traverse faces currently at pivot point in CCW fashion, keeping the smallest
 		// available CCW angle, as well as the smallest available CW angle.
 		do {
-			int8 otherPivotIndex = otherFace->FindVertex(pivotPoint);
-			int8 otherPivotCWIndex = otherFace->GetCWVertexIndex(otherPivotIndex);
-			int8 otherPivotCCWIndex = otherFace->GetCCWVertexIndex(otherPivotIndex);
+			int8_t otherPivotIndex = otherFace->FindVertex(pivotPoint);
+			int8_t otherPivotCWIndex = otherFace->GetCWVertexIndex(otherPivotIndex);
+			int8_t otherPivotCCWIndex = otherFace->GetCCWVertexIndex(otherPivotIndex);
 
 			// Get the CCW point from the pivot from the other face
 			const auto otherPivotCCW = otherFace->Vertices[otherPivotCCWIndex];
@@ -330,7 +332,7 @@ namespace utils {
 		return std::make_pair((Face *) NULL, -1);
 	}
 
-	void DelaunayGraph::AdjustRemovedFaceAdjacencies(Face * const face, const uint8 pivotIndex) {
+	void DelaunayGraph::AdjustRemovedFaceAdjacencies(Face * const face, const uint8_t pivotIndex) {
 		Vertex * const pivot = face->Vertices[pivotIndex];
 		Face * const CCWFace = face->GetAdjacentFaceCCW(pivot);
 		Face * const CWFace = face->GetAdjacentFaceCW(pivot);
@@ -340,8 +342,8 @@ namespace utils {
 		pivot->RemoveFace(face);
 	}
 
-	uint64 DelaunayGraph::GetNextFaceId() { return CurrentFaceId++; }
-	uint64 DelaunayGraph::GetNextVertexId() { return CurrentVertexId++; }
+	uint64_t DelaunayGraph::GetNextFaceId() { return CurrentFaceId++; }
+	uint64_t DelaunayGraph::GetNextVertexId() { return CurrentVertexId++; }
 
 	Vertex * DelaunayGraph::AddVertex(Vertex * const vertex) {
 		auto id = vertex->VertexId();
@@ -380,7 +382,7 @@ namespace utils {
 		}
 	}
 
-	Vertex * DelaunayGraph::AddVertex(const Vector2<> & point, const uint64 id) {
+	Vertex * DelaunayGraph::AddVertex(const Vector2<> & point, const uint64_t id) {
 		return AddVertex(new Vertex(Offset, point, id));
 	}
 
@@ -388,7 +390,7 @@ namespace utils {
 		Face * newFace = new Face(v1, v2, GetNextFaceId());
 
 		// Modify adjacencies
-		std::array<std::pair<Face *, uint8>, 3> adjusts = {{
+		std::array<std::pair<Face *, uint8_t>, 3> adjusts = {{
 			AdjustNewFaceAdjacencies(newFace, 0),
 			AdjustNewFaceAdjacencies(newFace, 1)
 		}};
@@ -431,7 +433,7 @@ namespace utils {
 		Face * newFace = new Face(inV1, inV2, inV3, GetNextFaceId());
 
 		// Modify adjacencies
-		std::array<std::pair<Face *, int8>, 3> adjusts = {{
+		std::array<std::pair<Face *, int8_t>, 3> adjusts = {{
 			AdjustNewFaceAdjacencies(newFace, 0),
 			AdjustNewFaceAdjacencies(newFace, 1),
 			AdjustNewFaceAdjacencies(newFace, 2)
@@ -450,7 +452,7 @@ namespace utils {
 	bool DelaunayGraph::RemoveFace(Face * const face) {
 		if (Faces.count(face) == 0)
 			return false;
-		for (uint8 i = 0; i < face->VertexCount(); i++)
+		for (uint8_t i = 0; i < face->VertexCount(); i++)
 			AdjustRemovedFaceAdjacencies(face, i);
 		Faces.erase(face);
 		IdFaceMap.erase(face->FaceId());
@@ -466,7 +468,7 @@ namespace utils {
 
 		bool found = false;
 		auto numFaces = v1->FaceCount();
-		for (uint64 c = 0; c < numFaces; c++) {
+		for (uint64_t c = 0; c < numFaces; c++) {
 			found = curFace->FindVertex(v1) != -1 && curFace->FindVertex(v2) != -1;
 			if (found)
 				break;

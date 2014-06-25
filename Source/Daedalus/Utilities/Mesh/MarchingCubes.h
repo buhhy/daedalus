@@ -1,11 +1,12 @@
 #pragma once
 
-#include "Engine.h"
-#include "DataStructures.h"
+#include <Utilities/DataStructures.h>
+
+#include <vector>
 
 namespace utils {
 	void MarchingCube(
-		TArray<Triangle> & resultTries,
+		std::vector<Triangle> & resultTries,
 		const float isoThreshold,
 		const GridCell & grid);
 }

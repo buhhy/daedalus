@@ -1,5 +1,5 @@
-#include "Daedalus.h"
-#include "DataStructures.h"
+#include <Daedalus.h>
+#include <Utilities/DataStructures.h>
 
 namespace utils {
 	Vector3<> Project(const Vector3<> projection, const Vector3<> target) {

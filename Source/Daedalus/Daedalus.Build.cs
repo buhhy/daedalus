@@ -6,9 +6,11 @@ public class Daedalus : ModuleRules
 		MinFilesUsingPrecompiledHeaderOverride = 1;
 		bFasterWithoutUnity = true;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "RHI", "RenderCore", "ShaderCore" });
+		PublicDependencyModuleNames.AddRange(new string[] {
+			"Core", "CoreUObject", "Engine", "InputCore", "RHI", "RenderCore", "ShaderCore"
+		});
 		PrivateDependencyModuleNames.AddRange(new string[] { });
-
+		
 		PrivateIncludePaths.AddRange(new string[]
 			{
 				"Daedalus",

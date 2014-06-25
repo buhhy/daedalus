@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Engine.h"
-#include "Datastructures.h"
+#include <Utilities/DataStructures.h>
 #include "DelaunayDatastructures.h"
 
 #include <unordered_set>
@@ -14,20 +13,20 @@ namespace utils {
 		class Vertex {
 		private:
 			Vector2<> Point;
-			uint64 Id;
-			uint64 NumEdges;
+			uint64_t Id;
+			uint64_t NumEdges;
 			Edge * ExitEdge;
 
 		public:
 			const Vector2<> & GetPoint() const { return Point; }
-			uint64 VertexId() const { return Id; }
-			uint64 EdgeCount() const { return NumEdges; }
+			uint64_t VertexId() const { return Id; }
+			uint64_t EdgeCount() const { return NumEdges; }
 			Edge * GetExitEdge() { return ExitEdge; }
 			
-			uint64 AddEdge(Edge * const edge);
-			uint64 RemoveEdge(Edge * const edge);
+			uint64_t AddEdge(Edge * const edge);
+			uint64_t RemoveEdge(Edge * const edge);
 
-			Vertex(const Vector2<> & point, const uint64 id): Point(point), Id(id) {}
+			Vertex(const Vector2<> & point, const uint64_t id): Point(point), Id(id) {}
 
 		};
 
@@ -36,7 +35,7 @@ namespace utils {
 		 */
 		class Edge {
 		private:
-			uint64 Id;
+			uint64_t Id;
 
 		public:
 			Vertex * Origin;
@@ -44,22 +43,22 @@ namespace utils {
 			Edge * NextLeft;
 			Edge * Twin;
 			
-			uint64 VertexId() const { return Id; }
+			uint64_t VertexId() const { return Id; }
 
 		};
 
 		class Face {
 		private:
-			uint64 Id;
-			uint64 NumEdges;
+			uint64_t Id;
+			uint64_t NumEdges;
 			Edge * BorderEdge;
 
 		public:
-			uint64 FaceId() const { return Id; }
-			uint64 EdgeCount() const { return NumEdges; }
+			uint64_t FaceId() const { return Id; }
+			uint64_t EdgeCount() const { return NumEdges; }
 			Edge * GetBorderEdge() { return BorderEdge; }
 
-			Face(const uint64 id): Id(id) {}
+			Face(const uint64_t id): Id(id) {}
 
 		};
 	}
@@ -82,8 +81,8 @@ namespace utils {
 			Edges.clear();
 		}
 			
-		inline uint64 VertexCount() const { return Vertices.size(); }
-		inline uint64 FaceCount() const { return Faces.size(); }
-		inline uint64 EdgeCount() const { return Edges.size(); }
+		inline uint64_t VertexCount() const { return Vertices.size(); }
+		inline uint64_t FaceCount() const { return Faces.size(); }
+		inline uint64_t EdgeCount() const { return Edges.size(); }
 	};
 }

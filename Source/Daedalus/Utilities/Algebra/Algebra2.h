@@ -85,11 +85,11 @@ namespace utils {
 	/**
 	 * Returns -1: outside circumcircle, 0: on perimeter of circumcircle, 1: inside circumcircle
 	 */
-	int8 IsWithinCircumcircle(const Vector2<> & point, const Circle2D & circle);
+	int8_t IsWithinCircumcircle(const Vector2<> & point, const Circle2D & circle);
 
 	/**
 	 * Returns -1: >180 degrees, 0: straight, 1: < 180
 	 */
-	int8 FindWinding(const Vector2<> & p1, const Vector2<> & pivot, const Vector2<> & p3);
+	int8_t FindWinding(const Vector2<> & p1, const Vector2<> & pivot, const Vector2<> & p3);
 	double FindAngle(const Vector2<> & v1, const Vector2<> & v2);
 }

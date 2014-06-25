@@ -1,4 +1,4 @@
-#include "Daedalus.h"
+#include <Daedalus.h>
 #include "GraphDatastructures.h"
 
 #include <unordered_map>
@@ -12,7 +12,7 @@ namespace utils {
 	VoronoiGraph::VoronoiGraph(const DelaunayGraph & source) {
 		// Generate all Voronoi vertices from circumcenters of faces
 		auto dFaces = source.GetFaces();
-		std::unordered_map<uint64, Vertex *> vVertices;
+		std::unordered_map<uint64_t, Vertex *> vVertices;
 		for (auto i : dFaces)
 			vVertices.insert({ i->FaceId(), new Vertex(i->GetCircumcircle().Center, i->FaceId()) });
 

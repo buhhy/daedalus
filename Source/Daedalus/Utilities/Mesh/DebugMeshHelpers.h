@@ -1,13 +1,13 @@
 #pragma once
 
-#include "DataStructures.h"
+#include <Utilities/DataStructures.h>
 
 #include <vector>
 
 namespace utils {
-	uint16 CreatePoint(
+	uint16_t CreatePoint(
 		std::vector<Triangle> & results, const Vector3<> & position, const float radius);
-	uint16 CreateLine(
+	uint16_t CreateLine(
 		std::vector<Triangle> & results, const Vector3<> & startPoint,
 		const Vector3<> & endPoint, const float radius);
 }

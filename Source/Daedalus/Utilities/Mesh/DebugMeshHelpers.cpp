@@ -1,4 +1,4 @@
-#include "Daedalus.h"
+#include <Daedalus.h>
 #include "DebugMeshHelpers.h"
 
 namespace utils {
@@ -13,7 +13,7 @@ namespace utils {
 		output.push_back({ f1, f2, f3 });
 	}
 
-	uint16 CreatePrism(
+	uint16_t CreatePrism(
 		std::vector<Triangle> & output,
 		Vector3<> * const input
 	) {
@@ -38,7 +38,7 @@ namespace utils {
 		{ { -1, 1, 1 } }
 	};
 
-	uint16 CreatePoint(
+	uint16_t CreatePoint(
 		std::vector<Triangle> & results, const Vector3<> & position, const float radius
 	) {
 		
@@ -47,13 +47,13 @@ namespace utils {
 
 		Vector3<> transformedVertices[8];
 
-		for (uint16 i = 0; i < 8; i++)
+		for (uint16_t i = 0; i < 8; i++)
 			transformedVertices[i] = transform * Vector4<>(CubeVertices[i], 1);
 
 		return CreatePrism(results, transformedVertices);
 	}
 
-	uint16 CreateLine(
+	uint16_t CreateLine(
 		std::vector<Triangle> & results, const Vector3<> & startPoint,
 		const Vector3<> & endPoint, const float radius
 	) {
@@ -68,7 +68,7 @@ namespace utils {
 
 		Vector3<> transformedVertices[8];
 
-		for (uint16 i = 0; i < 8; i++) {
+		for (uint16_t i = 0; i < 8; i++) {
 			if (CubeVertices[i].X < 0)
 				transformedVertices[i] = startTransform * Vector4<>(CubeVertices[i], 1);
 			else

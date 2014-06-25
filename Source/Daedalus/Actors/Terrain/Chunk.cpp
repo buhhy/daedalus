@@ -28,7 +28,7 @@ void AChunk::GenerateChunkMesh() {
 
 	double scale = TerrainGenParams.ChunkScale / size;
 
-	TArray<utils::Triangle> tempTris;
+	std::vector<utils::Triangle> tempTris;
 	utils::Vector3<> displacementVector;
 
 	utils::GridCell gridCell;
@@ -48,16 +48,16 @@ void AChunk::GenerateChunkMesh() {
 					density.Get(x + 1, y + 1, z),
 					density.Get(x + 1, y + 1, z + 1));
 
-				tempTris.Reset();
+				tempTris.clear();
 				utils::MarchingCube(tempTris, 0.5, gridCell);
 
 				displacementVector.Reset(x, y, z);
 
-				for (auto it = tempTris.CreateConstIterator(); it; ++it) {
+				for (auto & trit : tempTris) {
 					utils::Triangle tri(
-						(it->Point1 + displacementVector) * scale,
-						(it->Point2 + displacementVector) * scale,
-						(it->Point3 + displacementVector) * scale);
+						(trit.Point1 + displacementVector) * scale,
+						(trit.Point2 + displacementVector) * scale,
+						(trit.Point3 + displacementVector) * scale);
 					triangles.push_back(tri);
 				}
 			}

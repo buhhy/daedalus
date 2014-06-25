@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "DataStructures.h"
+#include <Utilities/UnrealBridge.h>
 #include "GeneratedMeshComponent.generated.h"
 
 /**
@@ -29,7 +29,7 @@ public:
 	FMeshTriangleVertex(
 		const utils::Vector3<> & position,
 		UMaterialInterface * const material = NULL
-	) : FMeshTriangleVertex(position.ToFVector(), material) {}
+	) : FMeshTriangleVertex(utils::ToFVector(position), material) {}
 
 	FMeshTriangleVertex(
 		const FVector & position,

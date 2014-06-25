@@ -1,12 +1,11 @@
 #pragma once
 
-#include "Engine.h"
 #include "GraphDatastructures.h"
 
 #include <vector>
 
 namespace utils {
-	typedef std::vector<std::pair<utils::Vector2<>, uint64> > InputVertexList;
+	typedef std::vector<std::pair<utils::Vector2<>, uint64_t> > InputVertexList;
 	/**
 	 * Basic divide and conquer algorithm and data structure taken from here:
 	 * http://www.geom.uiuc.edu/~samuelp/del_project.html. My implementation will handle
@@ -18,8 +17,8 @@ namespace utils {
 
 	void MergeDelaunayTileEdge(
 		DelaunayGraph & leftGraph, DelaunayGraph & rightGraph,
-		const uint64 lowerTangentLeft, const uint64 lowerTangentRight,
-		const uint64 upperTangentLeft, const uint64 upperTangentRight);
+		const uint32_t lowerTangentLeft, const uint32_t lowerTangentRight,
+		const uint32_t upperTangentLeft, const uint32_t upperTangentRight);
 
 	/**
 	 * @param graphs An array containing the 4 corner Delaunay graphs in the following
@@ -27,5 +26,5 @@ namespace utils {
 	 *               value in the pair contains the index of the point in the convex hull
 	 *               that is used in the merging procedure.
 	 */
-	void MergeDelaunayTileCorner(std::array<std::pair<DelaunayGraph *, uint64>, 4> & graphs);
+	void MergeDelaunayTileCorner(std::array<std::pair<DelaunayGraph *, uint32_t>, 4> & graphs);
 }

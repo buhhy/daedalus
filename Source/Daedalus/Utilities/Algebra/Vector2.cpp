@@ -1,13 +1,14 @@
-#include "Daedalus.h"
+#include <Daedalus.h>
+#include <Utilities/DataStructures.h>
 #include "Vector2.h"
 
 namespace utils {
 	template <typename T>
 	inline T Abs(T value) { return value > 0.0 ? value : -value; }
 
-	inline uint16 Abs(uint16 value) { return value; }
-	inline uint32 Abs(uint32 value) { return value; }
-	inline uint64 Abs(uint64 value) { return value; }
+	inline uint16_t Abs(uint16_t value) { return value; }
+	inline uint32_t Abs(uint32_t value) { return value; }
+	inline uint64_t Abs(uint64_t value) { return value; }
 
 	template <typename T>
 	Vector2<double> Vector2<T>::Normalize() const {
@@ -37,10 +38,10 @@ namespace utils {
 	template Vector2<float>;
 	template Vector2<double>;
 	template Vector2<int>;
-	template Vector2<int16>;
-	template Vector2<int32>;
-	template Vector2<int64>;
-	template Vector2<uint16>;
-	template Vector2<uint32>;
-	template Vector2<uint64>;
+	template Vector2<int16_t>;
+	template Vector2<int32_t>;
+	template Vector2<int64_t>;
+	template Vector2<uint16_t>;
+	template Vector2<uint32_t>;
+	template Vector2<uint64_t>;
 }

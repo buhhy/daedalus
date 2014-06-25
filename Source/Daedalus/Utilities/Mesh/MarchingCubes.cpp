@@ -1,6 +1,6 @@
-#include "Daedalus.h"
+#include <Daedalus.h>
 #include "MarchingCubes.h"
-#include "Constants.h"
+#include <Utilities/Constants.h>
 
 namespace utils {
 	int EdgeTable[256] = {
@@ -310,7 +310,7 @@ namespace utils {
 	of totally below the isolevel.
 	*/
 	void MarchingCube(
-		TArray<Triangle> & resultTries,
+		std::vector<Triangle> & resultTries,
 		const float isoThreshold,
 		const GridCell & grid
 	) {
@@ -373,8 +373,8 @@ namespace utils {
 				isoThreshold, grid.points[3], grid.points[7], grid.values[3], grid.values[7]);
 
 		/* Create the triangle */
-		for (uint32 i = 0; TriTable[cubeindex][i] != -1; i += 3) {
-			resultTries.Add(Triangle(
+		for (uint32_t i = 0; TriTable[cubeindex][i] != -1; i += 3) {
+			resultTries.push_back(Triangle(
 				vertlist[TriTable[cubeindex][i]],
 				vertlist[TriTable[cubeindex][i + 2]],
 				vertlist[TriTable[cubeindex][i + 1]]));
@@ -392,11 +392,11 @@ namespace utils {
 		float valp1,
 		float valp2
 	) {
-		if (FMath::Abs(isoThreshold - valp1) < FLOAT_ERROR)
+		if (std::abs(isoThreshold - valp1) < FLOAT_ERROR)
 			return p1;
-		if (FMath::Abs(isoThreshold - valp2) < FLOAT_ERROR)
+		if (std::abs(isoThreshold - valp2) < FLOAT_ERROR)
 			return p2;
-		if (FMath::Abs(valp1 - valp2) < FLOAT_ERROR)
+		if (std::abs(valp1 - valp2) < FLOAT_ERROR)
 			return p1;
 
 		double mu = (isoThreshold - valp1) / (valp2 - valp1);

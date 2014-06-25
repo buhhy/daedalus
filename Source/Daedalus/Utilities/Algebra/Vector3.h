@@ -16,7 +16,6 @@ namespace utils {
 		T Z;
 
 		Vector3() {}
-		Vector3(const FVector & vec) : Vector3(vec.X, vec.Y, vec.Z) {}
 		Vector3(const T x, const T y, const T z) : X(x), Y(y), Z(z) {}
 		Vector3(const Vector2<T> & vec, const T z) : Vector3(vec.X, vec.Y, z) {}
 
@@ -43,9 +42,7 @@ namespace utils {
 
 		/** Length squared. */
 		inline T Length2() const { return X * X + Y * Y + Z * Z; }
-		inline double Length() const { return FMath::Sqrt(Length2()); }
-
-		inline FVector ToFVector() const { return FVector(X, Y, Z); }
+		inline double Length() const { return std::sqrt(Length2()); }
 
 		Vector3<double> Normalize() const;
 		

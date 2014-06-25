@@ -13,12 +13,14 @@ namespace terrain {
 		PointDistribution(biomeSize),
 		DelaunayGraph(biomeOffset),
 		CurrentVertexId(0),
-		NeighborsLoaded(3, 3, false)
+		NeighboursMerged(3, 3, false),
+		bIsGraphGenerated(false),
+		bIsBiomesGenerated(false)
 	{
 		auto toY = PointDistribution.Depth - buffer - 1;
 		auto toX = PointDistribution.Width - buffer - 1;
-		// This region is technically always laoded, hence set to true
-		NeighborsLoaded.Set(1, 1, true);
+		// This region is technically always loaded, hence set to true
+		NeighboursMerged.Set(1, 1, true);
 	}
 
 	uint64 BiomeRegionData::AddBiome(
@@ -59,5 +61,13 @@ namespace terrain {
 		}
 
 		return std::make_tuple(vid, gpos, min);
+	}
+
+	void BiomeRegionData::GenerateDelaunayGraph() {
+		std::vector<std::pair<BiomeCellVertex, uint64> > vertexList;
+		for (auto & pair : Biomes)
+			vertexList.push_back(std::make_pair(pair.second->GetLocalPosition(), pair.first));
+		utils::BuildDelaunay2D(DelaunayGraph, vertexList);
+		bIsGraphGenerated = true;
 	}
 }

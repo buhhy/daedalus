@@ -1,6 +1,5 @@
-#include "Daedalus.h"
-#include "DataStructures.h"
-#include "Engine.h"
+#include <Daedalus.h>
+#include <Utilities/DataStructures.h>
 
 namespace utils {
 	/**
@@ -8,25 +7,25 @@ namespace utils {
 	 * degrees around the axis "axis", where "axis" is one of the
 	 * characters 'x', 'y', or 'z'.
 	 */
-	Matrix4<> CreateRotation(const double angle,  const Axis axis) {
+	Matrix4<> CreateRotation(const double angle, const Axis axis) {
 		double radAngle = angle * utils::M_PI/180;
 		switch (axis) {
 			case AXIS_X:
 				return Matrix4<>(
 					1.0, 0.0, 0.0, 0.0,
-					0.0, FMath::Cos(radAngle), -FMath::Sin(radAngle), 0.0,
-					0.0, FMath::Sin(radAngle), FMath::Cos(radAngle), 0.0,
+					0.0, std::cos(radAngle), -std::sin(radAngle), 0.0,
+					0.0, std::sin(radAngle), std::cos(radAngle), 0.0,
 					0.0, 0.0, 0.0, 1.0);
 			case AXIS_Y:
 				return Matrix4<>(
-					FMath::Cos(radAngle), 0.0, FMath::Sin(radAngle), 0.0,
+					std::cos(radAngle), 0.0, std::sin(radAngle), 0.0,
 					0.0, 1.0, 0.0, 0.0,
-					-FMath::Sin(radAngle), 0.0, FMath::Cos(radAngle), 0.0,
+					-std::sin(radAngle), 0.0, std::cos(radAngle), 0.0,
 					0.0, 0.0, 0.0, 1.0);
 			case AXIS_Z:
 				return Matrix4<>(
-					FMath::Cos(radAngle), FMath::Sin(radAngle), 0.0, 0.0,
-					-FMath::Sin(radAngle), FMath::Cos(radAngle), 0.0, 0.0,
+					std::cos(radAngle), std::sin(radAngle), 0.0, 0.0,
+					-std::sin(radAngle), std::cos(radAngle), 0.0, 0.0,
 					0.0, 0.0, 1.0, 0.0,
 					0.0, 0.0, 0.0, 1.0);
 			default:

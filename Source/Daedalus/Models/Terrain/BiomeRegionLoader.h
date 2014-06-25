@@ -1,11 +1,11 @@
 #pragma once
 
-#include <unordered_map>
 #include "BiomeRegionData.h"
 #include "TerrainDataStructures.h"
 #include "DataStructures.h"
 #include "EventBus.h"
 
+#include <unordered_map>
 #include <memory>
 
 namespace terrain {
@@ -22,24 +22,28 @@ namespace terrain {
 	 * ranges and what not. This class will most likely run on the server-side.
 	 */
 	class BiomeRegionLoader {
-	private:
-		typedef std::pair<utils::Vector2<>, uint64> VertexWithHullIndex;
+	public:
+		typedef std::pair<utils::Vector2<>, uint32_t> VertexWithHullIndex;
 
-		uint8 CornerLimit;
+	private:
 		BiomeRegionCache LoadedBiomeRegionCache;
 
 		BiomeGeneratorParameters BiomeGenParams;
 		std::shared_ptr<events::EventBus> EventBus;
 
-
-		std::shared_ptr<BiomeRegionData> LoadBiomeRegionFromDisk(
-			const BiomeRegionOffsetVector & offset) const;
-		std::shared_ptr<BiomeRegionData> GenerateMissingBiomeRegion(
-			const BiomeRegionOffsetVector & offset) const;
-
 		std::shared_ptr<const VertexWithHullIndex> BiomeRegionLoader::GetCornerHullVertex(
 			const BiomeRegionData & data,
 			const bool cornerX, const bool cornerY) const;
+		
+		bool IsBiomeRegionGenerated(const BiomeRegionOffsetVector & offset) const;
+
+
+		std::shared_ptr<BiomeRegionData> LoadBiomeRegionFromDisk(
+			const BiomeRegionOffsetVector & offset);
+		std::shared_ptr<BiomeRegionData> GenerateBiomeRegion(
+			const BiomeRegionOffsetVector & offset);
+		std::shared_ptr<BiomeRegionData> GenerateBiomeRegionArea(
+			const BiomeRegionOffsetVector & offset, const uint8 radius);
 
 		bool MergeRegionEdge(BiomeRegionData & r1, BiomeRegionData & r2);
 		bool MergeRegionCorner(
@@ -47,8 +51,8 @@ namespace terrain {
 			BiomeRegionData & tr,
 			BiomeRegionData & bl,
 			BiomeRegionData & br);
-		std::vector<BiomeRegionOffsetVector> MergeRegion(
-			std::shared_ptr<BiomeRegionData> targetRegion, const BiomeRegionOffsetVector & biomeOffset);
+		std::unordered_set<BiomeRegionOffsetVector> MergeRegion(
+			std::shared_ptr<BiomeRegionData> targetRegion);
 
 	public:
 		BiomeRegionLoader(
@@ -62,6 +66,6 @@ namespace terrain {
 		}
 
 		std::shared_ptr<BiomeRegionData> GetBiomeRegionAt(const BiomeRegionOffsetVector & offset);
-		BiomeId BiomeRegionLoader::FindNearestBiomeId(const utils::Vector2<> point);
+		const BiomeId BiomeRegionLoader::FindNearestBiomeId(const utils::Vector2<> point);
 	};
 }

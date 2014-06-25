@@ -1,14 +1,14 @@
-#include "Daedalus.h"
+#include <Daedalus.h>
+#include <Utilities/DataStructures.h>
+#include <Utilities/Constants.h>
 #include "Delaunay.h"
-#include "Constants.h"
-#include "DataStructures.h"
 
 #include <algorithm>
 
 namespace utils {
 	using namespace delaunay;
 
-	typedef std::pair<uint64, uint64> Tangent;
+	typedef std::pair<uint32_t, uint32_t> Tangent;
 
 	void MergeDelaunay(
 		DelaunayGraph & leftGraph,
@@ -23,7 +23,7 @@ namespace utils {
 		bool takeLeft, takeRight;
 		bool isLeftDone = false, isRightDone = false;
 
-		const Vector2<int64> rightOffset = rightGraph.GraphOffset() - leftGraph.GraphOffset();
+		const Vector2<int64_t> rightOffset = rightGraph.GraphOffset() - leftGraph.GraphOffset();
 
 		// If the left and right graphs are different, we need to the add an offset to the
 		// right graph since coordinates are local to the tile, and not absolute.
@@ -231,15 +231,15 @@ namespace utils {
 	Tangent FindTangent(
 		const ConvexHull & leftHull,
 		const ConvexHull & rightHull,
-		const std::function<uint64 (const ConvexHull &, uint64)> & nextLeftIndex,
-		const std::function<uint64 (const ConvexHull &, uint64)> & nextRightIndex,
-		const std::function<int8 (Vertex * const, Vertex * const, Vertex * const)> & getWinding
+		const std::function<uint32_t (const ConvexHull &, uint32_t)> & nextLeftIndex,
+		const std::function<uint32_t (const ConvexHull &, uint32_t)> & nextRightIndex,
+		const std::function<int8_t (Vertex * const, Vertex * const, Vertex * const)> & getWinding
 	) {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
-		uint64 leftIndex = leftHull.RightVertexIndex();
-		uint64 rightIndex = rightHull.LeftVertexIndex();
-		uint64 nextLeft = nextLeftIndex(leftHull, leftIndex);
-		uint64 nextRight = nextRightIndex(rightHull, rightIndex);
+		uint32_t leftIndex = leftHull.RightVertexIndex();
+		uint32_t rightIndex = rightHull.LeftVertexIndex();
+		uint32_t nextLeft = nextLeftIndex(leftHull, leftIndex);
+		uint32_t nextRight = nextRightIndex(rightHull, rightIndex);
 		
 		bool done;
 
@@ -248,7 +248,7 @@ namespace utils {
 			
 			// Loop until the next left vertex is below the tangent
 			while (true) {
-				int8 winding = getWinding(
+				int8_t winding = getWinding(
 					leftHull[nextLeft], leftHull[leftIndex], rightHull[rightIndex]);
 
 				// If the next left is below the tangent, then we've reached the apex
@@ -270,7 +270,7 @@ namespace utils {
 			
 			// Loop until the next right vertex is below the tangent
 			while (true) {
-				int8 winding = getWinding(
+				int8_t winding = getWinding(
 					rightHull[nextRight], leftHull[leftIndex], rightHull[rightIndex]);
 
 				// If the next right is below the tangent, then we've reached the apex
@@ -302,10 +302,10 @@ namespace utils {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
 		return FindTangent(
 			leftHull, rightHull,
-			[] (const ConvexHull & leftHull, const uint64 index) {
+			[] (const ConvexHull & leftHull, const uint32_t index) {
 				return leftHull.PrevIndex(index);
 			},
-			[] (const ConvexHull & rightHull, const uint64 index) {
+			[] (const ConvexHull & rightHull, const uint32_t index) {
 				return rightHull.NextIndex(index);
 			},
 			[] (Vertex * const nextVert, Vertex * const leftVert, Vertex * const rightVert) {
@@ -320,10 +320,10 @@ namespace utils {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
 		return FindTangent(
 			leftHull, rightHull,
-			[] (const ConvexHull & leftHull, const uint64 index) {
+			[] (const ConvexHull & leftHull, const uint32_t index) {
 				return leftHull.NextIndex(index);
 			},
-			[] (const ConvexHull & rightHull, const uint64 index) {
+			[] (const ConvexHull & rightHull, const uint32_t index) {
 				return rightHull.PrevIndex(index);
 			},
 			[] (Vertex * const nextVert, Vertex * const leftVert, Vertex * const rightVert) {
@@ -339,16 +339,16 @@ namespace utils {
 	) {
 		ConvexHull newConvexHull;
 
-		uint64 count = (upperTangent.first - lowerTangent.first + leftHull.Size()) %
+		uint32_t count = (upperTangent.first - lowerTangent.first + leftHull.Size()) %
 			leftHull.Size() + 1;
-		for (uint64 i = lowerTangent.first, c = 0; c < count; c++, i++) {
+		for (uint32_t i = lowerTangent.first, c = 0; c < count; c++, i++) {
 			if (i >= leftHull.Size()) i -= leftHull.Size();
 			newConvexHull.AddVertex(leftHull[i]);
 		}
 		
 		count = (lowerTangent.second - upperTangent.second + rightHull.Size()) %
 			rightHull.Size() + 1;
-		for (uint64 i = upperTangent.second, c = 0; c < count; c++, i++) {
+		for (uint32_t i = upperTangent.second, c = 0; c < count; c++, i++) {
 			if (i >= rightHull.Size()) i -= rightHull.Size();
 			newConvexHull.AddVertex(rightHull[i]);
 		}
@@ -360,12 +360,12 @@ namespace utils {
 	ConvexHull Divide(
 		DelaunayGraph & results,
 		const std::vector<Vertex *> & sortedVertices,
-		const uint64 start, const uint64 end,
-		const uint64 minSubdivisionDepth,
-		const uint64 subdivisionDepth = 0
+		const uint32_t start, const uint32_t end,
+		const uint32_t minSubdivisionDepth,
+		const uint32_t subdivisionDepth = 0
 	) {
 		// End condition when less than 4 vertices counted
-		uint64 count = end - start + 1;
+		uint32_t count = end - start + 1;
 		if (count < 4) {
 			ConvexHull hull;
 			if (count == 3) {
@@ -376,7 +376,7 @@ namespace utils {
 					sortedVertices[start + 2]);
 				
 				if (newFace != NULL) {
-					for (uint8 i = 0u; i < newFace->VertexCount(); i++)
+					for (uint8_t i = 0u; i < newFace->VertexCount(); i++)
 						hull.AddVertex(newFace->Vertices[i]);
 				} else {
 					// The 3 points are colinear, add 2 edges instead
@@ -386,7 +386,7 @@ namespace utils {
 					results.AddFace(
 						sortedVertices[start + 1],
 						sortedVertices[start + 2]);
-					for (uint8 i = 0u; i < 3; i++)
+					for (uint8_t i = 0u; i < 3; i++)
 						hull.AddVertex(sortedVertices[start + i]);
 				}
 			} else if (count == 2) {
@@ -395,7 +395,7 @@ namespace utils {
 					sortedVertices[start],
 					sortedVertices[start + 1]);
 
-				for (uint8 i = 0u; i < newFace->VertexCount(); i++)
+				for (uint8_t i = 0u; i < newFace->VertexCount(); i++)
 					hull.AddVertex(newFace->Vertices[i]);
 			} else {
 				// This shouldn't ever happen
@@ -404,7 +404,7 @@ namespace utils {
 
 			return hull;
 		} else {
-			uint64 half = (end + start) / 2;
+			uint32_t half = (end + start) / 2;
 			auto leftHull = Divide(
 				results, sortedVertices, start, half,
 				minSubdivisionDepth, subdivisionDepth + 1);
@@ -483,8 +483,8 @@ namespace utils {
 
 	void MergeDelaunayTileEdge(
 		DelaunayGraph & leftGraph, DelaunayGraph & rightGraph,
-		const uint64 lowerTangentLeft, const uint64 lowerTangentRight,
-		const uint64 upperTangentLeft, const uint64 upperTangentRight
+		const uint32_t lowerTangentLeft, const uint32_t lowerTangentRight,
+		const uint32_t upperTangentLeft, const uint32_t upperTangentRight
 	) {
 		MergeDelaunay(
 			leftGraph, rightGraph,
@@ -493,13 +493,13 @@ namespace utils {
 			Tangent(lowerTangentLeft, lowerTangentRight));
 	}
 
-	void MergeDelaunayTileCorner(std::array<std::pair<DelaunayGraph *, uint64>, 4> & graphs) {
-		const uint8 size = 4;
+	void MergeDelaunayTileCorner(std::array<std::pair<DelaunayGraph *, uint32_t>, 4> & graphs) {
+		const uint8_t size = 4;
 		std::array<utils::Vector2<>, size> points;
 		std::array<Vertex *, size> vertices;
 
 		// Get all 4 points with offsets to the top-left graph
-		for (uint8 i = 0; i < size; i++) {
+		for (uint8_t i = 0; i < size; i++) {
 			auto & graph = graphs[i];
 			auto offset = graph.first->GraphOffset() - graphs[0].first->GraphOffset();
 			auto vertex = graph.first->ConvexHull[graph.second];
@@ -508,7 +508,7 @@ namespace utils {
 		}
 
 		// Determine which cross-edge to use by checking for collinearity and circumcircles
-		uint8 p1, p2, p3, p4;
+		uint8_t p1, p2, p3, p4;
 		auto & basePoints = points[0];
 		auto circumcircle = utils::CalculateCircumcircle(
 			points[0], points[1], points[2]);
@@ -519,7 +519,7 @@ namespace utils {
 		}
 
 		// Add these 2 filler faces to every size
-		for (uint8 i = 0; i < size; i++) {
+		for (uint8_t i = 0; i < size; i++) {
 			auto & graph = graphs[i].first;
 			graph->AddFace(vertices[p1], vertices[p2], vertices[p3]);
 			graph->AddFace(vertices[p4], vertices[p3], vertices[p2]);

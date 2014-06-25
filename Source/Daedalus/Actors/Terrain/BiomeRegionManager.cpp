@@ -2,6 +2,8 @@
 #include "ChunkLoader.h"
 #include "BiomeRegionManager.h"
 
+#include <Utilities/UnrealBridge.h>
+
 
 inline FVector2D To2D(const FVector & in) { return { in.X, in.Y }; }
 inline FVector To3D(const FVector2D & in, const float z) { return { in.X, in.Y, z }; }
@@ -20,7 +22,7 @@ void ABiomeRegionManager::UpdateBiomesAt(const FVector & playerPosition) {
 	auto genParams = chunkLoader->GetGeneratorParameters();
 
 	// Get player's current chunk location
-	auto playerChunkPos = genParams.ToBiomeRegionCoordinates(utils::Vector2<>(playerPosition));
+	auto playerChunkPos = genParams.ToBiomeRegionCoordinates(utils::ToVector2(playerPosition));
 
 	int64 fromX = playerChunkPos.X - RenderDistance;
 	int64 fromY = playerChunkPos.Y - RenderDistance;
@@ -57,7 +59,8 @@ void ABiomeRegionManager::ReloadRegionAt(const terrain::BiomeRegionOffsetVector 
 	auto chunkLoader = GetGameState()->BiomeRegionLoader;
 	auto genParams = chunkLoader->GetGeneratorParameters();
 	auto data = chunkLoader->GetBiomeRegionAt(offset);
-	auto position = genParams.ToRealCoordinates(data->BiomeOffset).ToFVector(RenderHeight);
+	auto position = utils::ToFVector(
+		genParams.ToRealCoordinates(data->BiomeOffset), RenderHeight);
 	FRotator defaultRotation(0, 0, 0);
 	FActorSpawnParameters defaultParameters;
 
@@ -78,8 +81,8 @@ void ABiomeRegionManager::DeleteRegionAt(const terrain::BiomeRegionOffsetVector 
 
 void ABiomeRegionManager::BeginPlay() {
 	Super::BeginPlay();
-	//GetGameState()->EventBus->AddListener(events::E_PlayerMovement, this);
-	//GetGameState()->EventBus->AddListener(events::E_BiomeRegionUpdate, this);
+	GetGameState()->EventBus->AddListener(events::E_PlayerMovement, this);
+	GetGameState()->EventBus->AddListener(events::E_BiomeRegionUpdate, this);
 }
 
 void ABiomeRegionManager::HandleEvent(

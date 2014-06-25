@@ -1,13 +1,23 @@
 #pragma once
 
-#include "Engine.h"
-#include "Vector2.h"
-#include "Vector3.h"
-#include "Vector4.h"
-#include "Matrix4.h"
+#include <Utilities/Algebra/Vector2.h>
+#include <Utilities/Algebra/Vector3.h>
+#include <Utilities/Algebra/Vector4.h>
+#include <Utilities/Algebra/Matrix4.h>
 
+#include <cstdint>
 #include <vector>
 #include <memory>
+
+using std::int8_t;
+using std::int16_t;
+using std::int32_t;
+using std::int64_t;
+
+using std::uint8_t;
+using std::uint16_t;
+using std::uint32_t;
+using std::uint64_t;
 
 namespace utils {
 	// Equivalent to the Scala Option construct which can be a Some or None value
@@ -31,9 +41,9 @@ namespace utils {
 
 	struct Circle2D {
 		Vector2<> Center;
-		float Radius;
+		double Radius;
 
-		Circle2D(const Vector2<> center, const float radius) : Center(center), Radius(radius) {}
+		Circle2D(const Vector2<> center, const double radius) : Center(center), Radius(radius) {}
 		Circle2D() : Circle2D({ 0, 0 }, 0) {}
 	};
 
@@ -74,26 +84,26 @@ namespace utils {
 	template<typename T>
 	struct Tensor2 {
 		std::vector<T> Data;
-		uint32 Width;        // X
-		uint32 Depth;        // Y
+		uint32_t Width;        // X
+		uint32_t Depth;        // Y
 
 		Tensor2() : Tensor2(0, 0) {}
-		Tensor2(const uint32 size) : Tensor2(size, size) {}
-		Tensor2(const uint32 size, const T & value) : Tensor2(size, size, value) {}
+		Tensor2(const uint32_t size) : Tensor2(size, size) {}
+		Tensor2(const uint32_t size, const T & value) : Tensor2(size, size, value) {}
 
-		Tensor2(const Vector2<uint16> & size) : Tensor2(size.X, size.Y) {}
-		Tensor2(const Vector2<uint16> & size, const T & value) :
+		Tensor2(const Vector2<uint16_t> & size) : Tensor2(size.X, size.Y) {}
+		Tensor2(const Vector2<uint16_t> & size, const T & value) :
 			Tensor2(size.X, size.Y, value) {}
-		Tensor2(const Vector2<uint32> & size) : Tensor2(size.X, size.Y) {}
-		Tensor2(const Vector2<uint32> & size, const T & value) :
+		Tensor2(const Vector2<uint32_t> & size) : Tensor2(size.X, size.Y) {}
+		Tensor2(const Vector2<uint32_t> & size, const T & value) :
 			Tensor2(size.X, size.Y, value) {}
 
-		Tensor2(uint32 width, uint32 depth) :
+		Tensor2(const uint32_t width, const uint32_t depth) :
 			Width(width), Depth(depth), Data(width * depth) {}
-		Tensor2(uint32 width, uint32 depth, const T & value) :
+		Tensor2(const uint32_t width, const uint32_t depth, const T & value) :
 			Width(width), Depth(depth), Data(width * depth, value) {}
 
-		Tensor2 & Reset(uint32 Width, uint32 Depth, const T & value) {
+		Tensor2 & Reset(uint32_t Width, uint32_t Depth, const T & value) {
 			this->Width = Width;
 			this->Depth = Depth;
 			Data.resize(Width * Depth, value);
@@ -101,15 +111,15 @@ namespace utils {
 			return *this;
 		}
 
-		const T & Get(const uint32 & x, const uint32 & y) const {
-			return Data[x * Width + y];
+		const T & Get(const uint32_t x, const uint32_t y) const {
+			const T & temp = Data.at(x * Width + y); return temp;   // WTF?
 		}
 
-		T & Get(const uint32 & x, const uint32 & y) {
-			return Data[x * Width + y];
+		T & Get(const uint32_t x, const uint32_t y) {
+			return Data.at(x * Width + y);   // WTF?
 		}
 
-		void Set(const uint32 & x, const uint32 & y, const T & value) {
+		void Set(const uint32_t x, const uint32_t y, const T & value) {
 			Data[x * Width + y] = value;
 		}
 
@@ -118,29 +128,69 @@ namespace utils {
 		}
 	};
 
+	// Specialization for Tensor2<bool> because vector<bool> has a special implementation
+	template<>
+	struct Tensor2<bool> {
+		std::vector<bool> Data;
+		uint32_t Width;        // X
+		uint32_t Depth;        // Y
+
+		Tensor2() : Tensor2(0u, 0u) {}
+		Tensor2(const uint32_t size) : Tensor2(size, size) {}
+
+		Tensor2(const Vector2<uint16_t> & size) : Tensor2(size.X, size.Y) {}
+		Tensor2(const Vector2<uint16_t> & size, const bool value) :
+			Tensor2(size.X, size.Y, value) {}
+		Tensor2(const Vector2<uint32_t> & size) : Tensor2(size.X, size.Y) {}
+		Tensor2(const Vector2<uint32_t> & size, const bool value) :
+			Tensor2(size.X, size.Y, value) {}
+
+		Tensor2(const uint32_t width, const uint32_t depth) :
+			Width(width), Depth(depth), Data(width * depth) {}
+		Tensor2(const uint32_t width, const uint32_t depth, const bool value) :
+			Width(width), Depth(depth), Data(width * depth, value) {}
+
+		Tensor2 & Reset(const uint32_t Width, const uint32_t Depth, const bool value) {
+			this->Width = Width;
+			this->Depth = Depth;
+			Data.resize(Width * Depth, value);
+
+			return *this;
+		}
+
+		bool Get(const uint32_t x, const uint32_t y) const { return Data.at(x * Width + y); }
+		bool Get(const uint32_t x, const uint32_t y) { return Data.at(x * Width + y); }
+
+		void Set(const uint32_t x, const uint32_t y, const bool value) {
+			Data[x * Width + y] = value;
+		}
+
+		void Fill(const bool value) { Data.assign(Width * Depth, value); }
+	};
+
 	template<typename T>
 	struct Tensor3 {
 		std::vector<T> Data;
-		uint32 Width;       // X
-		uint32 Depth;       // Y
-		uint32 Height;      // Z
+		uint32_t Width;       // X
+		uint32_t Depth;       // Y
+		uint32_t Height;      // Z
 
 		Tensor3() : Tensor3(0, 0, 0) {}
-		Tensor3(const uint32 size) : Tensor3(size, size, size) {}
-		Tensor3(const uint32 size, const T & value) : Tensor3(size, size, size, value) {}
-		Tensor3(const Vector3<uint16> & size) : Tensor3(size.X, size.Y, size.Z) {}
-		Tensor3(const Vector3<uint16> & size, const T & value) :
+		Tensor3(const uint32_t size) : Tensor3(size, size, size) {}
+		Tensor3(const uint32_t size, const T & value) : Tensor3(size, size, size, value) {}
+		Tensor3(const Vector3<uint16_t> & size) : Tensor3(size.X, size.Y, size.Z) {}
+		Tensor3(const Vector3<uint16_t> & size, const T & value) :
 			Tensor3(size.X, size.Y, size.Z, value) {}
-		Tensor3(const Vector3<uint32> & size) : Tensor3(size.X, size.Y, size.Z) {}
-		Tensor3(const Vector3<uint32> & size, const T & value) :
+		Tensor3(const Vector3<uint32_t> & size) : Tensor3(size.X, size.Y, size.Z) {}
+		Tensor3(const Vector3<uint32_t> & size, const T & value) :
 			Tensor3(size.X, size.Y, size.Z, value) {}
 
-		Tensor3(uint32 width, uint32 depth, uint32 height) :
+		Tensor3(uint32_t width, uint32_t depth, uint32_t height) :
 			Width(width), Height(height), Depth(depth), Data(width * height * depth) {}
-		Tensor3(uint32 width, uint32 depth, uint32 height, const T & value) :
+		Tensor3(uint32_t width, uint32_t depth, uint32_t height, const T & value) :
 			Width(width), Height(height), Depth(depth), Data(width * height * depth, value) {}
 
-		Tensor3 & Reset(uint32 Width, uint32 Height, uint32 Depth, const T & value) {
+		Tensor3 & Reset(uint32_t Width, uint32_t Height, uint32_t Depth, const T & value) {
 			this->Width = Width;
 			this->Height = Height;
 			this->Depth = Depth;
@@ -149,15 +199,15 @@ namespace utils {
 			return *this;
 		}
 
-		const T & Get(const uint32 & x, const uint32 & y, const uint32 & z) const {
+		const T & Get(const uint32_t & x, const uint32_t & y, const uint32_t & z) const {
 			return Data[(x * Width + y) * Height + z];
 		}
 
-		T & GetMutable(const uint32 & x, const uint32 & y, const uint32 & z) {
+		T & GetMutable(const uint32_t & x, const uint32_t & y, const uint32_t & z) {
 			return Data[(x * Width + y) * Height + z];
 		}
 
-		void Set(const uint32 & x, const uint32 & y, const uint32 & z, const T & value) {
+		void Set(const uint32_t & x, const uint32_t & y, const uint32_t & z, const T & value) {
 			Data[(x * Width + y) * Height + z] = value;
 		}
 
@@ -167,5 +217,5 @@ namespace utils {
 	};
 }
 
-#include "Algebra2.h"
-#include "Algebra3.h"
+#include <Utilities/Algebra/Algebra2.h>
+#include <Utilities/Algebra/Algebra3.h>
