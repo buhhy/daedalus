@@ -14,7 +14,11 @@ namespace utils {
 		uint64_t Vertex::AddFace(Face * const face) {
 			if (IncidentFace == NULL)
 				IncidentFace = face;
-			return ++NumFaces;
+			// TODO: remove - this is simply for verification
+			++NumFaces;
+			IsSurrounded();
+
+			return NumFaces;
 		}
 
 		uint64_t Vertex::RemoveFace(Face * const face) {
@@ -24,7 +28,33 @@ namespace utils {
 				else
 					IncidentFace = face->GetAdjacentFaceCCW(this);
 			}
-			return --NumFaces;
+
+			--NumFaces;
+
+			if (IncidentFace != NULL)
+				IsSurrounded();
+
+			return NumFaces;
+		}
+
+		bool Vertex::IsSurrounded() const {
+			Face * curFace = GetIncidentFace();
+			bool surrounded = true;
+
+			for (uint32_t i = 0; i < FaceCount(); i++) {
+				auto nextFace = curFace->GetAdjacentFaceCCW(this);
+				auto curVertex = curFace->GetCWVertex(this);
+				auto nextVertex = nextFace->GetCCWVertex(this);
+				surrounded = surrounded && (*curVertex == *nextVertex);
+				curFace = nextFace;
+
+				if (nextFace == NULL)
+					assert(!"Vertex::IsSurrounded: next face does not contain pivot index");
+			}
+
+			if (!(*GetIncidentFace() == *curFace))
+				assert(!"Vertex::IsSurrounded: face does not loop around vertex correctly");
+			return surrounded;
 		}
 
 
@@ -33,19 +63,19 @@ namespace utils {
 		 *********************************************************************/
 		
 
-		int8_t Face::FindVertex(Vertex * const vertex) const {
+		int8_t Face::FindVertex(Vertex const * const vertex) const {
 			for (int8_t i = NumVertices - 1; i >= 0; i--)
 				if (Vertices[i] == vertex) return i;
 			return -1;
 		}
 
-		int8_t Face::FindFace(Face * const face) const {
+		int8_t Face::FindFace(Face const * const face) const {
 			for (int8_t i = NumVertices - 1; i >= 0; i--)
 				if (AdjacentFaces[i] == face) return i;
 			return -1;
 		}
 
-		Face * Face::GetAdjacentFaceCW(Vertex * const sharedVertex) {
+		Face * Face::GetAdjacentFaceCW(Vertex const * const sharedVertex) {
 			// Since we don't have a pointer to the CW face, we need to loop around the
 			// shared vertex until we find the last face before this face again
 			Face * curFace = NULL;
@@ -55,8 +85,8 @@ namespace utils {
 			for (uint64_t c = 0; c < fcount; c++) {
 				curFace = nextFace;
 				nextFace = nextFace->GetAdjacentFaceCCW(sharedVertex);
-				if (nextFace == NULL)
-					int i = 5;
+				assert(nextFace != NULL &&
+					"Face::GetAdjacentFaceCW: next face does not contain pivot index");
 			}
 
 			assert(curFace->GetAdjacentFaceCCW(sharedVertex) == this &&
@@ -65,7 +95,7 @@ namespace utils {
 			return nextFace == NULL ? NULL : curFace;
 		}
 
-		Face * Face::GetAdjacentFaceCCW(Vertex * const sharedVertex) {
+		Face * Face::GetAdjacentFaceCCW(Vertex const * const sharedVertex) {
 			int8_t found = FindVertex(sharedVertex);
 			// Shared vertex doesn't actually exist in this face
 			if (found == -1) return NULL;
@@ -253,7 +283,6 @@ namespace utils {
 		Face * otherFace = pivotPoint->GetIncidentFace();
 
 		// If pivot point has no faces yet, assign the new one
-		pivotPoint->AddFace(newFace);
 		if (otherFace == NULL)
 			return std::make_pair((Face *) NULL, -1);
 
@@ -307,7 +336,7 @@ namespace utils {
 			} else {
 				auto angle = FindAngle(otherPivotCW->GetPoint() - pivotPoint->GetPoint(), CWCompareEdge);
 				// Account for rounding errors?
-				if (angle > M_PI * 2 - 1E-3) angle = 0;
+				if (angle > M_PI * 2 - FLOAT_ERROR) angle = 0;
 				if (angle < CWMinAngle) {
 					CWMinAngle = angle;
 					CWFace = otherFace;
@@ -400,6 +429,10 @@ namespace utils {
 				adjust.first->AdjacentFaces[adjust.second] = newFace;
 		}
 
+		// Add new face to face vertices
+		for (uint8_t i = 0; i < newFace->VertexCount(); i++)
+			newFace->Vertices[i]->AddFace(newFace);
+
 		AddFace(newFace);
 
 		return newFace;
@@ -431,6 +464,10 @@ namespace utils {
 			if (f != NULL && f->IsDegenerate()) RemoveFace(f);
 
 		Face * newFace = new Face(inV1, inV2, inV3, GetNextFaceId());
+		
+		// TODO: remove breakpoint hook
+		if (newFace->FaceId() == 690)
+			int i = 5;
 
 		// Modify adjacencies
 		std::array<std::pair<Face *, int8_t>, 3> adjusts = {{
@@ -443,6 +480,10 @@ namespace utils {
 			if (adjust.first != NULL)
 				adjust.first->AdjacentFaces[adjust.second] = newFace;
 		}
+
+		// Add new face to face vertices
+		for (uint8_t i = 0; i < newFace->VertexCount(); i++)
+			newFace->Vertices[i]->AddFace(newFace);
 
 		AddFace(newFace);
 
@@ -460,28 +501,25 @@ namespace utils {
 		return true;
 	}
 		
-	Face * DelaunayGraph::FindFace(Vertex * const v1, Vertex * const v2) {
+	Face * DelaunayGraph::FindFace(Vertex const * const v1, Vertex const * const v2) {
 		Face * curFace = v1->GetIncidentFace();
 
 		if (curFace == NULL)
 			return NULL;
 
 		bool found = false;
-		auto numFaces = v1->FaceCount();
-		for (uint64_t c = 0; c < numFaces; c++) {
+		Face * foundFace = NULL;
+		for (uint64_t c = 0; c < v1->FaceCount(); c++) {
 			found = curFace->FindVertex(v1) != -1 && curFace->FindVertex(v2) != -1;
-			if (found)
-				break;
+			if (found && (foundFace == NULL || foundFace->FaceId() < curFace->FaceId()))
+				foundFace = curFace;
 			curFace = curFace->GetAdjacentFaceCCW(v1);
 		}
 
-		assert((found || curFace->GetAdjacentFaceCCW(v1) == v1->GetIncidentFace()) &&
-			"DelaunayGraph::FindFace: face does not loop around vertex correctly");
+		if (!(*curFace == *v1->GetIncidentFace()))
+			assert(!"DelaunayGraph::FindFace: face does not loop around vertex correctly");
 
-		if (found)
-			return curFace;
-		else
-			return NULL;
+		return foundFace;
 	}
 
 	const std::vector<Vertex const *> DelaunayGraph::GetVertices() const {

@@ -38,9 +38,14 @@ namespace utils {
 		class Face;
 		class ConvexHull;
 
+
+
+		/**
+		 * Vertex datastructure
+		 */
 		class Vertex {
 		private:
-			uint64_t NumFaces;
+			uint32_t NumFaces;
 			uint64_t Id;
 			uint64_t ForeignId;      // Local ID of the vertex in the foreign graph
 			Vector2<> Point;
@@ -52,7 +57,7 @@ namespace utils {
 			Vertex(
 				const DelaunayId & gid, const Vector2<> & point,
 				const uint64_t id, const uint64_t fid, bool isForeign,
-				Face * const inf, const uint64_t numFaces
+				Face * const inf, const uint32_t numFaces
 			) : GraphOffset(gid), Point(point), IncidentFace(inf),
 				Id(id), ForeignId(fid), bIsForeign(isForeign), NumFaces(numFaces)
 			{}
@@ -74,19 +79,30 @@ namespace utils {
 			uint64_t AddFace(Face * const face);
 			uint64_t RemoveFace(Face * const face);
 
+			/**
+			 * @return true if the current vertex is not part of the concave/convex hull
+			 *              formed by the faces that are incident to this vertex
+			 *         false if the current vertex is not part of that concave/convex hull
+			 */
+			bool Vertex::IsSurrounded() const;
+
 			inline Face * const GetIncidentFace() const { return IncidentFace; }
 			inline const DelaunayId & ParentGraphOffset() const { return GraphOffset; }
 			inline const Vector2<> & GetPoint() const { return Point; }
 			inline uint64_t VertexId() const { return Id; };
 			inline uint64_t ForeignVertexId() const { return ForeignId; }
-			inline uint64_t FaceCount() const { return NumFaces; }
+			inline uint32_t FaceCount() const { return NumFaces; }
 			inline bool IsForeign() const { return bIsForeign; }
-
-			inline bool operator == (const Vertex & other) const {
-				return other.VertexId() == VertexId();
-			}
 		};
 
+
+
+
+		/**
+		 * Edge datastructure - this is not actually used in the Delaunay triangulation
+		 * process, this edge structure is used for convenient transfer of edge information
+		 * such as a method return.
+		 */
 		struct Edge {
 			Vertex * Start;
 			Vertex * End;
@@ -100,11 +116,10 @@ namespace utils {
 					End = start;
 				}	
 			}
-
-			inline bool operator == (const Edge & other) const {
-				return *other.Start == *Start && *other.End == *End;
-			}
 		};
+
+
+
 
 		/**
 		 * Triangle datastructure: each vertex has a corresponding opposite face.
@@ -142,12 +157,12 @@ namespace utils {
 				return (current + 1) % NumVertices;
 			}
 
-			inline int8_t GetCWVertexIndex(Vertex * const current) const {
+			inline int8_t GetCWVertexIndex(Vertex const * const current) const {
 				auto value = FindVertex(current);
 				return value == -1 ? -1 : GetCWVertexIndex(value);
 			}
 
-			inline Vertex * GetCWVertex(Vertex * const current) const {
+			inline Vertex * GetCWVertex(Vertex const * const current) const {
 				auto value = GetCWVertexIndex(current);
 				return value == -1 ? NULL : Vertices[value];
 			}
@@ -157,20 +172,20 @@ namespace utils {
 				return (current + (IsDegenerate() ? 1 : 2)) % NumVertices;
 			}
 
-			inline int8_t GetCCWVertexIndex(Vertex * const current) const {
+			inline int8_t GetCCWVertexIndex(Vertex const * const current) const {
 				auto value = FindVertex(current);
 				return value == -1 ? -1 : GetCCWVertexIndex(value);
 			}
 
-			inline Vertex * GetCCWVertex(Vertex * const current) const {
+			inline Vertex * GetCCWVertex(Vertex const * const current) const {
 				auto value = GetCCWVertexIndex(current);
 				return value == -1 ? NULL : Vertices[value];
 			}
 
-			int8_t FindVertex(Vertex * const vertex) const;
-			int8_t FindFace(Face * const face) const;
-			Face * GetAdjacentFaceCW(Vertex * const sharedVertex);
-			Face * GetAdjacentFaceCCW(Vertex * const sharedVertex);
+			int8_t FindVertex(Vertex const * const vertex) const;
+			int8_t FindFace(Face const * const face) const;
+			Face * GetAdjacentFaceCW(Vertex const * const sharedVertex);
+			Face * GetAdjacentFaceCCW(Vertex const * const sharedVertex);
 
 			/**
 			 * Returns a pair containing the position of the circumcircle center and the radius
@@ -179,6 +194,43 @@ namespace utils {
 			Circle2D GetCircumcircle() const;
 		};
 
+
+
+
+		/**
+		 * Comparison operators
+		 */
+		inline bool operator == (const Vertex & left, const Vertex & right) {
+			return left.VertexId() == right.VertexId();
+		}
+
+		inline bool operator == (const Face & left, const Face & right) {
+			return left.FaceId() == right.FaceId();
+		}
+
+		inline bool operator == (const Edge & left, const Edge & right) {
+			return left.Start == right.Start && left.End == right.End;
+		}
+
+		inline bool operator == (Vertex & left, Vertex & right) {
+			return left.VertexId() == right.VertexId();
+		}
+
+		inline bool operator == (Face & left, Face & right) {
+			return left.FaceId() == right.FaceId();
+		}
+
+		inline bool operator == (Edge & left, Edge & right) {
+			return left.Start == right.Start && left.End == right.End;
+		}
+
+
+
+
+		/**
+		 * Convex hull datastructure - the vertices of the convex hull are stored in clockwise
+		 * order, the last vertex will always lead to an edge back to the first.
+		 */
 		class ConvexHull {
 		private:
 			// Convex hull vertices stored in CW winding order
@@ -261,6 +313,14 @@ namespace utils {
 		}
 	}
 
+
+
+
+	/**
+	 * An entire representation of a Delaunay triangulation, this structure is meant to be
+	 * tileable and represents a single tile. It may contain references to foreign vertices
+	 * from another tile.
+	 */
 	class DelaunayGraph {
 	private:
 		std::unordered_set<delaunay::Vertex *> Vertices;
@@ -332,9 +392,11 @@ namespace utils {
 		const std::vector<delaunay::Edge> GetUniqueEdges() const;
 
 		delaunay::Vertex * AddVertex(const Vector2<> & point, const uint64_t id);
+		delaunay::Face * AddFace(
+			delaunay::Vertex * const v1, delaunay::Vertex * const v2);
 
-		delaunay::Face * FindFace(delaunay::Vertex * const v1, delaunay::Vertex * const v2);
-		delaunay::Face * AddFace(delaunay::Vertex * const v1, delaunay::Vertex * const v2);
+		delaunay::Face * FindFace(
+			delaunay::Vertex const * const v1, delaunay::Vertex const * const v2);
 
 		/**
 		 * Indices of vertices should be provided in CW winding.
