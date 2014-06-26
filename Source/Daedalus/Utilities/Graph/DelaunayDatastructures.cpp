@@ -12,33 +12,30 @@ namespace utils {
 
 
 		uint64_t Vertex::AddFace(Face * const face) {
-			if (IncidentFace == NULL)
-				IncidentFace = face;
+			IncidentFaces.insert({ face->FaceId(), face });
 			// TODO: remove - this is simply for verification
-			++NumFaces;
 			IsSurrounded();
 
-			return NumFaces;
+			return FaceCount();
 		}
 
 		uint64_t Vertex::RemoveFace(Face * const face) {
-			if (face == IncidentFace) {
-				if (NumFaces == 1)
-					IncidentFace = NULL;
-				else
-					IncidentFace = face->GetAdjacentFaceCCW(this);
-			}
+			assert(IncidentFaces.count(face->FaceId()) > 0 &&
+				"Vertex::RemoveFace: vertex does not contain this face ID");
 
-			--NumFaces;
+			IncidentFaces.erase(face->FaceId());
+			
+			// TODO: remove - this is simply for verification
+			IsSurrounded();
 
-			if (IncidentFace != NULL)
-				IsSurrounded();
-
-			return NumFaces;
+			return FaceCount();
 		}
 
 		bool Vertex::IsSurrounded() const {
-			Face * curFace = GetIncidentFace();
+			if (FaceCount() == 0)
+				return false;
+
+			Face * curFace = GetFirstIncidentFace();
 			bool surrounded = true;
 
 			for (uint32_t i = 0; i < FaceCount(); i++) {
@@ -52,7 +49,7 @@ namespace utils {
 					assert(!"Vertex::IsSurrounded: next face does not contain pivot index");
 			}
 
-			if (!(*GetIncidentFace() == *curFace))
+			if (!(*GetFirstIncidentFace() == *curFace))
 				assert(!"Vertex::IsSurrounded: face does not loop around vertex correctly");
 			return surrounded;
 		}
@@ -280,11 +277,11 @@ namespace utils {
 		const auto pivotCWPoint = newFace->Vertices[pivotCWIndex];
 		const auto pivotCCWPoint = newFace->Vertices[pivotCCWIndex];
 
-		Face * otherFace = pivotPoint->GetIncidentFace();
-
 		// If pivot point has no faces yet, assign the new one
-		if (otherFace == NULL)
+		if (pivotPoint->FaceCount() == 0)
 			return std::make_pair((Face *) NULL, -1);
+
+		Face * otherFace = pivotPoint->GetFirstIncidentFace();
 
 		// We need to find the face immediately clockwise and counter-clockwise of the
 		// new face to adjust adjacencies. The face to the immediate CW of the new face
@@ -320,7 +317,7 @@ namespace utils {
 				auto angle = FindAngle(
 					CCWCompareEdge, otherPivotCCW->GetPoint() - pivotPoint->GetPoint());
 				// Account for rounding errors?
-				if (angle > M_PI * 2 - 1E-3) angle = 0;
+				if (angle > M_PI * 2 - FLOAT_ERROR) angle = 0;
 				if (angle < CCWMinAngle) {
 					CCWMinAngle = angle;
 					CCWFace = otherFace;
@@ -368,7 +365,6 @@ namespace utils {
 			
 		if (CWFace != face)
 			CWFace->AdjacentFaces[CWFace->GetCCWVertexIndex(pivot)] = CCWFace;
-		pivot->RemoveFace(face);
 	}
 
 	uint64_t DelaunayGraph::GetNextFaceId() { return CurrentFaceId++; }
@@ -466,7 +462,7 @@ namespace utils {
 		Face * newFace = new Face(inV1, inV2, inV3, GetNextFaceId());
 		
 		// TODO: remove breakpoint hook
-		if (newFace->FaceId() == 690)
+		if (newFace->FaceId() == 438)
 			int i = 5;
 
 		// Modify adjacencies
@@ -495,6 +491,8 @@ namespace utils {
 			return false;
 		for (uint8_t i = 0; i < face->VertexCount(); i++)
 			AdjustRemovedFaceAdjacencies(face, i);
+		for (uint8_t i = 0; i < face->VertexCount(); i++)
+			face->Vertices[i]->RemoveFace(face);
 		Faces.erase(face);
 		IdFaceMap.erase(face->FaceId());
 		delete face;
@@ -502,9 +500,9 @@ namespace utils {
 	}
 		
 	Face * DelaunayGraph::FindFace(Vertex const * const v1, Vertex const * const v2) {
-		Face * curFace = v1->GetIncidentFace();
+		Face * curFace = v1->GetFirstIncidentFace();
 
-		if (curFace == NULL)
+		if (v1->FaceCount() == 0 || v2->FaceCount() == 0)
 			return NULL;
 
 		bool found = false;
@@ -516,7 +514,7 @@ namespace utils {
 			curFace = curFace->GetAdjacentFaceCCW(v1);
 		}
 
-		if (!(*curFace == *v1->GetIncidentFace()))
+		if (!(*curFace == *v1->GetFirstIncidentFace()))
 			assert(!"DelaunayGraph::FindFace: face does not loop around vertex correctly");
 
 		return foundFace;

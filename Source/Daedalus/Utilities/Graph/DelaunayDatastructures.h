@@ -39,41 +39,42 @@ namespace utils {
 		class ConvexHull;
 
 
+		typedef std::unordered_map<uint64_t, Face * const> IdFaceMap;
+
+
 
 		/**
 		 * Vertex datastructure
 		 */
 		class Vertex {
 		private:
-			uint32_t NumFaces;
+			IdFaceMap IncidentFaces;
 			uint64_t Id;
 			uint64_t ForeignId;      // Local ID of the vertex in the foreign graph
 			Vector2<> Point;
 			bool bIsForeign;
 			
 			DelaunayId GraphOffset;
-			Face * IncidentFace;
 
+			// TODO: update copy constructor for face map
 			Vertex(
 				const DelaunayId & gid, const Vector2<> & point,
-				const uint64_t id, const uint64_t fid, bool isForeign,
-				Face * const inf, const uint32_t numFaces
-			) : GraphOffset(gid), Point(point), IncidentFace(inf),
-				Id(id), ForeignId(fid), bIsForeign(isForeign), NumFaces(numFaces)
+				const uint64_t id, const uint64_t fid, bool isForeign
+			) : GraphOffset(gid), Point(point),
+				Id(id), ForeignId(fid), bIsForeign(isForeign)
 			{}
 
 		public:
 			Vertex(const DelaunayId & gid, const Vector2<> & point, const uint64_t id) :
-				Vertex(gid, point, id, 0, false, NULL, 0)
+				Vertex(gid, point, id, 0, false)
 			{}
 			Vertex(
 				const DelaunayId & gid, const Vector2<> & point,
 				const uint64_t id, const uint64_t fid
-			) : Vertex(gid, point, id, fid, true, NULL, 0)
+			) : Vertex(gid, point, id, fid, true)
 			{}
 			Vertex(const Vertex & copy) :
-				Vertex(copy.GraphOffset, copy.Point, copy.Id, copy.ForeignId,
-					copy.bIsForeign, NULL, copy.NumFaces)
+				Vertex(copy.GraphOffset, copy.Point, copy.Id, copy.ForeignId, copy.bIsForeign)
 			{}
 
 			uint64_t AddFace(Face * const face);
@@ -86,12 +87,17 @@ namespace utils {
 			 */
 			bool Vertex::IsSurrounded() const;
 
-			inline Face * const GetIncidentFace() const { return IncidentFace; }
+			inline const IdFaceMap & GetIncidentFaces() const { return IncidentFaces; }
+			inline Face * const GetFirstIncidentFace() const {
+				if (FaceCount() == 0)
+					return NULL;
+				return IncidentFaces.cbegin()->second;
+			}
 			inline const DelaunayId & ParentGraphOffset() const { return GraphOffset; }
 			inline const Vector2<> & GetPoint() const { return Point; }
 			inline uint64_t VertexId() const { return Id; };
 			inline uint64_t ForeignVertexId() const { return ForeignId; }
-			inline uint32_t FaceCount() const { return NumFaces; }
+			inline uint32_t FaceCount() const { return IncidentFaces.size(); }
 			inline bool IsForeign() const { return bIsForeign; }
 		};
 

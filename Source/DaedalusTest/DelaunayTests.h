@@ -44,7 +44,9 @@ protected:
 	}
 };
 
-class DelaunayGridGraph : public testing::Test {
+typedef std::tuple<utils::Vector2<int64_t>, uint64_t, uint32_t> DelaunayTestParam;
+
+class DelaunayGridGraph : public testing::TestWithParam<DelaunayTestParam> {
 protected:
 	DelaunayGraph * Graph;
 	std::vector<Vector2<>> Points;
@@ -52,16 +54,17 @@ protected:
 	std::vector<Face const *> Faces;
 
 	virtual void SetUp() override {
+		const auto & param = GetParam();
 		// Use a Mersenne Twister random number generator to create deterministic random numbers
-		uint64_t seed = 5000;
-		utils::Vector2<int64_t> graphId(0, 0);
+		uint64_t seed = std::get<1>(param);
+		utils::Vector2<int64_t> graphId(std::get<0>(param));
 		uint8_t minCellPoints = 1;
 		uint8_t maxCellPoints = 1;
-		uint32_t gridCellCount = 32;
+		uint32_t gridCellCount = std::get<2>(param);
 
 		Graph = new DelaunayGraph(graphId);
 
-		uint32_t mtSeed = utils::HashFromVector(5000, graphId);
+		uint32_t mtSeed = (uint32_t) utils::HashFromVector(seed, graphId);
 		auto randNumPoints = std::bind(
 			std::uniform_int_distribution<int>(minCellPoints, maxCellPoints), std::mt19937(mtSeed));
 		auto randPosition = std::bind(
@@ -101,7 +104,7 @@ protected:
 };
 
 void TestCWTraversal(Vertex const * pivot, const bool testAdjacency) {
-	Face * curFace = pivot->GetIncidentFace();
+	Face * curFace = pivot->GetFirstIncidentFace();
 
 	for (uint8_t i = 0; i < pivot->FaceCount(); i++) {
 		auto nextFace = curFace->GetAdjacentFaceCW(pivot);
@@ -113,11 +116,11 @@ void TestCWTraversal(Vertex const * pivot, const bool testAdjacency) {
 		curFace = nextFace;
 	}
 
-	ASSERT_EQ(pivot->GetIncidentFace(), curFace);
+	ASSERT_EQ(pivot->GetFirstIncidentFace(), curFace);
 }
 
 void TestCCWTraversal(Vertex const * pivot, const bool testAdjacency) {
-	Face * curFace = pivot->GetIncidentFace();
+	Face * curFace = pivot->GetFirstIncidentFace();
 
 	for (uint8_t i = 0; i < pivot->FaceCount(); i++) {
 		auto nextFace = curFace->GetAdjacentFaceCCW(pivot);
@@ -129,67 +132,75 @@ void TestCCWTraversal(Vertex const * pivot, const bool testAdjacency) {
 		curFace = nextFace;
 	}
 
-	ASSERT_EQ(pivot->GetIncidentFace(), curFace);
+	ASSERT_EQ(pivot->GetFirstIncidentFace(), curFace);
 }
 
-//TEST_F(HexagonGraph, FindsUniqueFaces) {
-//	for (uint8_t i = 1, j = 2; i < Vertices.size(); i++, j++) {
-//		if (j >= Vertices.size()) j = 1;
-//		Face * found = Graph->FindFace(Vertices[i], Vertices[j]);
-//		ASSERT_FALSE(found == NULL);
-//		ASSERT_EQ(Faces[i - 1]->FaceId(), found->FaceId());
-//	}
-//}
-//
-//TEST_F(HexagonGraph, CanEvaluateWhenVerticesAreSurrounded) {
-//	// Only the middle vertex is technically surrounded
-//	ASSERT_TRUE(Vertices[0]->IsSurrounded());
-//	for (uint8_t i = 1; i < Vertices.size(); i++)
-//		ASSERT_FALSE(Vertices[i]->IsSurrounded());
-//}
+TEST_F(HexagonGraph, FindsUniqueFaces) {
+	for (uint8_t i = 1, j = 2; i < Vertices.size(); i++, j++) {
+		if (j >= Vertices.size()) j = 1;
+		Face * found = Graph->FindFace(Vertices[i], Vertices[j]);
+		ASSERT_FALSE(found == NULL);
+		ASSERT_EQ(Faces[i - 1]->FaceId(), found->FaceId());
+	}
+}
 
-//TEST_F(HexagonGraph, HasCorrectDataValues) {
-//	ASSERT_EQ(Points.size(), Vertices.size());
-//	ASSERT_EQ(Points.size(), Graph->VertexCount());
-//	ASSERT_EQ(Points.size() - 1, Graph->FaceCount());
-//
-//	ASSERT_EQ(Points.size() - 1, Vertices[0]->FaceCount());
-//	for (uint8_t i = 1; i < Points.size(); i++)
-//		ASSERT_EQ(2, Vertices[i]->FaceCount());
-//}
-//
-//TEST_F(HexagonGraph, TraversesCWFacesProperly) {
-//	TestCWTraversal(Vertices[0], true);
-//
-//	for (uint8_t i = 1; i < Vertices.size(); i++)
-//		TestCWTraversal(Vertices[i], false);
-//}
-//
-//TEST_F(HexagonGraph, TraversesCCWFacesProperly) {
-//	TestCCWTraversal(Vertices[0], true);
-//	
-//	for (uint8_t i = 1; i < Vertices.size(); i++)
-//		TestCCWTraversal(Vertices[i], false);
-//}
-//
-//TEST_F(HexagonGraph, DeletesFaces) {
-//	for (uint8_t i = 0; i < Faces.size(); i++) {
-//		Face * face = Faces[i];
-//		for (uint8_t v = 0; v < Vertices.size(); v++) {
-//			TestCWTraversal(Vertices[v], false);
-//			TestCCWTraversal(Vertices[v], false);
-//		}
-//
-//		Graph->RemoveFace(face);
-//	}
-//}
+TEST_F(HexagonGraph, CanEvaluateWhenVerticesAreSurrounded) {
+	// Only the middle vertex is technically surrounded
+	ASSERT_TRUE(Vertices[0]->IsSurrounded());
+	for (uint8_t i = 1; i < Vertices.size(); i++)
+		ASSERT_FALSE(Vertices[i]->IsSurrounded());
+}
+
+TEST_F(HexagonGraph, HasCorrectDataValues) {
+	ASSERT_EQ(Points.size(), Vertices.size());
+	ASSERT_EQ(Points.size(), Graph->VertexCount());
+	ASSERT_EQ(Points.size() - 1, Graph->FaceCount());
+
+	ASSERT_EQ(Points.size() - 1, Vertices[0]->FaceCount());
+	for (uint8_t i = 1; i < Points.size(); i++)
+		ASSERT_EQ(2, Vertices[i]->FaceCount());
+}
+
+TEST_F(HexagonGraph, TraversesCWFacesProperly) {
+	TestCWTraversal(Vertices[0], true);
+
+	for (uint8_t i = 1; i < Vertices.size(); i++)
+		TestCWTraversal(Vertices[i], false);
+}
+
+TEST_F(HexagonGraph, TraversesCCWFacesProperly) {
+	TestCCWTraversal(Vertices[0], true);
+	
+	for (uint8_t i = 1; i < Vertices.size(); i++)
+		TestCCWTraversal(Vertices[i], false);
+}
+
+TEST_F(HexagonGraph, DeletesFaces) {
+	for (uint8_t i = 0; i < Faces.size(); i++) {
+		Face * face = Faces[i];
+		for (uint8_t v = 0; v < Vertices.size(); v++) {
+			TestCWTraversal(Vertices[v], false);
+			TestCCWTraversal(Vertices[v], false);
+		}
+
+		Graph->RemoveFace(face);
+	}
+}
 
 
-TEST_F(DelaunayGridGraph, FacesNeighboursAreCoherent) {
-	TestCWTraversal(Vertices[0], false);
+/**
+ * Delaunay triangulation algorithm tests
+ */
 
-	for (uint16_t i = 1; i < Vertices.size(); i++) {
+TEST_P(DelaunayGridGraph, GeneratesValidTriangulation) {
+	for (uint16_t i = 0; i < Vertices.size(); i++) {
 		TestCWTraversal(Vertices[i], false);
 		TestCCWTraversal(Vertices[i], false);
 	}
 }
+
+const DelaunayTestParam TestParams[] = {
+	DelaunayTestParam({4, 24}, 12345678, 16)
+};
+
+INSTANTIATE_TEST_CASE_P(DistributedPoints, DelaunayGridGraph, testing::ValuesIn(TestParams));
