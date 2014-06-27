@@ -497,10 +497,6 @@ namespace utils {
 			if (f != NULL && f->IsDegenerate()) RemoveFace(f);
 
 		Face * newFace = new Face(inV1, inV2, inV3, GetNextFaceId());
-		
-		// TODO: remove breakpoint hook
-		if (newFace->FaceId() == 1201)
-			int i = 5;
 
 		// Modify adjacencies
 		std::array<std::pair<Face *, int8_t>, 3> adjusts = {{

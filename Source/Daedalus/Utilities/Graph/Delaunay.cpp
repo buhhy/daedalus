@@ -55,6 +55,12 @@ namespace utils {
 		
 		Vertex * leftCandidate = NULL, * rightCandidate = NULL, * nextCandidate = NULL;
 		Face * faceIt = NULL;
+		
+		
+		// TODO: remove breakpoint hook
+		if (leftGraph.GraphOffset().X == -25 && leftGraph.GraphOffset().Y == 3 &&
+				rightGraph.GraphOffset().X == -24 && rightGraph.GraphOffset().Y == 3)
+			int i = 5;
 
 		do {
 			foundLeft = false, foundRight = false;
@@ -510,9 +516,12 @@ namespace utils {
 		// Determine which cross-edge to use by checking for collinearity and circumcircles
 		uint8_t p1, p2, p3, p4;
 		auto & basePoints = points[0];
-		auto circumcircle = utils::CalculateCircumcircle(
+		auto circumcircle1 = utils::CalculateCircumcircle(
 			points[0], points[1], points[2]);
-		if (utils::IsWithinCircumcircle(points[3], circumcircle) == 1) {
+		auto circumcircle2 = utils::CalculateCircumcircle(
+			points[3], points[2], points[1]);
+		if (utils::IsWithinCircumcircle(points[3], circumcircle1) == 1 ||
+				utils::IsWithinCircumcircle(points[0], circumcircle2) == 1) {
 			p1 = 1; p2 = 3; p3 = 0; p4 = 2;
 		} else {
 			p1 = 0; p2 = 1; p3 = 2; p4 = 3;
