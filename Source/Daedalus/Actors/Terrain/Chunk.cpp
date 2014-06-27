@@ -15,7 +15,7 @@ void AChunk::InitializeChunk(const terrain::TerrainGeneratorParameters & params)
 	TerrainGenParams = params;
 }
 
-void AChunk::SetChunkData(const TSharedPtr<terrain::ChunkData> & chunkData) {
+void AChunk::SetChunkData(const std::shared_ptr<terrain::ChunkData> & chunkData) {
 	ChunkData = NULL;
 	ChunkData = chunkData;
 	GenerateChunkMesh();

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "TerrainDataStructures.h"
-#include "DataStructures.h"
+#include <Utilities/DataStructures.h>
 
 namespace terrain {
 	/**
@@ -13,21 +13,21 @@ namespace terrain {
 	 */
 	struct ChunkData {
 		utils::Tensor3<float> DensityData;
-		utils::Tensor3<uint64> MaterialData;
+		utils::Tensor3<uint64_t> MaterialData;
 
-		uint32 ChunkGridSize;			// Size of the chunk in polygons
-		uint32 ChunkFieldSize;			// Size of the chunk scalar field
+		uint32_t ChunkGridSize;			// Size of the chunk in polygons
+		uint32_t ChunkFieldSize;			// Size of the chunk scalar field
 		ChunkOffsetVector ChunkOffset;
 
 		ChunkData(
-			const uint32 chunkSize,
+			const uint32_t chunkSize,
 			const ChunkOffsetVector & chunkOffset
 		) : ChunkGridSize(chunkSize),
 			ChunkFieldSize(chunkSize + 1),
 			DensityData(chunkSize + 1, 0),
 			MaterialData(chunkSize + 1, 0),
 			ChunkOffset(chunkOffset) {}
-
+		
 		~ChunkData() {}
 	};
 }

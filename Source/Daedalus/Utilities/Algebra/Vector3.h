@@ -2,6 +2,8 @@
 
 #include "Vector2.h"
 
+#include <functional>
+
 namespace utils {
 	template <typename T>
 	struct Vector4;
@@ -54,11 +56,11 @@ namespace std {
 	template <typename T>
 	struct hash<utils::Vector3<T> > {
 		size_t operator()(const utils::Vector3<T> & v) const {
-			int64 seed = 0;
+			int64_t seed = 0;
 			std::hashCombine(seed, v.X);
 			std::hashCombine(seed, v.Y);
 			std::hashCombine(seed, v.Z);
-			return seed;
+			return (unsigned) seed;
 		}
 	};
 }

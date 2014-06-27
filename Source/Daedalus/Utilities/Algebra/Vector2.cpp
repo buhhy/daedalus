@@ -1,8 +1,12 @@
 #include <Daedalus.h>
 #include <Utilities/DataStructures.h>
 #include "Vector2.h"
+#include "Vector3.h"
 
 namespace utils {
+	template <typename T>
+	Vector2<T>::Vector2(const Vector3<T> & copy): Vector2(copy.X, copy.Y) {}
+
 	template <typename T>
 	inline T Abs(T value) { return value > 0.0 ? value : -value; }
 

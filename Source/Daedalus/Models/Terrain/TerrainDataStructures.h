@@ -1,57 +1,55 @@
 #pragma once
 
-#include "DataStructures.h"
+#include <Utilities/DataStructures.h>
 
 namespace terrain {
-	typedef utils::Vector3<int64> ChunkOffsetVector;
+	typedef utils::Vector3<int64_t> ChunkOffsetVector;
 
 	struct TerrainGeneratorParameters {
-		uint32 GridCellCount;       // Number of grid cells along a single edge of the cube
-		int64 Seed;
+		uint32_t GridCellCount;       // Number of grid cells along a single edge of the cube
+		int64_t Seed;
 		double ChunkScale;			// Maps chunk grid to real world coordinates
 
-		const FVector ToRealCoordinates(const ChunkOffsetVector & offset) const {
-			return FVector(
-				(int64) offset.X * ChunkScale,
-				(int64) offset.Y * ChunkScale,
-				(int64) offset.Z * ChunkScale);
+		const utils::Vector3<> ToRealCoordinates(const ChunkOffsetVector & offset) const {
+			return utils::Vector3<>(
+				offset.X * ChunkScale,
+				offset.Y * ChunkScale,
+				offset.Z * ChunkScale);
 		}
 
-		const ChunkOffsetVector ToChunkCoordinates(const FVector & position) const {
+		const ChunkOffsetVector ToChunkCoordinates(const utils::Vector3<> & position) const {
 			return ChunkOffsetVector(
-				FMath::Floor(position.X / ChunkScale),
-				FMath::Floor(position.Y / ChunkScale),
-				FMath::Floor(position.Z / ChunkScale));
+				(int64_t) std::floor(position.X / ChunkScale),
+				(int64_t) std::floor(position.Y / ChunkScale),
+				(int64_t) std::floor(position.Z / ChunkScale));
 		}
 	};
 
 
-	typedef utils::Vector2<int64> BiomeRegionOffsetVector;   // Offset vector for biome regions
-	typedef utils::Vector2<uint16> BiomeRegionGridVector;    // Offset vector within a region
-	typedef std::pair<BiomeRegionOffsetVector, uint64> BiomeId;
+	typedef utils::Vector2<int64_t> BiomeRegionOffsetVector;   // Offset vector for biome regions
+	typedef utils::Vector2<uint16_t> BiomeRegionGridVector;    // Offset vector within a region
+	typedef std::pair<BiomeRegionOffsetVector, uint64_t> BiomeId;
 
 	struct BiomeGeneratorParameters {
-		uint32 GridCellCount;       // Number of grid cells along a single edge of the square
-		int64 Seed;
-		uint64 BufferSize;          // Number of buffer cells for Delaunay graph merging
-		uint16 MinPointsPerCell;
-		uint16 MaxPointsPerCell;
+		uint32_t GridCellCount;       // Number of grid cells along a single edge of the square
+		int64_t Seed;
+		uint16_t BufferSize;          // Number of buffer cells for Delaunay graph merging
+		uint16_t MinPointsPerCell;
+		uint16_t MaxPointsPerCell;
 		double BiomeScale;          // Maps biome grid to real world coordinates
 
 		inline const utils::Vector2<> ToRealCoordinates(
 			const BiomeRegionOffsetVector & offset
 		) const {
-			return utils::Vector2<>(
-				(int64) offset.X * BiomeScale,
-				(int64) offset.Y * BiomeScale);
+			return utils::Vector2<>(offset.X * BiomeScale, offset.Y * BiomeScale);
 		}
 
 		inline const BiomeRegionOffsetVector ToBiomeRegionCoordinates(
 			const utils::Vector2<> & position
 		) const {
 			return BiomeRegionOffsetVector(
-				FMath::Floor(position.X / BiomeScale),
-				FMath::Floor(position.Y / BiomeScale));
+				(int64_t) std::floor(position.X / BiomeScale),
+				(int64_t) std::floor(position.Y / BiomeScale));
 		}
 
 		inline const utils::Vector2<> GetInnerRegionPosition(

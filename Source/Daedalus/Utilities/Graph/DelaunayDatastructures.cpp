@@ -14,7 +14,7 @@ namespace utils {
 		uint64_t Vertex::AddFace(Face * const face) {
 			IncidentFaces.insert({ face->FaceId(), face });
 			// TODO: remove - this is simply for verification
-			IsSurrounded();
+			//IsSurrounded();
 
 			return FaceCount();
 		}
@@ -26,7 +26,7 @@ namespace utils {
 			IncidentFaces.erase(face->FaceId());
 			
 			// TODO: remove - this is simply for verification
-			IsSurrounded();
+			//IsSurrounded();
 
 			return FaceCount();
 		}
@@ -128,8 +128,8 @@ namespace utils {
 			return bIsCollinear;
 		}
 		
-		int32_t ConvexHull::FindVertexById(const uint32_t id) const {
-			for (uint32_t i = 0; i < Size(); i++)
+		int32_t ConvexHull::FindVertexById(const uint64_t id) const {
+			for (size_t i = 0; i < Size(); i++)
 				if (HullVertices[i]->VertexId() == id) return i;
 			return -1;
 		}

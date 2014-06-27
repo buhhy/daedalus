@@ -4,10 +4,6 @@
 
 #include <Utilities/UnrealBridge.h>
 
-
-inline FVector2D To2D(const FVector & in) { return { in.X, in.Y }; }
-inline FVector To3D(const FVector2D & in, const float z) { return { in.X, in.Y, z }; }
-
 ABiomeRegionManager::ABiomeRegionManager(
 	const class FPostConstructInitializeProperties & PCIP
 ) : Super(PCIP), RenderDistance(0), RenderHeight(100.0) {}
@@ -16,13 +12,13 @@ ADDGameState * ABiomeRegionManager::GetGameState() {
 	return GetWorld()->GetGameState<ADDGameState>();
 }
 
-void ABiomeRegionManager::UpdateBiomesAt(const FVector & playerPosition) {
+void ABiomeRegionManager::UpdateBiomesAt(const utils::Vector3<> & playerPosition) {
 	terrain::BiomeRegionOffsetVector offset;
 	auto chunkLoader = GetGameState()->BiomeRegionLoader;
 	auto genParams = chunkLoader->GetGeneratorParameters();
 
 	// Get player's current chunk location
-	auto playerChunkPos = genParams.ToBiomeRegionCoordinates(utils::ToVector2(playerPosition));
+	auto playerChunkPos = genParams.ToBiomeRegionCoordinates(utils::Vector2<>(playerPosition));
 
 	int64 fromX = playerChunkPos.X - RenderDistance;
 	int64 fromY = playerChunkPos.Y - RenderDistance;
@@ -87,15 +83,14 @@ void ABiomeRegionManager::BeginPlay() {
 
 void ABiomeRegionManager::HandleEvent(
 	const events::EventType type,
-	const TSharedRef<events::EventData> & data
+	const std::shared_ptr<events::EventData> & data
 ) {
 	if (type == events::E_PlayerMovement) {
-		auto castedData = StaticCastSharedRef<events::EPlayerMovement>(data);
-		auto position = castedData->Source->GetActorLocation();
+		auto castedData = std::static_pointer_cast<events::EPlayerMovement>(data);
 		//UE_LOG(LogTemp, Warning, TEXT("Player position: %f %f %f"), position.X, position.Y, position.Z);
-		UpdateBiomesAt(position);
+		UpdateBiomesAt(castedData->Position);
 	} else if (type == events::E_BiomeRegionUpdate) {
-		auto castedData = StaticCastSharedRef<events::EBiomeRegionUpdate>(data);
+		auto castedData = std::static_pointer_cast<events::EBiomeRegionUpdate>(data);
 		for (auto offset : castedData->UpdatedOffsets) {
 			DeleteRegionAt(offset);
 			ReloadRegionAt(offset);

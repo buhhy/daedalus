@@ -2,8 +2,8 @@
 
 #include "BiomeRegionData.h"
 #include "TerrainDataStructures.h"
-#include "DataStructures.h"
-#include "EventBus.h"
+#include <Utilities/DataStructures.h>
+#include <Controllers/EventBus/EventBus.h>
 
 #include <unordered_map>
 #include <memory>
@@ -43,7 +43,7 @@ namespace terrain {
 		std::shared_ptr<BiomeRegionData> GenerateBiomeRegion(
 			const BiomeRegionOffsetVector & offset);
 		std::shared_ptr<BiomeRegionData> GenerateBiomeRegionArea(
-			const BiomeRegionOffsetVector & offset, const uint8 radius);
+			const BiomeRegionOffsetVector & offset, const uint8_t radius);
 
 		bool MergeRegionEdge(BiomeRegionData & r1, BiomeRegionData & r2);
 		bool MergeRegionCorner(

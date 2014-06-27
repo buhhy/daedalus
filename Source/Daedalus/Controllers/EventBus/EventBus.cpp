@@ -10,17 +10,17 @@ namespace events {
 
 	void EventBus::AddListener(
 		const events::EventType type,
-		IEventListener * const listener
+		EventListener * const listener
 	) {
 		// Insert a list if no listeners are currently listening on this event
 		if (Listeners.count(type) == 0) {
 			Listeners.insert({
 				type,
-				TSharedRef<events::ListenerList>(new events::ListenerList())
+				std::shared_ptr<events::ListenerList>(new events::ListenerList())
 			});
 		}
 
-		TSharedRef<events::ListenerList> & listeners = Listeners.at(type);
+		std::shared_ptr<events::ListenerList> & listeners = Listeners.at(type);
 
 		bool found = false;
 
@@ -37,7 +37,7 @@ namespace events {
 
 	void EventBus::RemoveListener(
 		const events::EventType type,
-		IEventListener * const listener
+		EventListener * const listener
 	) {
 		if (Listeners.count(type) > 0) {
 			bool found = false;
@@ -47,21 +47,21 @@ namespace events {
 			std::remove_if(
 				listeners->begin(),
 				listeners->end(),
-				[&] (IEventListener *& x) { return x == listener; });
+				[&] (EventListener *& x) { return x == listener; });
 		}
 	}
 
-	uint32 EventBus::Count(const events::EventType type) const {
+	uint32_t EventBus::Count(const events::EventType type) const {
 		if (Listeners.count(type) > 0)
 			return Listeners.at(type)->size();
 		return 0;
 	}
 
-	uint32 EventBus::BroadcastEvent(
+	uint32_t EventBus::BroadcastEvent(
 		const events::EventType type,
-		const TSharedRef<events::EventData> & data
+		const std::shared_ptr<events::EventData> & data
 	) {
-		uint32 broadcastCount = 0;
+		uint32_t broadcastCount = 0;
 
 		if (Listeners.count(type) > 0) {
 			auto & listeners = Listeners.at(type);

@@ -1,7 +1,6 @@
 #pragma once
 
-#include "GameFramework/Character.h"
-#include "TerrainDataStructures.h"
+#include <Models/Terrain/TerrainDataStructures.h>
 
 #include <functional>
 #include <vector>
@@ -17,8 +16,8 @@ namespace events {
 	};
 
 	struct EPlayerMovement : public EventData {
-		const TWeakObjectPtr<ACharacter> & Source;
-		EPlayerMovement(const TWeakObjectPtr<ACharacter> & source) : Source(source) {}
+		const utils::Vector3<> Position;
+		EPlayerMovement(const utils::Vector3<> & position) : Position(position) {}
 	};
 
 	struct EBiomeRegionUpdate : public EventData {

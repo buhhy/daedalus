@@ -5,7 +5,11 @@
 #include "DDGameState.h"
 #include "TerrainDataStructures.h"
 #include "Chunk.h"
+
+#include <memory>
+
 #include "ChunkManager.generated.h"
+
 
 /**
  * This class takes data fetched from the ChunkLoader and renders it. It is
@@ -13,7 +17,7 @@
  * will most likely run on the client-side.
  */
 UCLASS()
-class AChunkManager : public AActor, public IEventListener {
+class AChunkManager : public AActor, public EventListener {
 	GENERATED_UCLASS_BODY()
 
 private:
@@ -25,12 +29,12 @@ private:
 	uint64 RenderDistance;
 
 	ADDGameState * GetGameState();
-	void UpdateChunksAt(const FVector & playerPosition);
+	void UpdateChunksAt(const utils::Vector3<> & playerPosition);
 
 public:
 	virtual void HandleEvent(
 		const events::EventType type,
-		const TSharedRef<events::EventData> & data);
+		const std::shared_ptr<events::EventData> & data) override;
 
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
 };

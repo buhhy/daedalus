@@ -3,6 +3,9 @@
 #include <functional>
 
 namespace utils {
+	template <typename T>
+	struct Vector3;
+
 	template <typename T = double>
 	struct Vector2 {
 		T X;
@@ -11,6 +14,7 @@ namespace utils {
 		Vector2() {}
 		Vector2(const T & x, const T & y): X(x), Y(y) {}
 		Vector2(const Vector2<T> & copy): Vector2(copy.X, copy.Y) {}
+		Vector2(const Vector3<T> & copy);
 
 		inline void Reset(const T & x, const T & y) { X = x; Y = y; }
 		inline void Reset(const Vector2<T> & other) { Reset(other.X, other.Y); }

@@ -15,7 +15,7 @@ class AChunk : public AActor {
 	GENERATED_UCLASS_BODY()
 
 private:
-	TSharedPtr<terrain::ChunkData> ChunkData;
+	std::shared_ptr<terrain::ChunkData> ChunkData;
 	terrain::TerrainGeneratorParameters TerrainGenParams;
 	void GenerateChunkMesh();
 
@@ -26,5 +26,5 @@ public:
 		UMaterial * TestMaterial;
 
 	void InitializeChunk(const terrain::TerrainGeneratorParameters & params);
-	void SetChunkData(const TSharedPtr<terrain::ChunkData> & chunkData);
+	void SetChunkData(const std::shared_ptr<terrain::ChunkData> & chunkData);
 };

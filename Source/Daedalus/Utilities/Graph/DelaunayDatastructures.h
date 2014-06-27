@@ -300,7 +300,7 @@ namespace utils {
 			 * if the new point is collinear.
 			 */
 			bool AddVertex(Vertex * const vert);
-			int32_t FindVertexById(const uint32_t id) const;
+			int32_t FindVertexById(const uint64_t id) const;
 			uint32_t MinIndex(const std::function<double (Vertex * const)> & valueOf) const;
 
 			uint32_t LeftVertexIndex() const;

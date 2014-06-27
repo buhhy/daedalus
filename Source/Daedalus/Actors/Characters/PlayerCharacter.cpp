@@ -3,6 +3,8 @@
 #include "DDGameState.h"
 #include "Constants.h"
 
+#include <Utilities/UnrealBridge.h>
+
 APlayerCharacter::APlayerCharacter(const class FPostConstructInitializeProperties& PCIP)
 : Super(PCIP), bHoldingJump(false), TickDeltaCount(0) {
 	auto & movement = this->CharacterMovement;
@@ -75,6 +77,7 @@ void APlayerCharacter::Tick(float delta) {
 		
 		GetWorld()->GetGameState<ADDGameState>()->EventBus->BroadcastEvent(
 			events::E_PlayerMovement,
-			TSharedRef<events::EventData>(new events::EPlayerMovement(this)));
+			std::shared_ptr<events::EventData>(
+				new events::EPlayerMovement(utils::ToVector3(this->GetActorLocation()))));
 	}
 }

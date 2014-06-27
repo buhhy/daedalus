@@ -6,10 +6,11 @@
 #include <functional>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 namespace events {
-	typedef std::vector<IEventListener *> ListenerList;
-	typedef std::unordered_map <events::EventType, TSharedRef<ListenerList> > ListenerMap;
+	typedef std::vector<EventListener *> ListenerList;
+	typedef std::unordered_map <events::EventType, std::shared_ptr<ListenerList> > ListenerMap;
 
 	/**
 	*
@@ -32,19 +33,19 @@ namespace events {
 		 */
 		void AddListener(
 			const events::EventType type,
-			IEventListener * const listener);
+			EventListener * const listener);
 
 		void RemoveListener(
 			const events::EventType type,
-			IEventListener * const listener);
+			EventListener * const listener);
 
-		uint32 Count(const events::EventType type) const;
+		uint32_t Count(const events::EventType type) const;
 
 		/**
 		 * Broadcast the event along with its event data to all listening interfaces.
 		 */
-		uint32 BroadcastEvent(
+		uint32_t BroadcastEvent(
 			const events::EventType type,
-			const TSharedRef<events::EventData> & data);
+			const std::shared_ptr<events::EventData> & data);
 	};
 }

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "TerrainDataStructures.h"
-#include "DataStructures.h"
-#include "Delaunay.h"
+#include <Utilities/Graph/Delaunay.h>
+#include <Utilities/DataStructures.h>
 
 #include <array>
 #include <vector>
@@ -11,7 +11,7 @@
 
 namespace terrain {
 	typedef utils::Vector2<> BiomeCellVertex;
-	typedef std::vector<uint64> PointIds;
+	typedef std::vector<uint64_t> PointIds;
 
 	/**
 	 * This class represents the actual biome itself along with along data associated with the
@@ -52,7 +52,7 @@ namespace terrain {
 		const BiomeId & GlobalBiomeId() const { return GlobalId; }
 	};
 
-	typedef std::unordered_map<uint64, std::unique_ptr<BiomeData> > BiomeDataMap;
+	typedef std::unordered_map<uint64_t, std::unique_ptr<BiomeData> > BiomeDataMap;
 
 	/**
 	 * Each biome cell contains a list of 2D points that will be used in a Delaunay
@@ -67,7 +67,7 @@ namespace terrain {
 
 		~BiomeCellData() {}
 
-		inline void AddPoint(const uint64 id) { PointIds.push_back(id); }
+		inline void AddPoint(const uint64_t id) { PointIds.push_back(id); }
 	};
 
 	typedef utils::Tensor2<BiomeCellData> BiomePointField;
@@ -83,11 +83,11 @@ namespace terrain {
 		bool bIsGraphGenerated;
 		bool bIsBiomesGenerated;
 
-		uint64 CurrentVertexId;
+		uint64_t CurrentVertexId;
 		BiomeDataMap Biomes;
 
-		inline uint64 GetNextId() { return CurrentVertexId++; }
-		inline const BiomeId BuildId(uint64 localId) {
+		inline uint64_t GetNextId() { return CurrentVertexId++; }
+		inline const BiomeId BuildId(uint64_t localId) {
 			return BiomeId(BiomeOffset, localId);
 		}
 
@@ -99,29 +99,29 @@ namespace terrain {
 		// bottom left, (2, 2) is top right.
 		utils::Tensor2<bool> NeighboursMerged;
 
-		uint32 BiomeGridSize;                     // Size of the biome in grid cells
+		uint32_t BiomeGridSize;                     // Size of the biome in grid cells
 		BiomeRegionOffsetVector BiomeOffset;      // Biome offset from (0,0)
 
 		BiomeRegionData(
-			const uint16 buffer,
-			const uint32 biomeSize,
+			const uint16_t buffer,
+			const uint32_t biomeSize,
 			const BiomeRegionOffsetVector & biomeOffset);
 
 		~BiomeRegionData() {}
 
 
-		inline BiomeData * GetBiomeAt(const uint64 localBiomeId) {
+		inline BiomeData * GetBiomeAt(const uint64_t localBiomeId) {
 			return Biomes.at(localBiomeId).get();
 		}
 
-		inline const BiomeData * GetBiomeAt(const uint64 localBiomeId) const {
+		inline const BiomeData * GetBiomeAt(const uint64_t localBiomeId) const {
 			return Biomes.at(localBiomeId).get();
 		}
 
 		inline bool AllNeighboursLoaded() const {
 			bool done = true;
-			for (uint8 x = 0; x < NeighboursMerged.Width; x++) {
-				for (uint8 y = 0; y < NeighboursMerged.Depth; y++) {
+			for (uint8_t x = 0; x < NeighboursMerged.Width; x++) {
+				for (uint8_t y = 0; y < NeighboursMerged.Depth; y++) {
 					if (!NeighboursMerged.Get(x, y)) {
 						done = false;
 						break;
@@ -132,11 +132,11 @@ namespace terrain {
 		}
 
 
-		uint64 AddBiome(const uint64 x, const uint64 y, const BiomeCellVertex & position);
+		uint64_t AddBiome(const uint32_t x, const uint32_t y, const BiomeCellVertex & position);
 
 		void GenerateDelaunayGraph();
 
-		std::tuple<uint64, BiomeRegionGridVector, double> FindNearestPoint(
+		std::tuple<uint64_t, BiomeRegionGridVector, double> FindNearestPoint(
 			utils::Vector2<> offset) const;
 	};
 }

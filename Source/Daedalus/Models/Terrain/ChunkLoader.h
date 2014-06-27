@@ -1,14 +1,15 @@
 #pragma once
 
-#include <unordered_map>
 #include "ChunkData.h"
 #include "TerrainDataStructures.h"
-#include "DataStructures.h"
+#include <Utilities/DataStructures.h>
+
+#include <unordered_map>
 
 namespace terrain {
 	typedef std::unordered_map<
-		utils::Vector3<int64>,
-		TSharedRef<ChunkData>
+		utils::Vector3<int64_t>,
+		std::shared_ptr<ChunkData>
 	> ChunkCache;
 
 	/**
@@ -23,17 +24,17 @@ namespace terrain {
 
 		TerrainGeneratorParameters TerrainGenParams;
 
-		TSharedPtr<ChunkData> LoadChunkFromDisk(const ChunkOffsetVector & offset);
-		TSharedRef<ChunkData> GenerateMissingChunk(const ChunkOffsetVector & offset);
+		std::shared_ptr<ChunkData> LoadChunkFromDisk(const ChunkOffsetVector & offset);
+		std::shared_ptr<ChunkData> GenerateMissingChunk(const ChunkOffsetVector & offset);
 
 		//void RunDiamondSquare(ChunkData & data);
-		void SetDefaultHeight(ChunkData & data, int32 height);
+		void SetDefaultHeight(ChunkData & data, int32_t height);
 
 	public:
 		ChunkLoader(const TerrainGeneratorParameters & params);
 		~ChunkLoader();
 
 		const TerrainGeneratorParameters & GetGeneratorParameters() const;
-		TSharedRef<ChunkData> GetChunkAt(const ChunkOffsetVector & offset);
+		std::shared_ptr<ChunkData> GetChunkAt(const ChunkOffsetVector & offset);
 	};
 }

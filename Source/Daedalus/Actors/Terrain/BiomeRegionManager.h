@@ -5,13 +5,16 @@
 #include "DDGameState.h"
 #include "TerrainDataStructures.h"
 #include "BiomeRegion.h"
+
+#include <memory>
+
 #include "BiomeRegionManager.generated.h"
 
 /**
  * This manages biome rendering for debugging purposes.
  */
 UCLASS()
-class ABiomeRegionManager : public AActor, public IEventListener {
+class ABiomeRegionManager : public AActor, public EventListener {
 	GENERATED_UCLASS_BODY()
 
 private:
@@ -24,14 +27,14 @@ private:
 	float RenderHeight;
 
 	ADDGameState * GetGameState();
-	void UpdateBiomesAt(const FVector & playerPosition);
+	void UpdateBiomesAt(const utils::Vector3<> & playerPosition);
 	void ReloadRegionAt(const terrain::BiomeRegionOffsetVector & offset);
 	void DeleteRegionAt(const terrain::BiomeRegionOffsetVector & offset);
 
 public:
 	virtual void HandleEvent(
 		const events::EventType type,
-		const TSharedRef<events::EventData> & data);
+		const std::shared_ptr<events::EventData> & data) override;
 
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
 };

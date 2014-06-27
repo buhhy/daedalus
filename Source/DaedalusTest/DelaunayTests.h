@@ -4,6 +4,7 @@
 #include <Utilities/Graph/Delaunay.h>
 #include <Utilities/DataStructures.h>
 #include <Utilities/Hash.h>
+#include <Models/Terrain/BiomeRegionLoader.h>
 
 #include <iostream>
 #include <vector>
