@@ -12,8 +12,8 @@ namespace utils {
 		T Y;
 
 		Vector2() {}
-		Vector2(const T & x, const T & y): X(x), Y(y) {}
-		Vector2(const Vector2<T> & copy): Vector2(copy.X, copy.Y) {}
+		Vector2(const T & x, const T & y) : X(x), Y(y) {}
+		Vector2(const Vector2<T> & copy) : Vector2(copy.X, copy.Y) {}
 		Vector2(const Vector3<T> & copy);
 
 		inline void Reset(const T & x, const T & y) { X = x; Y = y; }
@@ -41,6 +41,16 @@ namespace utils {
 
 		template <typename T1>
 		inline Vector2<T1> Cast() const { return Vector2<T1>((T1) this->X, (T1) this->Y); }
+
+		inline Vector2<T> & operator += (const Vector2<T> & rhs) { X += rhs.X; Y += rhs.Y; return *this; }
+		inline Vector2<T> & operator -= (const Vector2<T> & rhs) { X -= rhs.X; Y -= rhs.Y; return *this; }
+		inline Vector2<T> & operator *= (const Vector2<T> & rhs) { X *= rhs.X; Y *= rhs.Y; return *this; }
+		inline Vector2<T> & operator /= (const Vector2<T> & rhs) { X /= rhs.X; Y /= rhs.Y; return *this; }
+
+		inline Vector2<T> & operator += (const T & rhs) { X += rhs; Y += rhs; return *this; }
+		inline Vector2<T> & operator -= (const T & rhs) { X -= rhs; Y -= rhs; return *this; }
+		inline Vector2<T> & operator *= (const T & rhs) { X *= rhs; Y *= rhs; return *this; }
+		inline Vector2<T> & operator /= (const T & rhs) { X /= rhs; Y /= rhs; return *this; }
 
 		Vector2<double> Normalize() const;
 	};

@@ -9,6 +9,21 @@ namespace utils {
 	using namespace delaunay;
 
 	typedef std::pair<uint32_t, uint32_t> Tangent;
+	typedef std::function<bool (Vertex * const p1, Vertex * const p2)> VertexComparator;
+
+	const VertexComparator HorizontalVertexComparator =
+		[] (Vertex * const v1, Vertex * const v2) {
+			const auto & p1 = v1->GetPoint(), & p2 = v2->GetPoint();
+			auto x = p2.X - p1.X;
+			return std::abs(x) < FLOAT_ERROR ? p1.Y < p2.Y : x > 0;
+		};
+
+	const VertexComparator VerticalVertexComparator =
+		[] (Vertex * const v1, Vertex * const v2) {
+			const auto & p1 = v1->GetPoint(), & p2 = v2->GetPoint();
+			auto y = p2.Y - p1.Y;
+			return std::abs(y) < FLOAT_ERROR ? p1.X < p2.X : y > 0;
+		};
 
 	void MergeDelaunay(
 		DelaunayGraph & leftGraph,
@@ -235,9 +250,11 @@ namespace utils {
 		const std::function<uint32_t (const ConvexHull &, uint32_t)> & nextRightIndex,
 		const std::function<int8_t (Vertex * const, Vertex * const, Vertex * const)> & getWinding
 	) {
-		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
-		uint32_t leftIndex = leftHull.RightVertexIndex();
-		uint32_t rightIndex = rightHull.LeftVertexIndex();
+		// Find the index of the closest vertex in the left hull to the centroid of the right
+		// hull, and do the same, but inverse for the right hull. This is a good starting point
+		// because these 2 vertices are guaranteed to form a non-intersecting edge.
+		uint32_t leftIndex = leftHull.ClosestVertexIndex(rightHull.Centroid());
+		uint32_t rightIndex = rightHull.ClosestVertexIndex(leftHull.Centroid());
 		uint32_t nextLeft = nextLeftIndex(leftHull, leftIndex);
 		uint32_t nextRight = nextRightIndex(rightHull, rightIndex);
 		
@@ -356,61 +373,74 @@ namespace utils {
 		return newConvexHull;
 	}
 
-	// Return a CW array of vertices representing the convex hull
+	void DivideVertexList(
+		std::vector<Vertex *> & leftHalf, std::vector<Vertex *> & rightHalf,
+		std::vector<Vertex *> & vertices,
+		const VertexComparator & comparator
+	) {
+		std::sort(vertices.begin(), vertices.end(), comparator);
+		size_t half = vertices.size() / 2;
+		for (size_t i = 0; i < half; i++)
+			leftHalf.push_back(vertices[i]);
+		for (size_t i = half; i < vertices.size(); i++)
+			rightHalf.push_back(vertices[i]);
+	}
+
+	/**
+	 * Returns a CW array of vertices representing the convex hull. The division step
+	 * alternates between horizontal and vertical divisions. when the subdivision depth is
+	 * even, horizontal divisions are used, when odd, vertical divisions are used. This form
+	 * of alternating subdivisions avoids the problem of small thin slices that may cause
+	 * rounding errors when handling angles.
+	 */
 	ConvexHull Divide(
 		DelaunayGraph & results,
-		const std::vector<Vertex *> & sortedVertices,
-		const uint32_t start, const uint32_t end,
+		std::vector<Vertex *> & vertices,
 		const uint32_t minSubdivisionDepth,
 		const uint32_t subdivisionDepth = 0
 	) {
 		// End condition when less than 4 vertices counted
-		uint32_t count = end - start + 1;
+		uint32_t count = vertices.size();
 		if (count < 4) {
 			ConvexHull hull;
 			if (count == 3) {
 				// Create triangle with 3 vertices
-				auto newFace = results.AddFace(
-					sortedVertices[start],
-					sortedVertices[start + 1],
-					sortedVertices[start + 2]);
+				auto newFace = results.AddFace(vertices[0], vertices[1], vertices[2]);
 				
 				if (newFace != NULL) {
 					for (uint8_t i = 0u; i < newFace->VertexCount(); i++)
 						hull.AddVertex(newFace->Vertices[i]);
 				} else {
 					// The 3 points are colinear, add 2 edges instead
-					results.AddFace(
-						sortedVertices[start],
-						sortedVertices[start + 1]);
-					results.AddFace(
-						sortedVertices[start + 1],
-						sortedVertices[start + 2]);
+					results.AddFace(vertices[0], vertices[1]);
+					results.AddFace(vertices[1], vertices[2]);
+
 					for (uint8_t i = 0u; i < 3; i++)
-						hull.AddVertex(sortedVertices[start + i]);
+						hull.AddVertex(vertices[i]);
 				}
 			} else if (count == 2) {
 				// Otherwise, just create a line
 				auto newFace = results.AddFace(
-					sortedVertices[start],
-					sortedVertices[start + 1]);
+					vertices[0],
+					vertices[1]);
 
 				for (uint8_t i = 0u; i < newFace->VertexCount(); i++)
 					hull.AddVertex(newFace->Vertices[i]);
 			} else {
 				// This shouldn't ever happen
-				hull.AddVertex(sortedVertices[start]);
+				hull.AddVertex(vertices[0]);
 			}
 
 			return hull;
 		} else {
-			uint32_t half = (end + start) / 2;
+			const bool isHorizontal = subdivisionDepth % 2 == 0;
+			std::vector<Vertex *> leftHalf, rightHalf;
+			DivideVertexList(leftHalf, rightHalf, vertices,
+				(isHorizontal ? HorizontalVertexComparator : VerticalVertexComparator));
 			auto leftHull = Divide(
-				results, sortedVertices, start, half,
-				minSubdivisionDepth, subdivisionDepth + 1);
+				results, leftHalf, minSubdivisionDepth, subdivisionDepth + 1);
 			auto rightHull = Divide(
-				results, sortedVertices, half + 1, end,
-				minSubdivisionDepth, subdivisionDepth + 1);
+				results, rightHalf, minSubdivisionDepth, subdivisionDepth + 1);
 			auto upperTangent = UpperTangent(leftHull, rightHull);
 			auto lowerTangent = LowerTangent(leftHull, rightHull);
 
@@ -427,57 +457,40 @@ namespace utils {
 	//void Test(DelaunayGraph & graph) {
 	//	std::vector<Vector2<> > testPoints;
 	//	std::vector<Vertex *> testVertices;
-		//testPoints.push_back({ 0.1, 0.2 });
-		//testPoints.push_back({ 0.2, 0.1 });
-		//testPoints.push_back({ 0.2, 0.3 });
-		//testPoints.push_back({ 0.2, 0.4 });
-		//testPoints.push_back({ 0.3, 0.2 });
-		//testPoints.push_back({ 0.4, 0.4 });
-		//testPoints.push_back({ 0.5, 0.3 });
-		//testPoints.push_back({ 0.6, 0.4 });
-		//testPoints.push_back({ 0.6, 0.2 });
-		//testPoints.push_back({ 0.6, 0.1 });
+	//	testPoints.push_back({ 0.1, 0.2 });
+	//	testPoints.push_back({ 0.2, 0.1 });
+	//	testPoints.push_back({ 0.2, 0.3 });
+	//	testPoints.push_back({ 0.2, 0.4 });
+	//	testPoints.push_back({ 0.3, 0.2 });
+	//	testPoints.push_back({ 0.4, 0.4 });
+	//	testPoints.push_back({ 0.5, 0.3 });
+	//	testPoints.push_back({ 0.6, 0.4 });
+	//	testPoints.push_back({ 0.6, 0.2 });
+	//	testPoints.push_back({ 0.6, 0.1 });
 
-		
-	//	testPoints.push_back({ 0.1, 0.1 });
+	//	
+	//	/*testPoints.push_back({ 0.1, 0.1 });
 	//	testPoints.push_back({ 0.1, 0.2 });
 	//	testPoints.push_back({ 0.1, 0.3 });
 	//	testPoints.push_back({ 0.2, 0.1 });
-	//	testPoints.push_back({ 0.3, 0.1 });
+	//	testPoints.push_back({ 0.3, 0.1 });*/
 
 	//	for (auto i = 0u; i < testPoints.size(); i++)
-	//		testVertices.push_back(new Vertex(testPoints[i], i));
+	//		testVertices.push_back(graph.AddVertex(testPoints[i], i));
 
-	//	std::sort(
-	//		testVertices.begin(),
-	//		testVertices.end(),
-	//		[] (Vertex * const p1, Vertex * const p2) {
-	//			return p1->GetPoint() < p2->GetPoint();
-	//		});
-
-	//	for (auto i = 0u; i < testPoints.size(); i++)
-	//		graph.AddVertex(testVertices[i]);
-
-	//	graph.ConvexHull = Divide(graph, testVertices, 0, graph.VertexCount() - 1, 0);
+	//	graph.ConvexHull = Divide(graph, testVertices, 0);
 	//}
 
 	void BuildDelaunay2D(DelaunayGraph & graph, const InputVertexList & inputPoints) {
 		std::vector<Vertex *> copiedVertices;
 
 		for (auto i = 0u; i < inputPoints.size(); i++)
-			copiedVertices.push_back(graph.AddVertex(inputPoints[i].first, inputPoints[i].second));
-
-		// Sort by X from left to right, then Y from top down to resolve conflicts
-		std::sort(
-			copiedVertices.begin(),
-			copiedVertices.end(),
-			[] (Vertex * const p1, Vertex * const p2) {
-				return p1->GetPoint() < p2->GetPoint();
-			});
+			copiedVertices.push_back(
+				graph.AddVertex(inputPoints[i].first, inputPoints[i].second));
 
 		// Run if at least 2 vertex
 		if (graph.VertexCount() > 1)
-			graph.ConvexHull = Divide(graph, copiedVertices, 0, graph.VertexCount() - 1, 0);
+			graph.ConvexHull = Divide(graph, copiedVertices, 0);
 		//Test(graph);
 	}
 

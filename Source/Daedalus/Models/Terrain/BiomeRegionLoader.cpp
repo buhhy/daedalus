@@ -305,11 +305,10 @@ namespace terrain {
 		if (LoadedBiomeRegionCache.count(offset) > 0) {
 			return LoadedBiomeRegionCache.at(offset);
 		} else {
-			if (IsBiomeRegionGenerated(offset)) {
+			if (IsBiomeRegionGenerated(offset))
 				return LoadBiomeRegionFromDisk(offset);
-			} else {
+			else
 				return GenerateBiomeRegionArea(offset, 1);
-			}
 		}
 	}
 

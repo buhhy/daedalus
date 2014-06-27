@@ -20,7 +20,7 @@ namespace terrain {
 		const utils::Vector3<int64_t> & offset
 	) {
 		auto data = new ChunkData(TerrainGenParams.GridCellCount, offset);
-		SetDefaultHeight(*data, 32.0);
+		SetDefaultHeight(*data, 32);
 		return std::shared_ptr<ChunkData>(data);
 	}
 

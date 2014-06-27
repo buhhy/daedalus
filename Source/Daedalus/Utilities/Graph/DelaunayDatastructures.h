@@ -38,7 +38,6 @@ namespace utils {
 		class Face;
 		class ConvexHull;
 
-
 		typedef std::unordered_map<uint64_t, Face * const> IdFaceMap;
 
 
@@ -239,10 +238,13 @@ namespace utils {
 		 */
 		class ConvexHull {
 		private:
+			typedef std::function<double (Vertex * const)> VertexValueExtractor;
+
 			// Convex hull vertices stored in CW winding order
 			std::vector<Vertex *> HullVertices;
 			bool bIsCollinear;
-
+			
+			uint32_t MinIndex(const VertexValueExtractor & valueOf) const;
 			uint32_t GetSequence(
 				std::deque<Vertex *> & deque,
 				const uint32_t start, const uint32_t end,
@@ -300,13 +302,12 @@ namespace utils {
 			 * if the new point is collinear.
 			 */
 			bool AddVertex(Vertex * const vert);
+			utils::Vector2<> Centroid() const;
 			int32_t FindVertexById(const uint64_t id) const;
-			uint32_t MinIndex(const std::function<double (Vertex * const)> & valueOf) const;
 
 			uint32_t LeftVertexIndex() const;
 			uint32_t RightVertexIndex() const;
-			uint32_t TopVertexIndex() const;
-			uint32_t BottomVertexIndex() const;
+			uint32_t ClosestVertexIndex(const utils::Vector2<> & compare) const;
 
 			uint32_t GetRange(const uint32_t start, const uint32_t end, const bool isCW) const;
 		};

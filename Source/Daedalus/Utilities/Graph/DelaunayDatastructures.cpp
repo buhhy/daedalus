@@ -109,7 +109,6 @@ namespace utils {
 		/*********************************************************************
 		 * Convex Hull
 		 *********************************************************************/
-
 		
 		bool ConvexHull::AddVertex(Vertex * const vert) {
 			// Check for collinearity, already collinear hulls can continue being collinear
@@ -142,15 +141,14 @@ namespace utils {
 			return MinIndex([] (Vertex * const v) { return -v->GetPoint().X; });
 		}
 		
-		uint32_t ConvexHull::TopVertexIndex() const {
-			return MinIndex([] (Vertex * const v) { return v->GetPoint().Y; });
-		}
 		
-		uint32_t ConvexHull::BottomVertexIndex() const {
-			return MinIndex([] (Vertex * const v) { return -v->GetPoint().Y; });
+		uint32_t ConvexHull::ClosestVertexIndex(const utils::Vector2<> & compare) const {
+			return MinIndex([&] (Vertex * const v) {
+				return (v->GetPoint() - compare).Length2();
+			});
 		}
 
-		uint32_t ConvexHull::MinIndex(const std::function<double (Vertex * const)> & valueOf) const {
+		uint32_t ConvexHull::MinIndex(const ConvexHull::VertexValueExtractor & valueOf) const {
 			if (HullVertices.empty())
 				return 0;
 			uint32_t minIndex = 0;
@@ -218,6 +216,13 @@ namespace utils {
 					count += size;
 				return count;
 			}
+		}
+
+		utils::Vector2<> ConvexHull::Centroid() const {
+			utils::Vector2<> sum(0, 0);
+			for (auto & v : HullVertices)
+				sum += v->GetPoint();
+			return sum / (double) HullVertices.size();
 		}
 	}
 
