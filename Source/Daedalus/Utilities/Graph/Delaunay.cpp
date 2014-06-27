@@ -55,12 +55,6 @@ namespace utils {
 		
 		Vertex * leftCandidate = NULL, * rightCandidate = NULL, * nextCandidate = NULL;
 		Face * faceIt = NULL;
-		
-		
-		// TODO: remove breakpoint hook
-		if (leftGraph.GraphOffset().X == -25 && leftGraph.GraphOffset().Y == 3 &&
-				rightGraph.GraphOffset().X == -24 && rightGraph.GraphOffset().Y == 3)
-			int i = 5;
 
 		do {
 			foundLeft = false, foundRight = false;
