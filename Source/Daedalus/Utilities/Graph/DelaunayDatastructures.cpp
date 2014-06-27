@@ -32,7 +32,7 @@ namespace utils {
 		}
 
 		bool Vertex::IsSurrounded() const {
-			if (FaceCount() == 0)
+			if (FaceCount() < 2)
 				return false;
 
 			Face * curFace = GetFirstIncidentFace();
@@ -89,7 +89,7 @@ namespace utils {
 			assert(curFace->GetAdjacentFaceCCW(sharedVertex) == this &&
 				"Face::GetAdjacentFaceCW: face does not loop around vertex correctly");
 
-			return nextFace == NULL ? NULL : curFace;
+			return curFace;
 		}
 
 		Face * Face::GetAdjacentFaceCCW(Vertex const * const sharedVertex) {
@@ -236,10 +236,10 @@ namespace utils {
 	{
 		// Add all vertices and faces in the copy graph
 		for (auto it : copy.Vertices)
-			AddVertex(new delaunay::Vertex(*it));
+			AddVertexToCache(new delaunay::Vertex(*it));
 		// TODO: this doesn't deep copy right now
 		for (auto it : copy.Faces)
-			AddFace(new delaunay::Face(*it));
+			AddFaceToCache(new delaunay::Face(*it));
 
 		// Set adjacencies for all faces and vertices
 		// TODO: this is not working properly yet
@@ -362,24 +362,40 @@ namespace utils {
 		Vertex * const pivot = face->Vertices[pivotIndex];
 		Face * const CCWFace = face->GetAdjacentFaceCCW(pivot);
 		Face * const CWFace = face->GetAdjacentFaceCW(pivot);
+
+		// The CCW face and CW face should never be equal unless that is the only other
+		// face attached to the pivot vertex.
+		if (pivot->FaceCount() == 2 && *CCWFace != *CWFace)
+			assert(!"DelaunayGraph::AdjustRemovedFaceAdjacencies: CW and CCW faces should be same if there are exactly 2 faces on the pivot");
+		if (pivot->FaceCount() > 2 && *CCWFace == *CWFace)
+			assert(!"DelaunayGraph::AdjustRemovedFaceAdjacencies: CW and CCW faces should not be the same if there are more than 2 faces on the pivot");
+
+		// The CCW face and CW face should never be equal to the removed face, unless the
+		// removed face is the only face attached to this pivot vertex.
+		if (pivot->FaceCount() == 1 && (*CCWFace != *face || *CWFace != *face))
+			assert(!"DelaunayGraph::AdjustRemovedFaceAdjacencies: CW and CCW and the removed face should be the same if there is only 1 face on the pivot");
+		if (pivot->FaceCount() > 1 && (*CCWFace == *face || *CWFace == *face))
+			assert(!"DelaunayGraph::AdjustRemovedFaceAdjacencies: CW and CCW and the removed face should not be the same if there are other faces");
 			
-		if (CWFace != face)
-			CWFace->AdjacentFaces[CWFace->GetCCWVertexIndex(pivot)] = CCWFace;
+		CWFace->AdjacentFaces[CWFace->GetCCWVertexIndex(pivot)] = CCWFace;
 	}
 
 	uint64_t DelaunayGraph::GetNextFaceId() { return CurrentFaceId++; }
 	uint64_t DelaunayGraph::GetNextVertexId() { return CurrentVertexId++; }
 
-	Vertex * DelaunayGraph::AddVertex(Vertex * const vertex) {
+	Vertex * DelaunayGraph::AddVertexToCache(Vertex * const vertex) {
 		auto id = vertex->VertexId();
 		Vertices.insert(vertex);
 		IdVertexMap.insert({ id, vertex });
-		if (id>= CurrentVertexId)
+		if (vertex->IsForeign())
+			ForeignIdVertexMap.insert({
+				GhostId(vertex->ParentGraphOffset(), vertex->ForeignVertexId()), vertex});
+		if (id >= CurrentVertexId)
 			CurrentVertexId = id + 1;
 		return vertex;
 	}
 
-	Face * DelaunayGraph::AddFace(Face * const face) {
+	Face * DelaunayGraph::AddFaceToCache(Face * const face) {
 		auto id = face->FaceId();
 		Faces.insert(face);
 		IdFaceMap.insert({ id, face });
@@ -387,28 +403,44 @@ namespace utils {
 			CurrentFaceId = id + 1;
 		return face;
 	}
+	
+	bool DelaunayGraph::RemoveFaceFromCache(delaunay::Face * const face) {
+		if (IdFaceMap.count(face->FaceId()) == 0)
+			return false;
+		Faces.erase(face);
+		IdFaceMap.erase(face->FaceId());
+		return true;
+	}
 
 	delaunay::Vertex * DelaunayGraph::AddGhostVertex(delaunay::Vertex * const vertex) {
 		if (vertex->ParentGraphOffset() == Offset) {
 			// Local vertex
 			return vertex;
 		} else {
-			// Foreign vertex, we need to duplicate and change ownernship, and add offset
-			auto point = vertex->GetPoint();
-			auto offset = vertex->ParentGraphOffset() - Offset;
-			auto lid = GetNextVertexId();
-			auto newVertex = new Vertex(
-				vertex->ParentGraphOffset(),
-				{ point.X + offset.X, point.Y + offset.Y },
-				lid, vertex->VertexId());
-			Vertices.insert(newVertex);
-			IdVertexMap.insert({ lid, newVertex });
-			return newVertex;
+			// Foreign vertex, we need to potentially duplicate if this vertex doesn't already
+			// exist in the cache, and change ownership, and add offset
+			auto existingVertex = ForeignIdVertexMap.find({
+				vertex->ParentGraphOffset(), vertex->VertexId() });
+
+			if (existingVertex == ForeignIdVertexMap.end()) {
+				auto point = vertex->GetPoint();
+				auto offset = vertex->ParentGraphOffset() - Offset;
+				auto lid = GetNextVertexId();
+				auto newVertex = new Vertex(
+					vertex->ParentGraphOffset(),
+					{ point.X + offset.X, point.Y + offset.Y },
+					lid, vertex->VertexId());
+
+				AddVertexToCache(newVertex);
+				return newVertex;
+			} else {
+				return existingVertex->second;
+			}
 		}
 	}
 
 	Vertex * DelaunayGraph::AddVertex(const Vector2<> & point, const uint64_t id) {
-		return AddVertex(new Vertex(Offset, point, id));
+		return AddVertexToCache(new Vertex(Offset, point, id));
 	}
 
 	Face * DelaunayGraph::AddFace(Vertex * const v1, Vertex * const v2) {
@@ -429,12 +461,17 @@ namespace utils {
 		for (uint8_t i = 0; i < newFace->VertexCount(); i++)
 			newFace->Vertices[i]->AddFace(newFace);
 
-		AddFace(newFace);
+		AddFaceToCache(newFace);
 
 		return newFace;
 	}
 
 	Face * DelaunayGraph::AddFace(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
+		// Ensure we aren't adding a triangle to vertices that are already surrounded. This
+		// would indicate an overlapping triangle.
+		if (v1->IsSurrounded() || v2->IsSurrounded() || v3->IsSurrounded())
+			assert(!"DelaunayGraph::AddFace: attempting to add a triangle to a surrounded vertex");
+
 		Vertex * inV1 = AddGhostVertex(v1);
 		Vertex * inV2 = AddGhostVertex(v2);
 		Vertex * inV3 = AddGhostVertex(v3);
@@ -462,7 +499,7 @@ namespace utils {
 		Face * newFace = new Face(inV1, inV2, inV3, GetNextFaceId());
 		
 		// TODO: remove breakpoint hook
-		if (newFace->FaceId() == 438)
+		if (newFace->FaceId() == 1201)
 			int i = 5;
 
 		// Modify adjacencies
@@ -481,7 +518,7 @@ namespace utils {
 		for (uint8_t i = 0; i < newFace->VertexCount(); i++)
 			newFace->Vertices[i]->AddFace(newFace);
 
-		AddFace(newFace);
+		AddFaceToCache(newFace);
 
 		return newFace;
 	}
@@ -493,8 +530,7 @@ namespace utils {
 			AdjustRemovedFaceAdjacencies(face, i);
 		for (uint8_t i = 0; i < face->VertexCount(); i++)
 			face->Vertices[i]->RemoveFace(face);
-		Faces.erase(face);
-		IdFaceMap.erase(face->FaceId());
+		RemoveFaceFromCache(face);
 		delete face;
 		return true;
 	}
@@ -514,7 +550,7 @@ namespace utils {
 			curFace = curFace->GetAdjacentFaceCCW(v1);
 		}
 
-		if (!(*curFace == *v1->GetFirstIncidentFace()))
+		if (*curFace != *v1->GetFirstIncidentFace())
 			assert(!"DelaunayGraph::FindFace: face does not loop around vertex correctly");
 
 		return foundFace;

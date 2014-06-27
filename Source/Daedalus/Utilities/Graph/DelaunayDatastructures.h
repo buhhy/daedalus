@@ -218,16 +218,16 @@ namespace utils {
 			return left.Start == right.Start && left.End == right.End;
 		}
 
-		inline bool operator == (Vertex & left, Vertex & right) {
-			return left.VertexId() == right.VertexId();
+		inline bool operator != (const Vertex & left, const Vertex & right) {
+			return left.VertexId() != right.VertexId();
 		}
 
-		inline bool operator == (Face & left, Face & right) {
-			return left.FaceId() == right.FaceId();
+		inline bool operator != (const Face & left, const Face & right) {
+			return left.FaceId() != right.FaceId();
 		}
 
-		inline bool operator == (Edge & left, Edge & right) {
-			return left.Start == right.Start && left.End == right.End;
+		inline bool operator != (const Edge & left, const Edge & right) {
+			return left.Start != right.Start && left.End != right.End;
 		}
 
 
@@ -336,6 +336,7 @@ namespace utils {
 		// be kept up-to-date with the vertex and face lists.
 		std::unordered_map<uint64_t, delaunay::Vertex *> IdVertexMap;
 		std::unordered_map<uint64_t, delaunay::Face *> IdFaceMap;
+		std::unordered_map<delaunay::GhostId, delaunay::Vertex *> ForeignIdVertexMap;
 
 		uint64_t CurrentFaceId;
 		uint64_t CurrentVertexId;
@@ -358,7 +359,7 @@ namespace utils {
 		 * Adds a pre-created vertex. The ID should be provide and be unique. The current
 		 * vertex ID will be updated to avoid duplicate IDs.
 		 */
-		delaunay::Vertex * AddVertex(delaunay::Vertex * const vertex);
+		delaunay::Vertex * AddVertexToCache(delaunay::Vertex * const vertex);
 
 		/**
 		 * Adds the provided vertex as a ghost vertex into the current graph. This means
@@ -372,7 +373,8 @@ namespace utils {
 		 * face ID will be updated to avoid duplicate IDs. Unlike the other methods for adding
 		 * faces, this method will not update adjacencies and is more meant for initialization.
 		 */
-		delaunay::Face * AddFace(delaunay::Face * const face);
+		delaunay::Face * AddFaceToCache(delaunay::Face * const face);
+		bool RemoveFaceFromCache(delaunay::Face * const face);
 
 	public:
 		delaunay::ConvexHull ConvexHull;

@@ -207,9 +207,9 @@ namespace utils {
 			isRightDone = rightVertexQueue.empty();
 		} while ((takeLeft || takeRight) && (!isLeftDone || !isRightDone));
 
-		for (auto f : leftAddedFaces)
+		for (auto & f : leftAddedFaces)
 			leftGraph.AddFace(f[0], f[1], f[2]);
-		for (auto f : rightAddedFaces)
+		for (auto & f : rightAddedFaces)
 			rightGraph.AddFace(f[0], f[1], f[2]);
 	}
 
@@ -512,7 +512,7 @@ namespace utils {
 		auto & basePoints = points[0];
 		auto circumcircle = utils::CalculateCircumcircle(
 			points[0], points[1], points[2]);
-		if (utils::IsWithinCircumcircle(points[3], circumcircle)) {
+		if (utils::IsWithinCircumcircle(points[3], circumcircle) == 1) {
 			p1 = 1; p2 = 3; p3 = 0; p4 = 2;
 		} else {
 			p1 = 0; p2 = 1; p3 = 2; p4 = 3;

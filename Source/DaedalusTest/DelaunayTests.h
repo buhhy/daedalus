@@ -88,7 +88,7 @@ protected:
 					Points.push_back(point);
 					vertexList.push_back({ point, vertexList.size() });
 
-					std::cout << "point (" << point.X << ", " << point.Y << ")" << std::endl;
+					//std::cout << "point (" << point.X << ", " << point.Y << ")" << std::endl;
 				}
 			}
 		}
@@ -200,7 +200,9 @@ TEST_P(DelaunayGridGraph, GeneratesValidTriangulation) {
 }
 
 const DelaunayTestParam TestParams[] = {
-	DelaunayTestParam({4, 24}, 12345678, 16)
+	DelaunayTestParam({4, 24}, 12345678, 16),
+	DelaunayTestParam({4, 4}, 12345678, 16),
+	DelaunayTestParam({3, 4}, 12345678, 16)
 };
 
 INSTANTIATE_TEST_CASE_P(DistributedPoints, DelaunayGridGraph, testing::ValuesIn(TestParams));
