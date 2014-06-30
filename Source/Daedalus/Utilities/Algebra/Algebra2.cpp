@@ -38,7 +38,7 @@ namespace utils {
 	double FindAngle(const Vector2<> & v1, const Vector2<> & v2) {
 		double result = std::atan2(v1.Determinant(v2), v1.Dot(v2));
 		if (result < FLOAT_ERROR)
-			result += 2 * M_PI;
+			result += 2 * MATH_PI;
 		return result;
 	}
 }

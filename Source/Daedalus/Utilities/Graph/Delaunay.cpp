@@ -3,6 +3,7 @@
 #include <Utilities/Constants.h>
 #include "Delaunay.h"
 
+#include <cassert>
 #include <algorithm>
 
 namespace utils {
@@ -427,6 +428,7 @@ namespace utils {
 				for (uint8_t i = 0u; i < newFace->VertexCount(); i++)
 					hull.AddVertex(newFace->Vertices[i]);
 			} else {
+				assert(!"Divide: we should never divide to the point where there are less than 2 vertices");
 				// This shouldn't ever happen
 				hull.AddVertex(vertices[0]);
 			}

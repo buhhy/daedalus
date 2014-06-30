@@ -322,7 +322,7 @@ namespace utils {
 				auto angle = FindAngle(
 					CCWCompareEdge, otherPivotCCW->GetPoint() - pivotPoint->GetPoint());
 				// Account for rounding errors?
-				if (angle > M_PI * 2 - FLOAT_ERROR) angle = 0;
+				if (angle > MATH_PI * 2 - FLOAT_ERROR) angle = 0;
 				if (angle < CCWMinAngle) {
 					CCWMinAngle = angle;
 					CCWFace = otherFace;
@@ -338,7 +338,7 @@ namespace utils {
 			} else {
 				auto angle = FindAngle(otherPivotCW->GetPoint() - pivotPoint->GetPoint(), CWCompareEdge);
 				// Account for rounding errors?
-				if (angle > M_PI * 2 - FLOAT_ERROR) angle = 0;
+				if (angle > MATH_PI * 2 - FLOAT_ERROR) angle = 0;
 				if (angle < CWMinAngle) {
 					CWMinAngle = angle;
 					CWFace = otherFace;

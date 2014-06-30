@@ -4,6 +4,9 @@
 
 #include <vector>
 
+/**
+ * These helper functions create helper meshes like lines and points for easier debugging.
+ */
 namespace utils {
 	uint16_t CreatePoint(
 		std::vector<Triangle> & results, const Vector3<> & position, const float radius);

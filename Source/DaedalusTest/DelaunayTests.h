@@ -205,7 +205,8 @@ const DelaunayTestParam TestParams[] = {
 	DelaunayTestParam({4, 4}, 12345678, 16),
 	DelaunayTestParam({3, 4}, 12345678, 16),
 	DelaunayTestParam({-25, 3}, 12345678, 16),
-	DelaunayTestParam({-24, 3}, 12345678, 16)
+	DelaunayTestParam({-24, 3}, 12345678, 16),
+	DelaunayTestParam({-5, 5}, 12345678, 64)
 };
 
 INSTANTIATE_TEST_CASE_P(DistributedPoints, DelaunayGridGraph, testing::ValuesIn(TestParams));

@@ -8,7 +8,7 @@ namespace utils {
 	 * characters 'x', 'y', or 'z'.
 	 */
 	Matrix4<> CreateRotation(const double angle, const Axis axis) {
-		double radAngle = angle * utils::M_PI/180;
+		double radAngle = angle * utils::MATH_PI/180;
 		switch (axis) {
 			case AXIS_X:
 				return Matrix4<>(
