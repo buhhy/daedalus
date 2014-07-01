@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Vector3.h"
-
+#include <Utilities/Algebra/Vector3.h>
 #include <Utilities/Algebra/Algebra.h>
 
 namespace utils {
@@ -44,5 +43,7 @@ namespace utils {
 		/* Length squared. */
 		inline double Length2() const { return X * X + Y * Y + Z * Z; }
 		inline double Length() const { return std::abs(Length2()); }
+
+		inline Vector3<T> Truncate() const { return Vector3<T>(X, Y, Z); }
 	};
 }

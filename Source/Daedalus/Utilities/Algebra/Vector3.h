@@ -13,9 +13,7 @@ namespace utils {
 	 */
 	template <typename T = double>
 	struct Vector3 {
-		T X;
-		T Y;
-		T Z;
+		T X, Y, Z;
 
 		Vector3() {}
 		Vector3(const T x, const T y, const T z) : X(x), Y(y), Z(z) {}
@@ -46,9 +44,20 @@ namespace utils {
 		inline T Length2() const { return X * X + Y * Y + Z * Z; }
 		inline double Length() const { return std::sqrt(Length2()); }
 
-		Vector3<double> Normalize() const;
-		
-		Vector3<T> & operator = (const Vector4<T> & vec);
+		inline Vector3<> Normalize() const {
+			double length = Length();
+			return Vector3<>(
+				(double) X / length, (double) Y / length, (double) Z / length);
+		}
+
+		inline Vector3<T> & operator = (const Vector3<T> & other) {
+			// Assignment swap principle
+			T x = other.X, y = other.Y, z = other.Z;
+			Reset(x, y, z);
+			return *this;
+		}
+
+		inline Vector2<T> Truncate() const { return Vector2<T>(X, Y); }
 	};
 }
 

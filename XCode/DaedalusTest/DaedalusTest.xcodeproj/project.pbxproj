@@ -12,8 +12,6 @@
 		6669EEFD1962A0CD006C471E /* Algebra2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEDD1962A0BB006C471E /* Algebra2.cpp */; };
 		6669EEFE1962A0CD006C471E /* Algebra3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEDF1962A0BB006C471E /* Algebra3.cpp */; };
 		6669EEFF1962A0CD006C471E /* Matrix4.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEE11962A0BB006C471E /* Matrix4.cpp */; };
-		6669EF001962A0CD006C471E /* Vector2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEE31962A0BB006C471E /* Vector2.cpp */; };
-		6669EF011962A0CD006C471E /* Vector3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEE51962A0BB006C471E /* Vector3.cpp */; };
 		6669EF021962A0CD006C471E /* Delaunay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEEB1962A0BB006C471E /* Delaunay.cpp */; };
 		6669EF031962A0CD006C471E /* DelaunayDatastructures.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEED1962A0BB006C471E /* DelaunayDatastructures.cpp */; };
 		6669EF041962A0CD006C471E /* GraphDatastructures.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEEF1962A0BB006C471E /* GraphDatastructures.cpp */; };
@@ -111,6 +109,7 @@
 		6669EEFB1962A0BB006C471E /* Perlin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Perlin.h; sourceTree = "<group>"; };
 		6669EEFC1962A0BB006C471E /* UnrealBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UnrealBridge.h; sourceTree = "<group>"; };
 		6669EF091962A0E7006C471E /* gtest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = gtest.framework; path = ../../Libraries/OSX/gtest.framework; sourceTree = "<group>"; };
+		6669EF1019634F78006C471E /* Algebra2DTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Algebra2DTests.h; path = ../../../Source/DaedalusTest/Algebra2DTests.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,6 +149,7 @@
 				6669EEA41962A09B006C471E /* Engine.h */,
 				6669EEA51962A09B006C471E /* Main.cpp */,
 				6669EE9C19629FA8006C471E /* DaedalusTest.1 */,
+				6669EF1019634F78006C471E /* Algebra2DTests.h */,
 			);
 			path = DaedalusTest;
 			sourceTree = "<group>";
@@ -402,8 +402,6 @@
 				6669EEFD1962A0CD006C471E /* Algebra2.cpp in Sources */,
 				6669EEFE1962A0CD006C471E /* Algebra3.cpp in Sources */,
 				6669EEFF1962A0CD006C471E /* Matrix4.cpp in Sources */,
-				6669EF001962A0CD006C471E /* Vector2.cpp in Sources */,
-				6669EF011962A0CD006C471E /* Vector3.cpp in Sources */,
 				6669EF021962A0CD006C471E /* Delaunay.cpp in Sources */,
 				6669EF031962A0CD006C471E /* DelaunayDatastructures.cpp in Sources */,
 				6669EF041962A0CD006C471E /* GraphDatastructures.cpp in Sources */,

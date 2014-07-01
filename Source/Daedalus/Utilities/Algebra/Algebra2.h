@@ -2,6 +2,7 @@
 
 #include "Algebra.h"
 #include <Utilities/DataStructures.h>
+#include <iostream>
 
 namespace utils {
 
@@ -9,7 +10,7 @@ namespace utils {
 	 * Unary operators
 	 */
 
-	template<typename T>
+	template <typename T>
 	inline Vector2<T> operator - (const Vector2<T> & lhs) {
 		return Vector2<T>(-lhs.X, -lhs.Y);
 	}
@@ -18,22 +19,22 @@ namespace utils {
 	 * Binary operators with LHS vector and RHS vector
 	 */
 
-	template<typename T>
+	template <typename T>
 	inline Vector2<T> operator + (const Vector2<T> & lhs, const Vector2<T> & rhs) {
 		return Vector2<T>(lhs.X + rhs.X, lhs.Y + rhs.Y);
 	}
 
-	template<typename T>
+	template <typename T>
 	inline Vector2<T> operator - (const Vector2<T> & lhs, const Vector2<T> & rhs) {
 		return Vector2<T>(lhs.X - rhs.X, lhs.Y - rhs.Y);
 	}
 
-	template<typename T>
+	template <typename T>
 	inline Vector2<T> operator * (const Vector2<T> & lhs, const Vector2<T> & rhs) {
 		return Vector2<T>(lhs.X * rhs.X, lhs.Y * rhs.Y);
 	}
 
-	template<typename T>
+	template <typename T>
 	inline Vector2<T> operator / (const Vector2<T> & lhs, const Vector2<T> & rhs) {
 		return Vector2<T>(lhs.X / rhs.X, lhs.Y / rhs.Y);
 	}
@@ -42,22 +43,22 @@ namespace utils {
 	 * Binary operators with LHS vector RHS primitive
 	 */
 
-	template<typename T>
+	template <typename T>
 	inline Vector2<T> operator + (const Vector2<T> & lhs, const T & rhs) {
 		return Vector2<T>(lhs.X + rhs, lhs.Y + rhs);
 	}
 
-	template<typename T>
+	template <typename T>
 	inline Vector2<T> operator - (const Vector2<T> & lhs, const T & rhs) {
 		return Vector2<T>(lhs.X - rhs, lhs.Y - rhs);
 	}
 
-	template<typename T>
+	template <typename T>
 	inline Vector2<T> operator * (const Vector2<T> & lhs, const T & rhs) {
 		return Vector2<T>(lhs.X * rhs, lhs.Y * rhs);
 	}
 
-	template<typename T>
+	template <typename T>
 	inline Vector2<T> operator / (const Vector2<T> & lhs, const T & rhs) {
 		return Vector2<T>(lhs.X / rhs, lhs.Y / rhs);
 	}
@@ -66,14 +67,20 @@ namespace utils {
 	 * Comparison operators
 	 */
 
-	template<typename T>
+	template <typename T>
 	inline bool operator == (const Vector2<T> & lhs, const Vector2<T> & rhs) {
 		return lhs.X == rhs.X && lhs.Y == rhs.Y;
 	}
 
-	template<typename T>
+	template <typename T>
 	inline bool operator < (const Vector2<T> & lhs, const Vector2<T> & rhs) {
 		return lhs.X == rhs.X ? lhs.Y < rhs.Y : lhs.X < rhs.X;
+	}
+
+	template <typename T>
+	std::ostream & operator << (std::ostream & os, const Vector2<T> & vec) {
+		os << '(' << vec.X << ", " << vec.Y << ')';
+		return os;
 	}
 
 	/**

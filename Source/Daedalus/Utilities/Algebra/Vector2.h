@@ -17,7 +17,6 @@ namespace utils {
 		Vector2() {}
 		Vector2(const T & x, const T & y) : X(x), Y(y) {}
 		Vector2(const Vector2<T> & copy) : Vector2(copy.X, copy.Y) {}
-		Vector2(const Vector3<T> & copy);
 
 		inline void Reset(const T & x, const T & y) { X = x; Y = y; }
 		inline void Reset(const Vector2<T> & other) { Reset(other.X, other.Y); }
@@ -40,7 +39,7 @@ namespace utils {
 
 		/** Length squared. */
 		inline double Length2() const { return (double) X * X + (double) Y * Y; }
-		inline double Length() const { return std::abs(Length2()); }
+		inline double Length() const { return std::sqrt(Length2()); }
 
 		template <typename T1>
 		inline Vector2<T1> Cast() const { return Vector2<T1>((T1) this->X, (T1) this->Y); }
@@ -55,7 +54,10 @@ namespace utils {
 		inline Vector2<T> & operator *= (const T & rhs) { X *= rhs; Y *= rhs; return *this; }
 		inline Vector2<T> & operator /= (const T & rhs) { X /= rhs; Y /= rhs; return *this; }
 
-		Vector2<double> Normalize() const;
+		inline Vector2<> Normalize() const {
+			double length = Length();
+			return Vector2<>((double) X / length, (double) Y / length);
+		}
 	};
 }
 

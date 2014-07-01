@@ -48,7 +48,7 @@ namespace utils {
 		Vector3<> transformedVertices[8];
 
 		for (uint16_t i = 0; i < 8; i++)
-			transformedVertices[i] = transform * Vector4<>(CubeVertices[i], 1);
+			transformedVertices[i] = (transform * Vector4<>(CubeVertices[i], 1)).Truncate();
 
 		return CreatePrism(results, transformedVertices);
 	}
@@ -70,9 +70,9 @@ namespace utils {
 
 		for (uint16_t i = 0; i < 8; i++) {
 			if (CubeVertices[i].X < 0)
-				transformedVertices[i] = startTransform * Vector4<>(CubeVertices[i], 1);
+				transformedVertices[i] = (startTransform * Vector4<>(CubeVertices[i], 1)).Truncate();
 			else
-				transformedVertices[i] = endTransform * Vector4<>(CubeVertices[i], 1);
+				transformedVertices[i] = (endTransform * Vector4<>(CubeVertices[i], 1)).Truncate();
 		}
 		
 		return CreatePrism(results, transformedVertices);

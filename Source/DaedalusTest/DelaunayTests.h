@@ -209,4 +209,4 @@ const DelaunayTestParam TestParams[] = {
 //	DelaunayTestParam({-5, 5}, 12345678, 64)
 };
 
-INSTANTIATE_TEST_CASE_P(DistributedPoints, DelaunayGridGraph, testing::ValuesIn(TestParams));
+//INSTANTIATE_TEST_CASE_P(DistributedPoints, DelaunayGridGraph, testing::ValuesIn(TestParams));

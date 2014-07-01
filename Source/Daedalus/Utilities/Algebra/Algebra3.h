@@ -3,6 +3,8 @@
 #include "Algebra.h"
 #include <Utilities/DataStructures.h>
 
+#include <iostream>
+
 namespace utils {
 	/********************
 	 * Vector3 Operators
@@ -72,6 +74,11 @@ namespace utils {
 	template<typename T>
 	inline bool operator == (const Vector3<T> & lhs, const Vector3<T> & rhs) {
 		return lhs.X == rhs.X && lhs.Y == rhs.Y && lhs.Z == rhs.Z;
+	}
+
+	template <typename T>
+	std::ostream& operator << (std::ostream &output, const Vector3<T> vec) {
+		return output << '(' << vec.X << ", " << vec.Y << ", " << vec.Z << ')';
 	}
 
 	/********************

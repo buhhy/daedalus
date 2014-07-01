@@ -18,7 +18,7 @@ void ABiomeRegionManager::UpdateBiomesAt(const utils::Vector3<> & playerPosition
 	auto genParams = chunkLoader->GetGeneratorParameters();
 
 	// Get player's current chunk location
-	auto playerChunkPos = genParams.ToBiomeRegionCoordinates(utils::Vector2<>(playerPosition));
+	auto playerChunkPos = genParams.ToBiomeRegionCoordinates(playerPosition.Truncate());
 
 	int64 fromX = playerChunkPos.X - RenderDistance;
 	int64 fromY = playerChunkPos.Y - RenderDistance;

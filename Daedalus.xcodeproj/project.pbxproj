@@ -32,9 +32,7 @@
 		E0D5E37E44FE18C071C6F760 /* MarchingCubes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4B5CF9144B43C3020F9DB79E /* MarchingCubes.cpp */; };
 		E21DA3825FF65243B4288416 /* DDGameMode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B5F64B35230992EDF2421C69 /* DDGameMode.cpp */; };
 		E2DB2220F04DCA7BF3222605 /* GraphDatastructures.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93DFE9180935B8B8BCFFBFC2 /* GraphDatastructures.cpp */; };
-		ED6930AA51E76419FB1077F1 /* Vector3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2D9AA3E670D813F94CCA209 /* Vector3.cpp */; };
 		F065836E73C8A2F3415E76E1 /* ChunkManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6C80F057548241D7663CECC5 /* ChunkManager.cpp */; };
-		F196C5FC16156EAB49EAFE0A /* Vector2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 21D9D0723294109053C165D6 /* Vector2.cpp */; };
 		F8EE3A7C52D9DFE2A62935E1 /* DebugCharacter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F1C8B2C8EC6F456C28CBD39 /* DebugCharacter.cpp */; };
 /* End PBXBuildFile section */
 
@@ -58,7 +56,6 @@
 		171293B424B44A22B5F14177 /* DebugMeshHelpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = DebugMeshHelpers.cpp; path = Source/Daedalus/Utilities/Mesh/DebugMeshHelpers.cpp; sourceTree = SOURCE_ROOT; };
 		172A2FE00FA3A092B5E62089 /* DebugCharacter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = DebugCharacter.h; path = Source/Daedalus/Actors/Characters/DebugCharacter.h; sourceTree = SOURCE_ROOT; };
 		2165E139F0A34D8E3CE54651 /* DDGameState.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = DDGameState.cpp; path = Source/Daedalus/Controllers/DDGameState.cpp; sourceTree = SOURCE_ROOT; };
-		21D9D0723294109053C165D6 /* Vector2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = Vector2.cpp; path = Source/Daedalus/Utilities/Algebra/Vector2.cpp; sourceTree = SOURCE_ROOT; };
 		2550F952F75F829C8282D79A /* TestMesh.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = TestMesh.cpp; path = Source/Daedalus/Actors/TestMesh.cpp; sourceTree = SOURCE_ROOT; };
 		29E7F796542CD23581EB9949 /* DelaunayDatastructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = DelaunayDatastructures.h; path = Source/Daedalus/Utilities/Graph/DelaunayDatastructures.h; sourceTree = SOURCE_ROOT; };
 		29FC17BCBC00AB4007D219E1 /* Algebra3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = Algebra3.cpp; path = Source/Daedalus/Utilities/Algebra/Algebra3.cpp; sourceTree = SOURCE_ROOT; };
@@ -101,7 +98,6 @@
 		A58817B4BFE3EC885169C687 /* Algebra2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Algebra2.h; path = Source/Daedalus/Utilities/Algebra/Algebra2.h; sourceTree = SOURCE_ROOT; };
 		AF8DCEC0EFCB86B2FEA83E67 /* Hash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Hash.h; path = Source/Daedalus/Utilities/Hash.h; sourceTree = SOURCE_ROOT; };
 		B055C80CF81A0379101047B9 /* EventListener.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = EventListener.cpp; path = Source/Daedalus/Controllers/EventBus/EventListener.cpp; sourceTree = SOURCE_ROOT; };
-		B2D9AA3E670D813F94CCA209 /* Vector3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = Vector3.cpp; path = Source/Daedalus/Utilities/Algebra/Vector3.cpp; sourceTree = SOURCE_ROOT; };
 		B5F64B35230992EDF2421C69 /* DDGameMode.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = DDGameMode.cpp; path = Source/Daedalus/Controllers/DDGameMode.cpp; sourceTree = SOURCE_ROOT; };
 		B64C3FA889BE2718F09D3BB4 /* Daedalus.Target.cs */ = {isa = PBXFileReference; lastKnownFileType = file.text; name = Daedalus.Target.cs; path = Source/Daedalus.Target.cs; sourceTree = SOURCE_ROOT; };
 		BE9C3077E1F943F41CD9821F /* ChunkLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChunkLoader.h; path = Source/Daedalus/Models/Terrain/ChunkLoader.h; sourceTree = SOURCE_ROOT; };
@@ -316,9 +312,7 @@
 				F4A6E015B1757A6580449ADE /* Algebra3.h */,
 				C07DCF5AAAB848C47CD221DD /* Matrix4.cpp */,
 				7298C535FFB31C2F2A0DF4D3 /* Matrix4.h */,
-				21D9D0723294109053C165D6 /* Vector2.cpp */,
 				6395010B83F189E14504CF28 /* Vector2.h */,
-				B2D9AA3E670D813F94CCA209 /* Vector3.cpp */,
 				59952E5C4D77A32301346879 /* Vector3.h */,
 				8ECEEA9EC2004E8ED775D5ED /* Vector4.h */,
 			);
@@ -573,8 +567,6 @@
 				A642C9A4EACF852E707BE498 /* Algebra2.cpp in Sources */,
 				2A38DBB491B423AF6F5B2EC3 /* Algebra3.cpp in Sources */,
 				7CC7A084A4947195A832482C /* Matrix4.cpp in Sources */,
-				F196C5FC16156EAB49EAFE0A /* Vector2.cpp in Sources */,
-				ED6930AA51E76419FB1077F1 /* Vector3.cpp in Sources */,
 				C39DBEF837505267F32005E7 /* Delaunay.cpp in Sources */,
 				4D492ACE78BDC7E1AE5D618A /* DelaunayDatastructures.cpp in Sources */,
 				E2DB2220F04DCA7BF3222605 /* GraphDatastructures.cpp in Sources */,
