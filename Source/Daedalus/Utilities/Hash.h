@@ -14,7 +14,7 @@ namespace utils {
 			absolutePos.Z * 1543 + 769) ^ ((seed + 123456789012345) * 389);
 
 		// FNV-1a hashing
-		int64_t hash = 14695981039346656037;
+		int64_t hash = 14695981039346656037ull;
 		for (auto i = 0; i < 8; i++) {
 			hash *= 1099511628211;
 			hash ^= collapsed & 0xff;
@@ -34,7 +34,7 @@ namespace utils {
 			absolutePos.Y * 3079 +  1543) ^ ((seed + 123456789012345) * 769);
 
 		// FNV-1a hashing
-		int64_t hash = 14695981039346656037;
+		int64_t hash = 14695981039346656037ull;
 		for (auto i = 0; i < 8; i++) {
 			hash *= 1099511628211;
 			hash ^= collapsed & 0xff;

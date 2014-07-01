@@ -2,6 +2,8 @@
 
 #include "Vector3.h"
 
+#include <Utilities/Algebra/Algebra.h>
+
 namespace utils {
 	/**
 	 * This xyzw vector is used in 3D space for affine transforms.
@@ -41,6 +43,6 @@ namespace utils {
 
 		/* Length squared. */
 		inline double Length2() const { return X * X + Y * Y + Z * Z; }
-		inline double Length() const { return FMath::Sqrt(Length2()); }
+		inline double Length() const { return std::abs(Length2()); }
 	};
 }

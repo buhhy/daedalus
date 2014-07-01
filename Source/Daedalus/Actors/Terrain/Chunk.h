@@ -4,7 +4,9 @@
 #include "GeneratedMeshComponent.h"
 #include "ChunkData.h"
 #include "TerrainDataStructures.h"
-#include "DataStructures.h"
+
+#include <Utilities/Algebra/Algebra3.h>
+
 #include "Chunk.generated.h"
 
 /**

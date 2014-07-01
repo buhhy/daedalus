@@ -1,5 +1,8 @@
 #pragma once
 
+#include <Utilities/Algebra/Algebra.h>
+
+#include <cmath>
 #include <functional>
 
 namespace utils {

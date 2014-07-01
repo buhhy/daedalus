@@ -1,5 +1,5 @@
 #include <Daedalus.h>
-#include <Utilities/DataStructures.h>
+#include "Algebra3.h"
 
 namespace utils {
 	Vector3<> Project(const Vector3<> projection, const Vector3<> target) {

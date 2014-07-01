@@ -31,9 +31,8 @@ namespace terrain {
 		BiomeGeneratorParameters BiomeGenParams;
 		std::shared_ptr<events::EventBus> EventBus;
 
-		std::shared_ptr<const VertexWithHullIndex> BiomeRegionLoader::GetCornerHullVertex(
-			const BiomeRegionData & data,
-			const bool cornerX, const bool cornerY) const;
+		std::shared_ptr<const VertexWithHullIndex> GetCornerHullVertex(
+			const BiomeRegionData & data, const bool cornerX, const bool cornerY) const;
 		
 		bool IsBiomeRegionGenerated(const BiomeRegionOffsetVector & offset) const;
 
@@ -66,6 +65,6 @@ namespace terrain {
 		}
 
 		std::shared_ptr<BiomeRegionData> GetBiomeRegionAt(const BiomeRegionOffsetVector & offset);
-		const BiomeId BiomeRegionLoader::FindNearestBiomeId(const utils::Vector2<> point);
+		const BiomeId FindNearestBiomeId(const utils::Vector2<> point);
 	};
 }

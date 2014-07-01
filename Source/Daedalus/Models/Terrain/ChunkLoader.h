@@ -2,7 +2,7 @@
 
 #include "ChunkData.h"
 #include "TerrainDataStructures.h"
-#include <Utilities/DataStructures.h>
+#include <Utilities/Algebra/Algebra3.h>
 
 #include <unordered_map>
 

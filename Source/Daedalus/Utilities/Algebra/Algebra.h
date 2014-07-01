@@ -2,6 +2,8 @@
 
 #include <Utilities/Constants.h>
 
+#include <functional>
+
 namespace utils {
 }
 

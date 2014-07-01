@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Algebra.h"
+#include <Utilities/DataStructures.h>
 
 namespace utils {
 	/********************

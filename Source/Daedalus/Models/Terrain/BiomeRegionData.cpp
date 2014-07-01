@@ -28,7 +28,7 @@ namespace terrain {
 		const BiomeCellVertex & position
 	) {
 		auto id = GetNextId();
-		Biomes.insert({ id, std::unique_ptr<BiomeData>(new BiomeData(BuildId(id), position)) });
+		Biomes.insert({ id, std::shared_ptr<BiomeData>(new BiomeData(BuildId(id), position)) });
 		PointDistribution.Get(x, y).AddPoint(id);
 		return id;
 	}

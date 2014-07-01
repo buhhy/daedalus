@@ -52,7 +52,7 @@ namespace terrain {
 		const BiomeId & GlobalBiomeId() const { return GlobalId; }
 	};
 
-	typedef std::unordered_map<uint64_t, std::unique_ptr<BiomeData> > BiomeDataMap;
+	typedef std::unordered_map<uint64_t, std::shared_ptr<BiomeData> > BiomeDataMap;
 
 	/**
 	 * Each biome cell contains a list of 2D points that will be used in a Delaunay

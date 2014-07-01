@@ -1,6 +1,7 @@
 #pragma once
 
-#include <Utilities/DataStructures.h>
+#include <Utilities/Algebra/Algebra2.h>
+#include <Utilities/Algebra/Algebra3.h>
 
 #include <vector>
 

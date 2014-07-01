@@ -24,7 +24,7 @@ namespace utils {
 	template <typename T>
 	struct Option {
 	private:
-		std::unique_ptr<T> Value;
+		std::shared_ptr<T> Value;
 	public:
 		Option() : Value(NULL) {}
 		Option(const T & value) : Value(new T(value)) {}
@@ -216,6 +216,3 @@ namespace utils {
 		}
 	};
 }
-
-#include <Utilities/Algebra/Algebra2.h>
-#include <Utilities/Algebra/Algebra3.h>

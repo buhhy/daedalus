@@ -1,7 +1,5 @@
 #include <Daedalus.h>
 #include <Utilities/DataStructures.h>
-#include "Vector2.h"
-#include "Vector3.h"
 
 namespace utils {
 	template <typename T>
@@ -39,13 +37,13 @@ namespace utils {
 		return Vector2<double>((double) X, (double) Y);
 	}
 
-	template Vector2<float>;
-	template Vector2<double>;
-	template Vector2<int>;
-	template Vector2<int16_t>;
-	template Vector2<int32_t>;
-	template Vector2<int64_t>;
-	template Vector2<uint16_t>;
-	template Vector2<uint32_t>;
-	template Vector2<uint64_t>;
+	// Explicit instantiations
+	template struct Vector2<float>;
+	template struct Vector2<double>;
+	template struct Vector2<int16_t>;
+	template struct Vector2<int32_t>;
+	template struct Vector2<int64_t>;
+	template struct Vector2<uint16_t>;
+	template struct Vector2<uint32_t>;
+	template struct Vector2<uint64_t>;
 }

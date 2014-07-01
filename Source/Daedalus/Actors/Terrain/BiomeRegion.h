@@ -4,8 +4,8 @@
 #include "GeneratedMeshComponent.h"
 #include "BiomeRegionData.h"
 #include "TerrainDataStructures.h"
-#include "DataStructures.h"
 
+#include <Utilities/Algebra/Algebra3.h>
 #include <memory>
 
 #include "BiomeRegion.generated.h"

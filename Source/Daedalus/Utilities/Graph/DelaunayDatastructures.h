@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utilities/DataStructures.h>
+#include <Utilities/Algebra/Algebra2.h>
 
 #include <array>
 #include <deque>
@@ -84,7 +84,7 @@ namespace utils {
 			 *              formed by the faces that are incident to this vertex
 			 *         false if the current vertex is not part of that concave/convex hull
 			 */
-			bool Vertex::IsSurrounded() const;
+			bool IsSurrounded() const;
 
 			inline const IdFaceMap & GetIncidentFaces() const { return IncidentFaces; }
 			inline Face * const GetFirstIncidentFace() const {

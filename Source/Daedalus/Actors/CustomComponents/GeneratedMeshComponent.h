@@ -19,12 +19,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = Vertex) FColor VertexColor;
 
 	FMeshTriangleVertex() :
-		Position(0.0), Material(NULL), VertexColor({ 255, 255, 255 }) {}
+		Position(0.0), Material(NULL), VertexColor(255., 255., 255.) {}
 
 	FMeshTriangleVertex(const FVector & position) :
 		Position(position),
 		Material(NULL),
-		VertexColor({ 255, 255, 255 }) {}
+		VertexColor(255., 255., 255.) {}
 
 	FMeshTriangleVertex(
 		const utils::Vector3<> & position,
@@ -36,7 +36,7 @@ public:
 		UMaterialInterface * const material
 	) : Position(position),
 		Material(material),
-		VertexColor({ 255, 255, 255 }) {}
+		VertexColor(255., 255., 255.) {}
 
 	FMeshTriangleVertex(
 		const FVector & position,

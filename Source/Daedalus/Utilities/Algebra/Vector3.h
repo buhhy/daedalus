@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Vector2.h"
-
+#include <Utilities/Algebra/Vector2.h>
+#include <Utilities/Algebra/Algebra.h>
 #include <functional>
 
 namespace utils {
@@ -9,8 +9,8 @@ namespace utils {
 	struct Vector4;
 
 	/**
-	* A standard XYZ vector that can be used as a hashmap key.
-	*/
+	 * A standard XYZ vector that can be used as a hashmap key.
+	 */
 	template <typename T = double>
 	struct Vector3 {
 		T X;

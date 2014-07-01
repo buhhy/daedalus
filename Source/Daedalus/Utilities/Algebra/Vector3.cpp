@@ -61,13 +61,13 @@ namespace utils {
 		return *this;
 	}
 
-	template Vector3<float>;
-	template Vector3<double>;
-	template Vector3<int>;
-	template Vector3<int16_t>;
-	template Vector3<int32_t>;
-	template Vector3<int64_t>;
-	template Vector3<uint16_t>;
-	template Vector3<uint32_t>;
-	template Vector3<uint64_t>;
+	// Explicit instantiations
+	template struct Vector3<float>;
+	template struct Vector3<double>;
+	template struct Vector3<int16_t>;
+	template struct Vector3<int32_t>;
+	template struct Vector3<int64_t>;
+	template struct Vector3<uint16_t>;
+	template struct Vector3<uint32_t>;
+	template struct Vector3<uint64_t>;
 }

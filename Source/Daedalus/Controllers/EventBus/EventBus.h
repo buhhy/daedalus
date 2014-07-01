@@ -10,7 +10,7 @@
 
 namespace events {
 	typedef std::vector<EventListener *> ListenerList;
-	typedef std::unordered_map <events::EventType, std::shared_ptr<ListenerList> > ListenerMap;
+	typedef std::unordered_map<events::EventType, std::shared_ptr<ListenerList> > ListenerMap;
 
 	/**
 	*
