@@ -1,15 +1,19 @@
+# Unreal Engine
 *.sdf
-*.sln
 *.sln.DotSettings.user
 *.suo
 *.opensdf
-*.xcodeproj
 /build
 /Binaries
 /DerivedDataCache
 /Intermediate
 /Saved
 /Debug
-/DaedalusTest
-/DaedalusExperimental
+
+# XCode
+*.hmap
+*.xcuserstate
+*.pbxuser
+xcuserdata
+DerivedData
 
