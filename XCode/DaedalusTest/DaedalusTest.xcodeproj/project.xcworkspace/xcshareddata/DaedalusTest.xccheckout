@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>004556A9-B9F1-4E28-88D2-2EE8D377D704</string>
+	<key>IDESourceControlProjectName</key>
+	<string>DaedalusTest</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>403BB6B9-9300-4369-945A-C3BBBC1DD7BA</key>
+		<string>ssh://github.com/buhhy/daedalus.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>XCode/DaedalusTest/DaedalusTest.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>403BB6B9-9300-4369-945A-C3BBBC1DD7BA</key>
+		<string>../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://github.com/buhhy/daedalus.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>403BB6B9-9300-4369-945A-C3BBBC1DD7BA</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>403BB6B9-9300-4369-945A-C3BBBC1DD7BA</string>
+			<key>IDESourceControlWCCName</key>
+			<string>Daedalus</string>
+		</dict>
+	</array>
+</dict>
+</plist>

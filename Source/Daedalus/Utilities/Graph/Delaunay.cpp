@@ -47,12 +47,6 @@ namespace utils {
 			return isSame ? input : Vector2<>(rightOffset.X + input.X, rightOffset.Y + input.Y);
 		};
 
-		// Ditto for the left graph, however we use the left tile as (0, 0) for simplicity,
-		// so this is only useful when adding ghost vertices for the right tile.
-		const auto addLeftOffset = [&] (const Vector2<> & input) -> Vector2<> {
-			return isSame ? input : Vector2<>(-rightOffset.X + input.X, -rightOffset.Y + input.Y);
-		};
-
 		std::vector<std::array<Vertex *, 3> > leftAddedFaces;
 		std::vector<std::array<Vertex *, 3> > rightAddedFaces;
 		std::deque<Vertex *> leftVertexQueue;
@@ -524,7 +518,6 @@ namespace utils {
 
 		// Determine which cross-edge to use by checking for collinearity and circumcircles
 		uint8_t p1, p2, p3, p4;
-		auto & basePoints = points[0];
 		auto circumcircle1 = utils::CalculateCircumcircle(
 			points[0], points[1], points[2]);
 		auto circumcircle2 = utils::CalculateCircumcircle(

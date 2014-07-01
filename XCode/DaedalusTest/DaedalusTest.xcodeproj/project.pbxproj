@@ -1,0 +1,540 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6669EE9D19629FA8006C471E /* DaedalusTest.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6669EE9C19629FA8006C471E /* DaedalusTest.1 */; };
+		6669EEA81962A09B006C471E /* Main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEA51962A09B006C471E /* Main.cpp */; };
+		6669EEFD1962A0CD006C471E /* Algebra2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEDD1962A0BB006C471E /* Algebra2.cpp */; };
+		6669EEFE1962A0CD006C471E /* Algebra3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEDF1962A0BB006C471E /* Algebra3.cpp */; };
+		6669EEFF1962A0CD006C471E /* Matrix4.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEE11962A0BB006C471E /* Matrix4.cpp */; };
+		6669EF001962A0CD006C471E /* Vector2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEE31962A0BB006C471E /* Vector2.cpp */; };
+		6669EF011962A0CD006C471E /* Vector3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEE51962A0BB006C471E /* Vector3.cpp */; };
+		6669EF021962A0CD006C471E /* Delaunay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEEB1962A0BB006C471E /* Delaunay.cpp */; };
+		6669EF031962A0CD006C471E /* DelaunayDatastructures.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEED1962A0BB006C471E /* DelaunayDatastructures.cpp */; };
+		6669EF041962A0CD006C471E /* GraphDatastructures.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEEF1962A0BB006C471E /* GraphDatastructures.cpp */; };
+		6669EF051962A0CD006C471E /* DebugMeshHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEF31962A0BB006C471E /* DebugMeshHelpers.cpp */; };
+		6669EF061962A0CD006C471E /* MarchingCubes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEF51962A0BB006C471E /* MarchingCubes.cpp */; };
+		6669EF071962A0CD006C471E /* Midpoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEF81962A0BB006C471E /* Midpoint.cpp */; };
+		6669EF081962A0CD006C471E /* Perlin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEFA1962A0BB006C471E /* Perlin.cpp */; };
+		6669EF0A1962A0E7006C471E /* gtest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6669EF091962A0E7006C471E /* gtest.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		6669EE9519629FA8006C471E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				6669EE9D19629FA8006C471E /* DaedalusTest.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		6669EE9719629FA8006C471E /* DaedalusTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = DaedalusTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6669EE9C19629FA8006C471E /* DaedalusTest.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = DaedalusTest.1; sourceTree = "<group>"; };
+		6669EEA31962A09B006C471E /* DelaunayTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = DelaunayTests.h; path = ../../../Source/DaedalusTest/DelaunayTests.h; sourceTree = "<group>"; };
+		6669EEA41962A09B006C471E /* Engine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Engine.h; path = ../../../Source/DaedalusTest/Engine.h; sourceTree = "<group>"; };
+		6669EEA51962A09B006C471E /* Main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Main.cpp; path = ../../../Source/DaedalusTest/Main.cpp; sourceTree = "<group>"; };
+		6669EEAC1962A0BB006C471E /* DebugCharacter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DebugCharacter.cpp; sourceTree = "<group>"; };
+		6669EEAD1962A0BB006C471E /* DebugCharacter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugCharacter.h; sourceTree = "<group>"; };
+		6669EEAE1962A0BB006C471E /* PlayerCharacter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PlayerCharacter.cpp; sourceTree = "<group>"; };
+		6669EEAF1962A0BB006C471E /* PlayerCharacter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PlayerCharacter.h; sourceTree = "<group>"; };
+		6669EEB11962A0BB006C471E /* GeneratedMeshComponent.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = GeneratedMeshComponent.cpp; sourceTree = "<group>"; };
+		6669EEB21962A0BB006C471E /* GeneratedMeshComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedMeshComponent.h; sourceTree = "<group>"; };
+		6669EEB41962A0BB006C471E /* BiomeRegion.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BiomeRegion.cpp; sourceTree = "<group>"; };
+		6669EEB51962A0BB006C471E /* BiomeRegion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BiomeRegion.h; sourceTree = "<group>"; };
+		6669EEB61962A0BB006C471E /* BiomeRegionManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BiomeRegionManager.cpp; sourceTree = "<group>"; };
+		6669EEB71962A0BB006C471E /* BiomeRegionManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BiomeRegionManager.h; sourceTree = "<group>"; };
+		6669EEB81962A0BB006C471E /* Chunk.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Chunk.cpp; sourceTree = "<group>"; };
+		6669EEB91962A0BB006C471E /* Chunk.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Chunk.h; sourceTree = "<group>"; };
+		6669EEBA1962A0BB006C471E /* ChunkManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ChunkManager.cpp; sourceTree = "<group>"; };
+		6669EEBB1962A0BB006C471E /* ChunkManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ChunkManager.h; sourceTree = "<group>"; };
+		6669EEBC1962A0BB006C471E /* TestMesh.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TestMesh.cpp; sourceTree = "<group>"; };
+		6669EEBD1962A0BB006C471E /* TestMesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestMesh.h; sourceTree = "<group>"; };
+		6669EEBF1962A0BB006C471E /* DDGameMode.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DDGameMode.cpp; sourceTree = "<group>"; };
+		6669EEC01962A0BB006C471E /* DDGameMode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DDGameMode.h; sourceTree = "<group>"; };
+		6669EEC11962A0BB006C471E /* DDGameState.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DDGameState.cpp; sourceTree = "<group>"; };
+		6669EEC21962A0BB006C471E /* DDGameState.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DDGameState.h; sourceTree = "<group>"; };
+		6669EEC41962A0BB006C471E /* EventBus.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = EventBus.cpp; sourceTree = "<group>"; };
+		6669EEC51962A0BB006C471E /* EventBus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EventBus.h; sourceTree = "<group>"; };
+		6669EEC61962A0BB006C471E /* EventListener.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = EventListener.cpp; sourceTree = "<group>"; };
+		6669EEC71962A0BB006C471E /* EventListener.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EventListener.h; sourceTree = "<group>"; };
+		6669EEC81962A0BB006C471E /* Events.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Events.h; sourceTree = "<group>"; };
+		6669EECA1962A0BB006C471E /* Daedalus.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Daedalus.cpp; sourceTree = "<group>"; };
+		6669EECB1962A0BB006C471E /* Daedalus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Daedalus.h; sourceTree = "<group>"; };
+		6669EECE1962A0BB006C471E /* BiomeRegionData.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BiomeRegionData.cpp; sourceTree = "<group>"; };
+		6669EECF1962A0BB006C471E /* BiomeRegionData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BiomeRegionData.h; sourceTree = "<group>"; };
+		6669EED01962A0BB006C471E /* BiomeRegionLoader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BiomeRegionLoader.cpp; sourceTree = "<group>"; };
+		6669EED11962A0BB006C471E /* BiomeRegionLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BiomeRegionLoader.h; sourceTree = "<group>"; };
+		6669EED21962A0BB006C471E /* ChunkData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ChunkData.h; sourceTree = "<group>"; };
+		6669EED31962A0BB006C471E /* ChunkLoader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ChunkLoader.cpp; sourceTree = "<group>"; };
+		6669EED41962A0BB006C471E /* ChunkLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ChunkLoader.h; sourceTree = "<group>"; };
+		6669EED51962A0BB006C471E /* TerrainDataStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TerrainDataStructures.h; sourceTree = "<group>"; };
+		6669EED81962A0BB006C471E /* Daedalus.ico */ = {isa = PBXFileReference; lastKnownFileType = image.ico; path = Daedalus.ico; sourceTree = "<group>"; };
+		6669EED91962A0BB006C471E /* Daedalus.rc */ = {isa = PBXFileReference; lastKnownFileType = text; path = Daedalus.rc; sourceTree = "<group>"; };
+		6669EEDC1962A0BB006C471E /* Algebra.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Algebra.h; sourceTree = "<group>"; };
+		6669EEDD1962A0BB006C471E /* Algebra2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Algebra2.cpp; sourceTree = "<group>"; };
+		6669EEDE1962A0BB006C471E /* Algebra2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Algebra2.h; sourceTree = "<group>"; };
+		6669EEDF1962A0BB006C471E /* Algebra3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Algebra3.cpp; sourceTree = "<group>"; };
+		6669EEE01962A0BB006C471E /* Algebra3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Algebra3.h; sourceTree = "<group>"; };
+		6669EEE11962A0BB006C471E /* Matrix4.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Matrix4.cpp; sourceTree = "<group>"; };
+		6669EEE21962A0BB006C471E /* Matrix4.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Matrix4.h; sourceTree = "<group>"; };
+		6669EEE31962A0BB006C471E /* Vector2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Vector2.cpp; sourceTree = "<group>"; };
+		6669EEE41962A0BB006C471E /* Vector2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Vector2.h; sourceTree = "<group>"; };
+		6669EEE51962A0BB006C471E /* Vector3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Vector3.cpp; sourceTree = "<group>"; };
+		6669EEE61962A0BB006C471E /* Vector3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Vector3.h; sourceTree = "<group>"; };
+		6669EEE71962A0BB006C471E /* Vector4.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Vector4.h; sourceTree = "<group>"; };
+		6669EEE81962A0BB006C471E /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
+		6669EEE91962A0BB006C471E /* DataStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DataStructures.h; sourceTree = "<group>"; };
+		6669EEEB1962A0BB006C471E /* Delaunay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Delaunay.cpp; sourceTree = "<group>"; };
+		6669EEEC1962A0BB006C471E /* Delaunay.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Delaunay.h; sourceTree = "<group>"; };
+		6669EEED1962A0BB006C471E /* DelaunayDatastructures.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DelaunayDatastructures.cpp; sourceTree = "<group>"; };
+		6669EEEE1962A0BB006C471E /* DelaunayDatastructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DelaunayDatastructures.h; sourceTree = "<group>"; };
+		6669EEEF1962A0BB006C471E /* GraphDatastructures.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = GraphDatastructures.cpp; sourceTree = "<group>"; };
+		6669EEF01962A0BB006C471E /* GraphDatastructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GraphDatastructures.h; sourceTree = "<group>"; };
+		6669EEF11962A0BB006C471E /* Hash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Hash.h; sourceTree = "<group>"; };
+		6669EEF31962A0BB006C471E /* DebugMeshHelpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DebugMeshHelpers.cpp; sourceTree = "<group>"; };
+		6669EEF41962A0BB006C471E /* DebugMeshHelpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugMeshHelpers.h; sourceTree = "<group>"; };
+		6669EEF51962A0BB006C471E /* MarchingCubes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MarchingCubes.cpp; sourceTree = "<group>"; };
+		6669EEF61962A0BB006C471E /* MarchingCubes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MarchingCubes.h; sourceTree = "<group>"; };
+		6669EEF81962A0BB006C471E /* Midpoint.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Midpoint.cpp; sourceTree = "<group>"; };
+		6669EEF91962A0BB006C471E /* Midpoint.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Midpoint.h; sourceTree = "<group>"; };
+		6669EEFA1962A0BB006C471E /* Perlin.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Perlin.cpp; sourceTree = "<group>"; };
+		6669EEFB1962A0BB006C471E /* Perlin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Perlin.h; sourceTree = "<group>"; };
+		6669EEFC1962A0BB006C471E /* UnrealBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UnrealBridge.h; sourceTree = "<group>"; };
+		6669EF091962A0E7006C471E /* gtest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = gtest.framework; path = ../../Libraries/OSX/gtest.framework; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6669EE9419629FA8006C471E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6669EF0A1962A0E7006C471E /* gtest.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		6669EE8E19629FA8006C471E = {
+			isa = PBXGroup;
+			children = (
+				6669EF091962A0E7006C471E /* gtest.framework */,
+				6669EEA91962A0BB006C471E /* Daedalus */,
+				6669EE9919629FA8006C471E /* DaedalusTest */,
+				6669EE9819629FA8006C471E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		6669EE9819629FA8006C471E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6669EE9719629FA8006C471E /* DaedalusTest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6669EE9919629FA8006C471E /* DaedalusTest */ = {
+			isa = PBXGroup;
+			children = (
+				6669EEA31962A09B006C471E /* DelaunayTests.h */,
+				6669EEA41962A09B006C471E /* Engine.h */,
+				6669EEA51962A09B006C471E /* Main.cpp */,
+				6669EE9C19629FA8006C471E /* DaedalusTest.1 */,
+			);
+			path = DaedalusTest;
+			sourceTree = "<group>";
+		};
+		6669EEA91962A0BB006C471E /* Daedalus */ = {
+			isa = PBXGroup;
+			children = (
+				6669EEAA1962A0BB006C471E /* Actors */,
+				6669EEBE1962A0BB006C471E /* Controllers */,
+				6669EECA1962A0BB006C471E /* Daedalus.cpp */,
+				6669EECB1962A0BB006C471E /* Daedalus.h */,
+				6669EECC1962A0BB006C471E /* Models */,
+				6669EED61962A0BB006C471E /* Resources */,
+				6669EEDA1962A0BB006C471E /* Utilities */,
+			);
+			name = Daedalus;
+			path = ../../Source/Daedalus;
+			sourceTree = "<group>";
+		};
+		6669EEAA1962A0BB006C471E /* Actors */ = {
+			isa = PBXGroup;
+			children = (
+				6669EEAB1962A0BB006C471E /* Characters */,
+				6669EEB01962A0BB006C471E /* CustomComponents */,
+				6669EEB31962A0BB006C471E /* Terrain */,
+				6669EEBC1962A0BB006C471E /* TestMesh.cpp */,
+				6669EEBD1962A0BB006C471E /* TestMesh.h */,
+			);
+			path = Actors;
+			sourceTree = "<group>";
+		};
+		6669EEAB1962A0BB006C471E /* Characters */ = {
+			isa = PBXGroup;
+			children = (
+				6669EEAC1962A0BB006C471E /* DebugCharacter.cpp */,
+				6669EEAD1962A0BB006C471E /* DebugCharacter.h */,
+				6669EEAE1962A0BB006C471E /* PlayerCharacter.cpp */,
+				6669EEAF1962A0BB006C471E /* PlayerCharacter.h */,
+			);
+			path = Characters;
+			sourceTree = "<group>";
+		};
+		6669EEB01962A0BB006C471E /* CustomComponents */ = {
+			isa = PBXGroup;
+			children = (
+				6669EEB11962A0BB006C471E /* GeneratedMeshComponent.cpp */,
+				6669EEB21962A0BB006C471E /* GeneratedMeshComponent.h */,
+			);
+			path = CustomComponents;
+			sourceTree = "<group>";
+		};
+		6669EEB31962A0BB006C471E /* Terrain */ = {
+			isa = PBXGroup;
+			children = (
+				6669EEB41962A0BB006C471E /* BiomeRegion.cpp */,
+				6669EEB51962A0BB006C471E /* BiomeRegion.h */,
+				6669EEB61962A0BB006C471E /* BiomeRegionManager.cpp */,
+				6669EEB71962A0BB006C471E /* BiomeRegionManager.h */,
+				6669EEB81962A0BB006C471E /* Chunk.cpp */,
+				6669EEB91962A0BB006C471E /* Chunk.h */,
+				6669EEBA1962A0BB006C471E /* ChunkManager.cpp */,
+				6669EEBB1962A0BB006C471E /* ChunkManager.h */,
+			);
+			path = Terrain;
+			sourceTree = "<group>";
+		};
+		6669EEBE1962A0BB006C471E /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				6669EEBF1962A0BB006C471E /* DDGameMode.cpp */,
+				6669EEC01962A0BB006C471E /* DDGameMode.h */,
+				6669EEC11962A0BB006C471E /* DDGameState.cpp */,
+				6669EEC21962A0BB006C471E /* DDGameState.h */,
+				6669EEC31962A0BB006C471E /* EventBus */,
+			);
+			path = Controllers;
+			sourceTree = "<group>";
+		};
+		6669EEC31962A0BB006C471E /* EventBus */ = {
+			isa = PBXGroup;
+			children = (
+				6669EEC41962A0BB006C471E /* EventBus.cpp */,
+				6669EEC51962A0BB006C471E /* EventBus.h */,
+				6669EEC61962A0BB006C471E /* EventListener.cpp */,
+				6669EEC71962A0BB006C471E /* EventListener.h */,
+				6669EEC81962A0BB006C471E /* Events.h */,
+			);
+			path = EventBus;
+			sourceTree = "<group>";
+		};
+		6669EECC1962A0BB006C471E /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				6669EECD1962A0BB006C471E /* Terrain */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		6669EECD1962A0BB006C471E /* Terrain */ = {
+			isa = PBXGroup;
+			children = (
+				6669EECE1962A0BB006C471E /* BiomeRegionData.cpp */,
+				6669EECF1962A0BB006C471E /* BiomeRegionData.h */,
+				6669EED01962A0BB006C471E /* BiomeRegionLoader.cpp */,
+				6669EED11962A0BB006C471E /* BiomeRegionLoader.h */,
+				6669EED21962A0BB006C471E /* ChunkData.h */,
+				6669EED31962A0BB006C471E /* ChunkLoader.cpp */,
+				6669EED41962A0BB006C471E /* ChunkLoader.h */,
+				6669EED51962A0BB006C471E /* TerrainDataStructures.h */,
+			);
+			path = Terrain;
+			sourceTree = "<group>";
+		};
+		6669EED61962A0BB006C471E /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				6669EED71962A0BB006C471E /* Windows */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		6669EED71962A0BB006C471E /* Windows */ = {
+			isa = PBXGroup;
+			children = (
+				6669EED81962A0BB006C471E /* Daedalus.ico */,
+				6669EED91962A0BB006C471E /* Daedalus.rc */,
+			);
+			path = Windows;
+			sourceTree = "<group>";
+		};
+		6669EEDA1962A0BB006C471E /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				6669EEDB1962A0BB006C471E /* Algebra */,
+				6669EEE81962A0BB006C471E /* Constants.h */,
+				6669EEE91962A0BB006C471E /* DataStructures.h */,
+				6669EEEA1962A0BB006C471E /* Graph */,
+				6669EEF11962A0BB006C471E /* Hash.h */,
+				6669EEF21962A0BB006C471E /* Mesh */,
+				6669EEF71962A0BB006C471E /* Noise */,
+				6669EEFC1962A0BB006C471E /* UnrealBridge.h */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		6669EEDB1962A0BB006C471E /* Algebra */ = {
+			isa = PBXGroup;
+			children = (
+				6669EEDC1962A0BB006C471E /* Algebra.h */,
+				6669EEDD1962A0BB006C471E /* Algebra2.cpp */,
+				6669EEDE1962A0BB006C471E /* Algebra2.h */,
+				6669EEDF1962A0BB006C471E /* Algebra3.cpp */,
+				6669EEE01962A0BB006C471E /* Algebra3.h */,
+				6669EEE11962A0BB006C471E /* Matrix4.cpp */,
+				6669EEE21962A0BB006C471E /* Matrix4.h */,
+				6669EEE31962A0BB006C471E /* Vector2.cpp */,
+				6669EEE41962A0BB006C471E /* Vector2.h */,
+				6669EEE51962A0BB006C471E /* Vector3.cpp */,
+				6669EEE61962A0BB006C471E /* Vector3.h */,
+				6669EEE71962A0BB006C471E /* Vector4.h */,
+			);
+			path = Algebra;
+			sourceTree = "<group>";
+		};
+		6669EEEA1962A0BB006C471E /* Graph */ = {
+			isa = PBXGroup;
+			children = (
+				6669EEEB1962A0BB006C471E /* Delaunay.cpp */,
+				6669EEEC1962A0BB006C471E /* Delaunay.h */,
+				6669EEED1962A0BB006C471E /* DelaunayDatastructures.cpp */,
+				6669EEEE1962A0BB006C471E /* DelaunayDatastructures.h */,
+				6669EEEF1962A0BB006C471E /* GraphDatastructures.cpp */,
+				6669EEF01962A0BB006C471E /* GraphDatastructures.h */,
+			);
+			path = Graph;
+			sourceTree = "<group>";
+		};
+		6669EEF21962A0BB006C471E /* Mesh */ = {
+			isa = PBXGroup;
+			children = (
+				6669EEF31962A0BB006C471E /* DebugMeshHelpers.cpp */,
+				6669EEF41962A0BB006C471E /* DebugMeshHelpers.h */,
+				6669EEF51962A0BB006C471E /* MarchingCubes.cpp */,
+				6669EEF61962A0BB006C471E /* MarchingCubes.h */,
+			);
+			path = Mesh;
+			sourceTree = "<group>";
+		};
+		6669EEF71962A0BB006C471E /* Noise */ = {
+			isa = PBXGroup;
+			children = (
+				6669EEF81962A0BB006C471E /* Midpoint.cpp */,
+				6669EEF91962A0BB006C471E /* Midpoint.h */,
+				6669EEFA1962A0BB006C471E /* Perlin.cpp */,
+				6669EEFB1962A0BB006C471E /* Perlin.h */,
+			);
+			path = Noise;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6669EE9619629FA8006C471E /* DaedalusTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6669EEA019629FA8006C471E /* Build configuration list for PBXNativeTarget "DaedalusTest" */;
+			buildPhases = (
+				6669EE9319629FA8006C471E /* Sources */,
+				6669EE9419629FA8006C471E /* Frameworks */,
+				6669EE9519629FA8006C471E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DaedalusTest;
+			productName = DaedalusTest;
+			productReference = 6669EE9719629FA8006C471E /* DaedalusTest */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6669EE8F19629FA8006C471E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0510;
+			};
+			buildConfigurationList = 6669EE9219629FA8006C471E /* Build configuration list for PBXProject "DaedalusTest" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 6669EE8E19629FA8006C471E;
+			productRefGroup = 6669EE9819629FA8006C471E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6669EE9619629FA8006C471E /* DaedalusTest */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6669EE9319629FA8006C471E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6669EEFD1962A0CD006C471E /* Algebra2.cpp in Sources */,
+				6669EEFE1962A0CD006C471E /* Algebra3.cpp in Sources */,
+				6669EEFF1962A0CD006C471E /* Matrix4.cpp in Sources */,
+				6669EF001962A0CD006C471E /* Vector2.cpp in Sources */,
+				6669EF011962A0CD006C471E /* Vector3.cpp in Sources */,
+				6669EF021962A0CD006C471E /* Delaunay.cpp in Sources */,
+				6669EF031962A0CD006C471E /* DelaunayDatastructures.cpp in Sources */,
+				6669EF041962A0CD006C471E /* GraphDatastructures.cpp in Sources */,
+				6669EF051962A0CD006C471E /* DebugMeshHelpers.cpp in Sources */,
+				6669EF061962A0CD006C471E /* MarchingCubes.cpp in Sources */,
+				6669EF071962A0CD006C471E /* Midpoint.cpp in Sources */,
+				6669EF081962A0CD006C471E /* Perlin.cpp in Sources */,
+				6669EEA81962A09B006C471E /* Main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		6669EE9E19629FA8006C471E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "compiler-default";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		6669EE9F19629FA8006C471E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "compiler-default";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				OTHER_LDFLAGS = "";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		6669EEA119629FA8006C471E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/../../Libraries/OSX",
+					/Users/tlei/Files/Repositories/Daedalus/Libraries/OSX,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../Source/Daedalus/** $(SRCROOT)/../../Source/DaedalusTest/**";
+			};
+			name = Debug;
+		};
+		6669EEA219629FA8006C471E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/../../Libraries/OSX",
+					/Users/tlei/Files/Repositories/Daedalus/Libraries/OSX,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../Source/Daedalus/** $(SRCROOT)/../../Source/DaedalusTest/**";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6669EE9219629FA8006C471E /* Build configuration list for PBXProject "DaedalusTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6669EE9E19629FA8006C471E /* Debug */,
+				6669EE9F19629FA8006C471E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6669EEA019629FA8006C471E /* Build configuration list for PBXNativeTarget "DaedalusTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6669EEA119629FA8006C471E /* Debug */,
+				6669EEA219629FA8006C471E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6669EE8F19629FA8006C471E /* Project object */;
+}

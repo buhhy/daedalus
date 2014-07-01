@@ -493,8 +493,8 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 					"$(SRCROOT)/../../Libraries/OSX",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../Source/Daedalus/** $(SRCROOT)/../../Source/DaedalusExperimental/**";
@@ -510,6 +510,7 @@
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../Source/Daedalus/** $(SRCROOT)/../../Source/DaedalusExperimental/**";
 			};
 			name = Release;
 		};

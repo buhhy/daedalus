@@ -177,7 +177,7 @@ namespace utils {
 				// ping-pong when reaching an extreme rather than loop around
 				for (int64_t i = start; c < count; c++, i += direction) {
 					deque.push_back((*this)[(unsigned) i]);
-					if (direction < 0 && i == 0 || direction > 0 && i == size - 1)
+					if ((direction < 0 && i == 0) || (direction > 0 && i == size - 1))
 						direction *= -1;
 				}
 				return count;
