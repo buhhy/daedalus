@@ -110,6 +110,7 @@
 		6669EEFC1962A0BB006C471E /* UnrealBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UnrealBridge.h; sourceTree = "<group>"; };
 		6669EF091962A0E7006C471E /* gtest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = gtest.framework; path = ../../Libraries/OSX/gtest.framework; sourceTree = "<group>"; };
 		6669EF1019634F78006C471E /* Algebra2DTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Algebra2DTests.h; path = ../../../Source/DaedalusTest/Algebra2DTests.h; sourceTree = "<group>"; };
+		6669EF1119636D95006C471E /* Algebra3DTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Algebra3DTests.h; path = ../../../Source/DaedalusTest/Algebra3DTests.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,6 +151,7 @@
 				6669EEA51962A09B006C471E /* Main.cpp */,
 				6669EE9C19629FA8006C471E /* DaedalusTest.1 */,
 				6669EF1019634F78006C471E /* Algebra2DTests.h */,
+				6669EF1119636D95006C471E /* Algebra3DTests.h */,
 			);
 			path = DaedalusTest;
 			sourceTree = "<group>";

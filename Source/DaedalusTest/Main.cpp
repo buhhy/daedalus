@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "Algebra2DTests.h"
+#include "Algebra3DTests.h"
 #include "DelaunayTests.h"
 
 int main(int argc, char ** argv) {
