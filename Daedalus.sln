@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Daedalus", "Intermediate\ProjectFiles\Daedalus.vcxproj", "{0CD164DE-C5F6-4147-9977-C0BF86A2FB8A}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		DebugGame Editor|Windows = DebugGame Editor|Windows
+		DebugGame|Windows = DebugGame|Windows
+		Development Editor|Windows = Development Editor|Windows
+		Development|Windows = Development|Windows
+		Shipping|Windows = Shipping|Windows
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0CD164DE-C5F6-4147-9977-C0BF86A2FB8A}.DebugGame Editor|Windows.ActiveCfg = DebugGame_Editor|x64
+		{0CD164DE-C5F6-4147-9977-C0BF86A2FB8A}.DebugGame Editor|Windows.Build.0 = DebugGame_Editor|x64
+		{0CD164DE-C5F6-4147-9977-C0BF86A2FB8A}.DebugGame|Windows.ActiveCfg = DebugGame_RocketGame|x64
+		{0CD164DE-C5F6-4147-9977-C0BF86A2FB8A}.DebugGame|Windows.Build.0 = DebugGame_RocketGame|x64
+		{0CD164DE-C5F6-4147-9977-C0BF86A2FB8A}.Development Editor|Windows.ActiveCfg = Development_Editor|x64
+		{0CD164DE-C5F6-4147-9977-C0BF86A2FB8A}.Development Editor|Windows.Build.0 = Development_Editor|x64
+		{0CD164DE-C5F6-4147-9977-C0BF86A2FB8A}.Development|Windows.ActiveCfg = Development_RocketGame|x64
+		{0CD164DE-C5F6-4147-9977-C0BF86A2FB8A}.Development|Windows.Build.0 = Development_RocketGame|x64
+		{0CD164DE-C5F6-4147-9977-C0BF86A2FB8A}.Shipping|Windows.ActiveCfg = Shipping_RocketGame|Win32
+		{0CD164DE-C5F6-4147-9977-C0BF86A2FB8A}.Shipping|Windows.Build.0 = Shipping_RocketGame|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+	EndGlobalSection
+EndGlobal

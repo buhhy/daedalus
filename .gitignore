@@ -1,4 +1,5 @@
 # Unreal Engine
+
 *.sdf
 *.sln.DotSettings.user
 *.suo
@@ -10,10 +11,32 @@
 /Saved
 /Debug
 
+
+# Visual Studio
+
+[Tt]humbs.db
+*.suo
+*.user
+*.sln.docstates
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/[Rr]eleases/
+x64/x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+*.ide/
+*.psess
+*.vsp
+*.vspx
+
+
 # XCode
+
 *.hmap
 *.xcuserstate
 *.pbxuser
 xcuserdata
 DerivedData
-
+.DS_Store

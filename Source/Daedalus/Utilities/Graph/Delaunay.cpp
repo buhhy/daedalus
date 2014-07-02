@@ -9,7 +9,7 @@
 namespace utils {
 	using namespace delaunay;
 
-	typedef std::pair<uint32_t, uint32_t> Tangent;
+	typedef std::pair<uint64_t, uint64_t> Tangent;
 	typedef std::function<bool (Vertex * const p1, Vertex * const p2)> VertexComparator;
 
 	const VertexComparator HorizontalVertexComparator =
@@ -241,17 +241,17 @@ namespace utils {
 	Tangent FindTangent(
 		const ConvexHull & leftHull,
 		const ConvexHull & rightHull,
-		const std::function<uint32_t (const ConvexHull &, uint32_t)> & nextLeftIndex,
-		const std::function<uint32_t (const ConvexHull &, uint32_t)> & nextRightIndex,
+		const std::function<uint64_t (const ConvexHull &, uint64_t)> & nextLeftIndex,
+		const std::function<uint64_t (const ConvexHull &, uint64_t)> & nextRightIndex,
 		const std::function<int8_t (Vertex * const, Vertex * const, Vertex * const)> & getWinding
 	) {
 		// Find the index of the closest vertex in the left hull to the centroid of the right
 		// hull, and do the same, but inverse for the right hull. This is a good starting point
 		// because these 2 vertices are guaranteed to form a non-intersecting edge.
-		uint32_t leftIndex = leftHull.ClosestVertexIndex(rightHull.Centroid());
-		uint32_t rightIndex = rightHull.ClosestVertexIndex(leftHull.Centroid());
-		uint32_t nextLeft = nextLeftIndex(leftHull, leftIndex);
-		uint32_t nextRight = nextRightIndex(rightHull, rightIndex);
+		uint64_t leftIndex = leftHull.ClosestVertexIndex(rightHull.Centroid());
+		uint64_t rightIndex = rightHull.ClosestVertexIndex(leftHull.Centroid());
+		uint64_t nextLeft = nextLeftIndex(leftHull, leftIndex);
+		uint64_t nextRight = nextRightIndex(rightHull, rightIndex);
 		
 		bool done;
 
@@ -314,10 +314,10 @@ namespace utils {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
 		return FindTangent(
 			leftHull, rightHull,
-			[] (const ConvexHull & leftHull, const uint32_t index) {
+			[] (const ConvexHull & leftHull, const uint64_t index) {
 				return leftHull.PrevIndex(index);
 			},
-			[] (const ConvexHull & rightHull, const uint32_t index) {
+			[] (const ConvexHull & rightHull, const uint64_t index) {
 				return rightHull.NextIndex(index);
 			},
 			[] (Vertex * const nextVert, Vertex * const leftVert, Vertex * const rightVert) {
@@ -332,10 +332,10 @@ namespace utils {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
 		return FindTangent(
 			leftHull, rightHull,
-			[] (const ConvexHull & leftHull, const uint32_t index) {
+			[] (const ConvexHull & leftHull, const uint64_t index) {
 				return leftHull.NextIndex(index);
 			},
-			[] (const ConvexHull & rightHull, const uint32_t index) {
+			[] (const ConvexHull & rightHull, const uint64_t index) {
 				return rightHull.PrevIndex(index);
 			},
 			[] (Vertex * const nextVert, Vertex * const leftVert, Vertex * const rightVert) {
@@ -351,16 +351,16 @@ namespace utils {
 	) {
 		ConvexHull newConvexHull;
 
-		uint32_t count = (upperTangent.first - lowerTangent.first + leftHull.Size()) %
+		uint64_t count = (upperTangent.first - lowerTangent.first + leftHull.Size()) %
 			leftHull.Size() + 1;
-		for (uint32_t i = lowerTangent.first, c = 0; c < count; c++, i++) {
+		for (uint64_t i = lowerTangent.first, c = 0; c < count; c++, i++) {
 			if (i >= leftHull.Size()) i -= leftHull.Size();
 			newConvexHull.AddVertex(leftHull[i]);
 		}
 		
 		count = (lowerTangent.second - upperTangent.second + rightHull.Size()) %
 			rightHull.Size() + 1;
-		for (uint32_t i = upperTangent.second, c = 0; c < count; c++, i++) {
+		for (uint64_t i = upperTangent.second, c = 0; c < count; c++, i++) {
 			if (i >= rightHull.Size()) i -= rightHull.Size();
 			newConvexHull.AddVertex(rightHull[i]);
 		}

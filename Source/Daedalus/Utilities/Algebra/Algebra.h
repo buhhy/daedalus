@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Utilities/Integers.h>
 #include <Utilities/Constants.h>
 
 #include <functional>

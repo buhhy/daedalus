@@ -245,9 +245,9 @@ namespace utils {
 			bool bIsCollinear;
 			
 			uint32_t MinIndex(const VertexValueExtractor & valueOf) const;
-			uint32_t GetSequence(
+			uint64_t GetSequence(
 				std::deque<Vertex *> & deque,
-				const uint32_t start, const uint32_t end,
+				const uint64_t start, const uint64_t end,
 				const bool isCw) const;
 		public:
 			ConvexHull() : bIsCollinear(false) {}
@@ -260,8 +260,8 @@ namespace utils {
 				return HullVertices.cend();
 			}
 
-			inline Vertex * operator [] (const uint32_t index) { return HullVertices[index]; }
-			inline Vertex * const operator [] (const uint32_t index) const {
+			inline Vertex * operator [] (const uint64_t index) { return HullVertices[index]; }
+			inline Vertex * const operator [] (const uint64_t index) const {
 				return HullVertices[index];
 			}
 
@@ -277,21 +277,21 @@ namespace utils {
 
 			inline uint64_t Size() const { return HullVertices.size(); }
 
-			inline uint32_t GetSequenceCW(
+			inline uint64_t GetSequenceCW(
 				std::deque<Vertex *> & deque,
-				const uint32_t start, const uint32_t end
+				const uint64_t start, const uint64_t end
 			) const { return GetSequence(deque, start, end, true); }
 
-			inline uint32_t GetSequenceCCW(
+			inline uint64_t GetSequenceCCW(
 				std::deque<Vertex *> & deque,
-				const uint32_t start, const uint32_t end
+				const uint64_t start, const uint64_t end
 			) const { return GetSequence(deque, start, end, false); }
 
-			inline uint32_t NextIndex(const uint32_t current) const {
+			inline uint64_t NextIndex(const uint64_t current) const {
 				return (current + 1) % Size();
 			}
 
-			inline uint64_t PrevIndex(const uint32_t current) const {
+			inline uint64_t PrevIndex(const uint64_t current) const {
 				if (current < 1)
 					return Size() - 1;
 				return current - 1;
@@ -309,7 +309,7 @@ namespace utils {
 			uint32_t RightVertexIndex() const;
 			uint32_t ClosestVertexIndex(const utils::Vector2<> & compare) const;
 
-			uint32_t GetRange(const uint32_t start, const uint32_t end, const bool isCW) const;
+			uint64_t GetRange(const uint64_t start, const uint64_t end, const bool isCW) const;
 		};
 
 		/**

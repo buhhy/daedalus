@@ -62,7 +62,7 @@ int main(int argc, char ** argv) {
 		if (!updated) {
 			SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 			SDL_RenderClear(renderer);
-			DrawNoise(renderer, generator, SizeX, SizeY, 0.005);
+			DrawNoise(renderer, generator, SizeX, SizeY, 0.005f);
 			SDL_RenderPresent(renderer);
 			updated = true;
 		}

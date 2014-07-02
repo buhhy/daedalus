@@ -163,13 +163,13 @@ namespace utils {
 			return minIndex;
 		}
 
-		uint32_t ConvexHull::GetSequence(
+		uint64_t ConvexHull::GetSequence(
 			std::deque<Vertex *> & deque,
-			const uint32_t start, const uint32_t end,
+			const uint64_t start, const uint64_t end,
 			const bool isCW
 		) const {
-			uint32_t c = 0, size = Size();
-			uint32_t count = GetRange(start, end, isCW);
+			uint64_t c = 0, size = Size();
+			uint64_t count = GetRange(start, end, isCW);
 			int8_t direction = (isCW ? 1 : -1);
 
 			if (bIsCollinear) {
@@ -191,15 +191,15 @@ namespace utils {
 			}
 		}
 
-		uint32_t ConvexHull::GetRange(
-			const uint32_t start, const uint32_t end,
+		uint64_t ConvexHull::GetRange(
+			const uint64_t start, const uint64_t end,
 			const bool isCW
 		) const {
-			uint32_t size = Size();
+			uint64_t size = Size();
 			int8_t direction = (isCW ? 1 : -1);
 			if (bIsCollinear) {
 				int64_t compare = direction * (end - start);
-				uint32_t count;
+				uint64_t count;
 				if (compare <= 0) {
 					if (isCW)
 						count = (2 * (size - 1)) - end - start + 1;
@@ -211,7 +211,7 @@ namespace utils {
 
 				return count;
 			} else {
-				uint32_t count = (direction * (end - start) + size) % Size() + 1;
+				uint64_t count = (direction * (end - start) + size) % Size() + 1;
 				if (count == 1)
 					count += size;
 				return count;

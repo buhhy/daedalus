@@ -1,23 +1,13 @@
 #pragma once
 
+#include <Utilities/Integers.h>
 #include <Utilities/Algebra/Vector2.h>
 #include <Utilities/Algebra/Vector3.h>
 #include <Utilities/Algebra/Vector4.h>
 #include <Utilities/Algebra/Matrix4.h>
 
-#include <cstdint>
 #include <vector>
 #include <memory>
-
-using std::int8_t;
-using std::int16_t;
-using std::int32_t;
-using std::int64_t;
-
-using std::uint8_t;
-using std::uint16_t;
-using std::uint32_t;
-using std::uint64_t;
 
 namespace utils {
 	// Equivalent to the Scala Option construct which can be a Some or None value
