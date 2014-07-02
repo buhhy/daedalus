@@ -11,16 +11,20 @@ void DrawNoise(
 	SDL_Renderer * renderer, const utils::PerlinNoise * generator,
 	const uint16_t sizeX, const uint16_t sizeY, const float scale
 ) {
-	for (uint16_t x = 0; x < sizeX; x++) {
-		for (uint16_t y = 0; y < sizeY; y++) {
-			auto noise = generator->Generate(scale * x, scale * y);
-			uint8_t r = noise * 256, g = noise * 256, b = noise * 256;
-			std::cout << r << g << b << " ";
+	double min = 2, max = -2;
+	for (uint16_t x = 1; x <= sizeX; x++) {
+		for (uint16_t y = 1; y <= sizeY; y++) {
+			double noise = 0;
+			for (uint8_t c = 32; c >= 1; c /= 2)
+				noise += 1.0 / c * (generator->Generate(scale * x * c, scale * y * c) * 1.3 + 1) * 0.3;
+			if (noise < min) min = noise;
+			if (noise > max) max = noise;
+			uint8_t r = noise * 255, g = noise * 255, b = noise * 255;
 			SDL_SetRenderDrawColor(renderer, r, g, b, SDL_ALPHA_OPAQUE);
 			SDL_RenderDrawPoint(renderer, x, y);
 		}
 	}
-	std::cout << std::endl;
+	std::cout << min << " " << max << std::endl;
 }
 
 int main(int argc, char ** argv) {
@@ -45,6 +49,7 @@ int main(int argc, char ** argv) {
 	}
 
 	bool running = true;
+	bool updated = false;
 	SDL_Event sdlEvent;
 	auto generator = new utils::PerlinNoise();
 
@@ -53,11 +58,14 @@ int main(int argc, char ** argv) {
 			if (sdlEvent.type == SDL_QUIT)
 				running = false;
 		}
-		
-		SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-		SDL_RenderClear(renderer);
-		DrawNoise(renderer, generator, SizeX, SizeY, 0.15);
-		SDL_RenderPresent(renderer);
+
+		if (!updated) {
+			SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+			SDL_RenderClear(renderer);
+			DrawNoise(renderer, generator, SizeX, SizeY, 0.005);
+			SDL_RenderPresent(renderer);
+			updated = true;
+		}
 	}
 
 	delete generator;

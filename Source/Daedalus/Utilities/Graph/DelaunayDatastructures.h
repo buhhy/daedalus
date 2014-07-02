@@ -96,7 +96,7 @@ namespace utils {
 			inline const Vector2<> & GetPoint() const { return Point; }
 			inline uint64_t VertexId() const { return Id; };
 			inline uint64_t ForeignVertexId() const { return ForeignId; }
-			inline uint32_t FaceCount() const { return IncidentFaces.size(); }
+			inline uint64_t FaceCount() const { return IncidentFaces.size(); }
 			inline bool IsForeign() const { return bIsForeign; }
 		};
 
@@ -275,7 +275,7 @@ namespace utils {
 				return *this;
 			}
 
-			inline uint32_t Size() const { return HullVertices.size(); }
+			inline uint64_t Size() const { return HullVertices.size(); }
 
 			inline uint32_t GetSequenceCW(
 				std::deque<Vertex *> & deque,
@@ -291,7 +291,7 @@ namespace utils {
 				return (current + 1) % Size();
 			}
 
-			inline uint32_t PrevIndex(const uint32_t current) const {
+			inline uint64_t PrevIndex(const uint32_t current) const {
 				if (current < 1)
 					return Size() - 1;
 				return current - 1;
@@ -392,8 +392,8 @@ namespace utils {
 			Faces.clear();
 		}
 
-		inline uint32_t VertexCount() const { return Vertices.size(); }
-		inline uint32_t FaceCount() const { return Faces.size(); }
+		inline uint64_t VertexCount() const { return Vertices.size(); }
+		inline uint64_t FaceCount() const { return Faces.size(); }
 		inline delaunay::DelaunayId GraphOffset() const { return Offset; }
 
 		const std::vector<delaunay::Vertex const *> GetVertices() const;

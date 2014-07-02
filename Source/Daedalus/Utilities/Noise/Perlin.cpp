@@ -124,7 +124,7 @@ namespace utils {
 	 * 1D float Perlin noise, SL "noise()"
 	 */
 	float PerlinNoise::Generate(float x) const {
-		int ix0, ix1;
+		uint64_t ix0, ix1;
 		float fx0, fx1;
 		float s, n0, n1;
 
@@ -146,7 +146,7 @@ namespace utils {
 	 * 1D float Perlin periodic noise, SL "pnoise()"
 	 */
 	float PerlinNoise::GeneratePeriodic(float x, int px) const {
-		int ix0, ix1;
+		uint64_t ix0, ix1;
 		float fx0, fx1;
 		float s, n0, n1;
 
@@ -169,7 +169,7 @@ namespace utils {
 	 * 2D float Perlin noise.
 	 */
 	float PerlinNoise::Generate(float x, float y) const {
-		int ix0, iy0, ix1, iy1;
+		uint64_t ix0, iy0, ix1, iy1;
 		float fx0, fy0, fx1, fy1;
 		float s, t, nx0, nx1, n0, n1;
 
@@ -203,7 +203,7 @@ namespace utils {
 	 * 2D float Perlin periodic noise.
 	 */
 	float PerlinNoise::GeneratePeriodic(float x, float y, int px, int py) const {
-		int ix0, iy0, ix1, iy1;
+		uint64_t ix0, iy0, ix1, iy1;
 		float fx0, fy0, fx1, fy1;
 		float s, t, nx0, nx1, n0, n1;
 
@@ -238,7 +238,7 @@ namespace utils {
 	 * 3D float Perlin noise.
 	 */
 	float PerlinNoise::Generate(float x, float y, float z) const {
-		int ix0, iy0, ix1, iy1, iz0, iz1;
+		uint64_t ix0, iy0, ix1, iy1, iz0, iz1;
 		float fx0, fy0, fz0, fx1, fy1, fz1;
 		float s, t, r;
 		float nxy0, nxy1, nx0, nx1, n0, n1;
@@ -291,7 +291,7 @@ namespace utils {
 	 * 3D float Perlin periodic noise.
 	 */
 	float PerlinNoise::GeneratePeriodic(float x, float y, float z, int px, int py, int pz) const {
-		int ix0, iy0, ix1, iy1, iz0, iz1;
+		uint64_t ix0, iy0, ix1, iy1, iz0, iz1;
 		float fx0, fy0, fz0, fx1, fy1, fz1;
 		float s, t, r;
 		float nxy0, nxy1, nx0, nx1, n0, n1;
@@ -346,7 +346,7 @@ namespace utils {
 	 */
 
 	float PerlinNoise::Generate(float x, float y, float z, float w) const {
-		int ix0, iy0, iz0, iw0, ix1, iy1, iz1, iw1;
+		uint64_t ix0, iy0, iz0, iw0, ix1, iy1, iz1, iw1;
 		float fx0, fy0, fz0, fw0, fx1, fy1, fz1, fw1;
 		float s, t, r, q;
 		float nxyz0, nxyz1, nxy0, nxy1, nx0, nx1, n0, n1;
@@ -433,7 +433,7 @@ namespace utils {
 		float x, float y, float z, float w,
 		int px, int py, int pz, int pw
 	) const {
-		int ix0, iy0, iz0, iw0, ix1, iy1, iz1, iw1;
+		uint64_t ix0, iy0, iz0, iw0, ix1, iy1, iz1, iw1;
 		float fx0, fy0, fz0, fw0, fx1, fy1, fz1, fw1;
 		float s, t, r, q;
 		float nxyz0, nxyz1, nxy0, nxy1, nx0, nx1, n0, n1;

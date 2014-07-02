@@ -395,7 +395,7 @@ namespace utils {
 		const uint32_t subdivisionDepth = 0
 	) {
 		// End condition when less than 4 vertices counted
-		uint32_t count = vertices.size();
+		uint64_t count = vertices.size();
 		if (count < 4) {
 			ConvexHull hull;
 			if (count == 3) {

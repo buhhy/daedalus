@@ -13,8 +13,6 @@
 		6669EE8219629B39006C471E /* Algebra2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EE6219629B28006C471E /* Algebra2.cpp */; };
 		6669EE8319629B39006C471E /* Algebra3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EE6419629B28006C471E /* Algebra3.cpp */; };
 		6669EE8419629B39006C471E /* Matrix4.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EE6619629B28006C471E /* Matrix4.cpp */; };
-		6669EE8519629B39006C471E /* Vector2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EE6819629B28006C471E /* Vector2.cpp */; };
-		6669EE8619629B39006C471E /* Vector3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EE6A19629B28006C471E /* Vector3.cpp */; };
 		6669EE8719629B39006C471E /* Delaunay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EE7019629B28006C471E /* Delaunay.cpp */; };
 		6669EE8819629B39006C471E /* DelaunayDatastructures.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EE7219629B28006C471E /* DelaunayDatastructures.cpp */; };
 		6669EE8919629B39006C471E /* GraphDatastructures.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EE7419629B28006C471E /* GraphDatastructures.cpp */; };
@@ -402,8 +400,6 @@
 				6669EE8219629B39006C471E /* Algebra2.cpp in Sources */,
 				6669EE8319629B39006C471E /* Algebra3.cpp in Sources */,
 				6669EE8419629B39006C471E /* Matrix4.cpp in Sources */,
-				6669EE8519629B39006C471E /* Vector2.cpp in Sources */,
-				6669EE8619629B39006C471E /* Vector3.cpp in Sources */,
 				6669EE8719629B39006C471E /* Delaunay.cpp in Sources */,
 				6669EE8819629B39006C471E /* DelaunayDatastructures.cpp in Sources */,
 				6669EE8919629B39006C471E /* GraphDatastructures.cpp in Sources */,
