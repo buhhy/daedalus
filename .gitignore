@@ -1,9 +1,7 @@
 # Unreal Engine
 
-*.sdf
-*.sln.DotSettings.user
-*.suo
-*.opensdf
+Daedalus.sln
+Daedalus.xcodeproj
 /build
 /Binaries
 /DerivedDataCache
@@ -15,7 +13,9 @@
 # Visual Studio
 
 [Tt]humbs.db
+*.sdf
 *.suo
+*.opensdf
 *.user
 *.sln.docstates
 [Dd]ebug/
