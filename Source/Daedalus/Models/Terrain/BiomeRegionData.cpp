@@ -10,15 +10,13 @@ namespace terrain {
 		const BiomeRegionOffsetVector & biomeOffset
 	) : BiomeGridSize(biomeSize),
 		BiomeOffset(biomeOffset),
-		PointDistribution(biomeSize),
+		BiomeCells(biomeSize, biomeSize),
 		DelaunayGraph(biomeOffset),
 		CurrentVertexId(0),
 		NeighboursMerged(3, 3, false),
 		bIsGraphGenerated(false),
-		bIsBiomesGenerated(false)
+		bIsBiomeDataGenerated(false)
 	{
-		auto toY = PointDistribution.Depth - buffer - 1;
-		auto toX = PointDistribution.Width - buffer - 1;
 		// This region is technically always loaded, hence set to true
 		NeighboursMerged.Set(1, 1, true);
 	}
@@ -28,8 +26,9 @@ namespace terrain {
 		const BiomeCellVertex & position
 	) {
 		auto id = GetNextId();
-		Biomes.insert({ id, std::shared_ptr<BiomeData>(new BiomeData(BuildId(id), position)) });
-		PointDistribution.Get(x, y).AddPoint(id);
+		Biomes.insert(std::make_pair(
+			id, std::shared_ptr<BiomeData>(new BiomeData(BuildId(id), position))));
+		BiomeCells.Get(x, y).AddPoint(id);
 		return id;
 	}
 
@@ -49,7 +48,7 @@ namespace terrain {
 		BiomeRegionGridVector gpos;
 		for (uint16_t x = xstart; x <= xend; x++) {
 			for (uint16_t y = ystart; y <= yend; y++) {
-				for (auto id : PointDistribution.Get(x, y).PointIds) {
+				for (auto id : BiomeCells.Get(x, y).PointIds) {
 					double dist = (offset - Biomes.at(id)->GetLocalPosition()).Length2();
 					if (dist < min) {
 						min = dist;
@@ -69,5 +68,10 @@ namespace terrain {
 			vertexList.push_back(std::make_pair(pair.second->GetLocalPosition(), pair.first));
 		utils::BuildDelaunay2D(DelaunayGraph, vertexList);
 		bIsGraphGenerated = true;
+	}
+
+	void BiomeRegionData::GenerateBiomeData() {
+		// Do some biome data initialization
+		bIsBiomeDataGenerated = true;
 	}
 }

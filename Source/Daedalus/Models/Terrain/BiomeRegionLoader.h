@@ -23,7 +23,8 @@ namespace terrain {
 	 */
 	class BiomeRegionLoader {
 	public:
-		typedef std::pair<utils::Vector2<>, uint32_t> VertexWithHullIndex;
+		using VertexWithHullIndex = std::pair<utils::Vector2<>, uint32_t>;
+		using BiomeRegionDataPtr = std::shared_ptr<BiomeRegionData>;
 
 	private:
 		BiomeRegionCache LoadedBiomeRegionCache;
@@ -35,14 +36,17 @@ namespace terrain {
 			const BiomeRegionData & data, const bool cornerX, const bool cornerY) const;
 		
 		bool IsBiomeRegionGenerated(const BiomeRegionOffsetVector & offset) const;
+		BiomeRegionDataPtr GetBiomeRegionFromCache(const BiomeRegionOffsetVector & offset);
 
-
-		std::shared_ptr<BiomeRegionData> LoadBiomeRegionFromDisk(
+		BiomeRegionDataPtr LoadBiomeRegionFromDisk(
 			const BiomeRegionOffsetVector & offset);
-		std::shared_ptr<BiomeRegionData> GenerateBiomeRegion(
+		BiomeRegionDataPtr GenerateBiomeRegion(
 			const BiomeRegionOffsetVector & offset);
-		std::shared_ptr<BiomeRegionData> GenerateBiomeRegionArea(
+		BiomeRegionDataPtr GenerateBiomeRegionArea(
 			const BiomeRegionOffsetVector & offset, const uint8_t radius);
+
+		BiomeRegionDataPtr BiomeRegionLoader::GenerateBiomeDataForRegion(
+			BiomeRegionDataPtr biomeRegion);
 
 		bool MergeRegionEdge(BiomeRegionData & r1, BiomeRegionData & r2);
 		bool MergeRegionCorner(
@@ -51,7 +55,7 @@ namespace terrain {
 			BiomeRegionData & bl,
 			BiomeRegionData & br);
 		std::unordered_set<BiomeRegionOffsetVector> MergeRegion(
-			std::shared_ptr<BiomeRegionData> targetRegion);
+			BiomeRegionDataPtr targetRegion);
 
 	public:
 		BiomeRegionLoader(
@@ -64,7 +68,7 @@ namespace terrain {
 			return BiomeGenParams;
 		}
 
-		std::shared_ptr<BiomeRegionData> GetBiomeRegionAt(const BiomeRegionOffsetVector & offset);
+		BiomeRegionDataPtr GetBiomeRegionAt(const BiomeRegionOffsetVector & offset);
 		const BiomeId FindNearestBiomeId(const utils::Vector2<> point);
 	};
 }

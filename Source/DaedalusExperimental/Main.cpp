@@ -14,9 +14,8 @@ void DrawNoise(
 	double min = 2, max = -2;
 	for (uint16_t x = 1; x <= sizeX; x++) {
 		for (uint16_t y = 1; y <= sizeY; y++) {
-			double noise = 0;
-			for (uint8_t c = 32; c >= 1; c /= 2)
-				noise += 1.0 / c * (generator->Generate(scale * x * c, scale * y * c) * 1.3 + 1) * 0.3;
+			//double noise = (generator->Generate(x*0.12, y*0.12) * 1.3 + 1) * 0.5;
+			double noise = generator->GenerateFractal(x * 0.005, y * 0.005, 6u, 0.5) * 0.5;
 			if (noise < min) min = noise;
 			if (noise > max) max = noise;
 			uint8_t r = noise * 255, g = noise * 255, b = noise * 255;

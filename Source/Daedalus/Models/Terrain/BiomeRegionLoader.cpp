@@ -2,13 +2,15 @@
 #include "BiomeRegionLoader.h"
 
 #include <Utilities/Hash.h>
+#include <Utilities/Noise/Perlin.h>
 
 #include <algorithm>
 #include <functional>
 #include <random>
 
 namespace terrain {
-	typedef BiomeRegionLoader::VertexWithHullIndex VertexWithHullIndex;
+	using VertexWithHullIndex = BiomeRegionLoader::VertexWithHullIndex;
+	using BiomeRegionDataPtr = BiomeRegionLoader::BiomeRegionDataPtr;
 
 	BiomeRegionLoader::BiomeRegionLoader(
 		const BiomeGeneratorParameters & params,
@@ -29,14 +31,15 @@ namespace terrain {
 		const uint32_t startX = cornerX ? data.BiomeGridSize - 1 : 0;
 		const uint32_t startY = cornerY ? data.BiomeGridSize - 1 : 0;
 		const uint16_t cornerLimit = BiomeGenParams.BufferSize;
-		int8_t accumX = 0, accumY = 0;
 		const VertexWithHullIndex * vertex = NULL;
+
+		int8_t accumX = 0, accumY = 0;
 		bool found;
 
 		do {
 			found = false;
 			const auto & pointIds =
-				data.PointDistribution.Get(startX + accumX, startY + accumY).PointIds;
+				data.GetBiomeCells().Get(startX + accumX, startY + accumY).PointIds;
 			for (size_t i = 0; i < pointIds.size(); i++) {
 				auto value = data.DelaunayGraph.ConvexHull.FindVertexById(pointIds[i]);
 				if (value != -1) {
@@ -141,22 +144,25 @@ namespace terrain {
 	}
 	
 	std::unordered_set<BiomeRegionOffsetVector> BiomeRegionLoader::MergeRegion(
-		std::shared_ptr<BiomeRegionData> targetRegion
+		BiomeRegionDataPtr targetRegion
 	) {
+		// If this region has already been merged with all surrounding regions, then skip
+		if (targetRegion->IsMergedWithAllNeighbours())
+			return std::unordered_set<BiomeRegionOffsetVector>();
+
 		const BiomeRegionOffsetVector & biomeOffset = targetRegion->BiomeOffset;
 
 		// Update neighbor's neighbor generation cache
-		utils::Tensor2<std::shared_ptr<BiomeRegionData> > neighbors(3, 3, NULL);
-		BiomeRegionOffsetVector nOffset;
+		utils::TensorFixed2D<BiomeRegionDataPtr, 3> neighbors(NULL);
+		BiomeRegionOffsetVector currentOffset;
 
 		// Load up the neighboring biome regions if they haven't already been cached
 		// and the sides haven't already been merged
 		for (int8_t offY = -1; offY <= 1; offY++) {
 			for (int8_t offX = -1; offX <= 1; offX++) {
 				if (offY != 0 || offX != 0) {
-					nOffset.Reset(offX + biomeOffset.X, offY + biomeOffset.Y);
-					if (IsBiomeRegionGenerated(nOffset))
-						neighbors.Set(offX + 1, offY + 1, GetBiomeRegionAt(nOffset));
+					currentOffset.Reset(offX + biomeOffset.X, offY + biomeOffset.Y);
+					neighbors.Set(offX + 1, offY + 1, GetBiomeRegionFromCache(currentOffset));
 				}
 			}
 		}
@@ -198,8 +204,6 @@ namespace terrain {
 			}
 		}
 
-		mergedRegions.erase(BiomeRegionOffsetVector(0, 0));
-
 		return mergedRegions;
 	}
 
@@ -207,21 +211,33 @@ namespace terrain {
 		const BiomeRegionOffsetVector & offset
 	) const {
 		// TODO: implement some form of tracking which biome regions have been generated
-		return LoadedBiomeRegionCache.count(offset) > 0;
+		return LoadedBiomeRegionCache.find(offset) != LoadedBiomeRegionCache.end();
+	}
+	
+	BiomeRegionDataPtr BiomeRegionLoader::GetBiomeRegionFromCache(
+		const BiomeRegionOffsetVector & offset
+	) {
+		auto found = LoadedBiomeRegionCache.find(offset);
+		if (found != LoadedBiomeRegionCache.end())
+			return found->second;
+		else
+			return LoadBiomeRegionFromDisk(offset);
 	}
 
-	std::shared_ptr<BiomeRegionData> BiomeRegionLoader::LoadBiomeRegionFromDisk(
+	BiomeRegionDataPtr BiomeRegionLoader::LoadBiomeRegionFromDisk(
 		const BiomeRegionOffsetVector & offset
 	) {
 		// TODO: implement disk loading
-		return std::shared_ptr<BiomeRegionData>(NULL);
+		if (IsBiomeRegionGenerated(offset))
+			return NULL;
+		return NULL;
 	}
 
-	std::shared_ptr<BiomeRegionData> BiomeRegionLoader::GenerateBiomeRegion(
+	BiomeRegionDataPtr BiomeRegionLoader::GenerateBiomeRegion(
 		const BiomeRegionOffsetVector & biomeOffset
 	) {
 		// TODO: implement disk saving
-		auto dataRef = std::shared_ptr<BiomeRegionData>(
+		auto dataRef = BiomeRegionDataPtr(
 			new BiomeRegionData(
 				BiomeGenParams.BufferSize, BiomeGenParams.GridCellCount, biomeOffset));
 
@@ -261,26 +277,35 @@ namespace terrain {
 		return dataRef;
 	}
 
-	std::shared_ptr<BiomeRegionData> BiomeRegionLoader::GenerateBiomeRegionArea(
+	BiomeRegionDataPtr BiomeRegionLoader::GenerateBiomeRegionArea(
 		const BiomeRegionOffsetVector & offset,
 		const uint8_t radius
 	) {
-		std::shared_ptr<BiomeRegionData> newRegion;
-		for (int64_t y = offset.Y - radius; y <= offset.Y + radius; y++) {
-			for (int64_t x = offset.X - radius; x <= offset.X + radius; x++) {
-				auto position = BiomeRegionOffsetVector(x, y);
-				auto created = GenerateBiomeRegion(position);
-				if (x == offset.X && y == offset.Y)
-					newRegion = created;
+		const uint8_t diameter = radius * 2 + 1;
+
+		// Generate 8 surrounding regions as well as the current region
+		BiomeRegionDataPtr newRegion;
+		BiomeRegionOffsetVector currentOffset;
+		utils::Tensor2D<BiomeRegionDataPtr> loadedRegions(diameter, diameter);
+
+		for (int64_t offY = 0; offY < diameter; offY++) {
+			for (int64_t offX = 0; offX < diameter; offX++) {
+				currentOffset.Reset(offset.X - radius + offX, offset.Y - radius + offY);
+				// Don't generate region if it has already been generated
+				auto currentRegion = GetBiomeRegionFromCache(currentOffset);
+				if (!currentRegion)
+					currentRegion = GenerateBiomeRegion(currentOffset);
+				loadedRegions.Set(offX, offY, currentRegion);
 			}
 		}
+		newRegion = loadedRegions.Get(radius, radius);
 
+		// Run the merge algorithm on all generated regions
 		std::unordered_set<BiomeRegionOffsetVector> updatedRegions;
-		for (int64_t y = offset.Y - radius; y <= offset.Y + radius; y++) {
-			for (int64_t x = offset.X - radius; x <= offset.X + radius; x++) {
-				auto position = BiomeRegionOffsetVector(x, y);
-				auto updated = MergeRegion(GetBiomeRegionAt(position));
-				updatedRegions.insert(position);
+		for (int64_t offY = 0; offY < diameter; offY++) {
+			for (int64_t offX = 0; offX < diameter; offX++) {
+				auto currentRegion = loadedRegions.Get(offX, offY);
+				auto updated = MergeRegion(currentRegion);
 				for (auto & up : updated)
 					updatedRegions.insert(up);
 			}
@@ -294,12 +319,44 @@ namespace terrain {
 				updatedVec.begin(), updatedRegions.cbegin(), updatedRegions.cend());
 			EventBus->BroadcastEvent(
 				events::E_BiomeRegionUpdate,
-				std::shared_ptr<events::EBiomeRegionUpdate>(new events::EBiomeRegionUpdate(updatedVec)));
+				std::shared_ptr<events::EBiomeRegionUpdate>(
+					new events::EBiomeRegionUpdate(updatedVec)));
 		}
 		return newRegion;
 	}
 
-	std::shared_ptr<BiomeRegionData> BiomeRegionLoader::GetBiomeRegionAt(
+	BiomeRegionDataPtr BiomeRegionLoader::GenerateBiomeDataForRegion(
+		BiomeRegionDataPtr biomeRegion
+	) {
+		utils::PerlinNoise2D generator(1234);
+		// TODO: implement disk storage
+		if (!biomeRegion->IsBiomeDataGenerated()) {
+			auto & biomeCells = biomeRegion->GetBiomeCells();
+			for (size_t x = 0; x < biomeCells.GetWidth(); x++) {
+				for (size_t y = 0; y < biomeCells.GetDepth(); y++) {
+					for (auto & id : biomeCells.Get(x, y).PointIds) {
+						auto biome = biomeRegion->GetBiomeAt(id);
+						auto position = biome->GetLocalPosition();
+						auto height = generator.GenerateFractal(
+							(position.X * biomeRegion->BiomeOffset.X) * 0.017,
+							(position.Y * biomeRegion->BiomeOffset.Y) * 0.017,
+							6, 0.5);
+						biome->SetElevation(height);
+					}
+				}
+			}
+
+			std::vector<BiomeRegionOffsetVector> updatedVec;
+			updatedVec.push_back(biomeRegion->BiomeOffset);
+			EventBus->BroadcastEvent(
+				events::E_BiomeRegionUpdate,
+				std::shared_ptr<events::EBiomeRegionUpdate>(
+					new events::EBiomeRegionUpdate(updatedVec)));
+		}
+		return biomeRegion;
+	} 
+
+	BiomeRegionDataPtr BiomeRegionLoader::GetBiomeRegionAt(
 		const BiomeRegionOffsetVector & offset
 	) {
 		//UE_LOG(LogTemp, Error, TEXT("Loading chunk at offset: %d %d %d"), offset.X, offset.Y, offset.Z);

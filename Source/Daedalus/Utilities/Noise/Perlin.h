@@ -3,56 +3,72 @@
 #include <Utilities/DataStructures.h>
 
 namespace utils {
+	// TODO: split into component 2D, 3D, 4D generator classes
 	/*
 	 * This is a clean, fast, modern and free Perlin noise class in C++.
 	 * Being a stand-alone class with no external dependencies, it is
 	 * highly reusable without source code modifications.
 	 *
-	 * Note:
-	 * Replacing the "float" type with "double" can actually make this run faster
-	 * on some platforms. A templatized version of PerlinNoise could be useful.
-	 *
 	 * @author Stefan Gustavson
 	 */
+	class PerlinNoise2D {
+	private:
+		Vector2<int64_t> Offset;
+		uint64_t Seed;
+		
+		double GradientAt(int hash, double x, double y) const;
+
+	public:
+		PerlinNoise2D(const uint64_t seed) : Offset(0, 0), Seed(seed) {}
+		PerlinNoise2D(const Vector2<int64_t> & offset, const uint64_t seed) :
+			Offset(offset), Seed(seed)
+		{}
+
+		~PerlinNoise2D() {}
+
+		double Generate(double x, double y) const;
+		double GeneratePeriodic(double x, double y, int px, int py) const;
+
+		/**
+		 * Generates 2D fractal Perlin noise.
+		 * @param numOctaves Number of octaves of noise to add.
+		 * @param persistence Higher persistence results in higher representation of lower
+		 *                    frequencies, lower persistence results in higher representation of
+		 *                    higher frequencies.
+		 */
+		double GenerateFractal(
+			const double x, const double y,
+			const uint8_t numOctaves, const double persistence) const;
+
+	};
+
 	class PerlinNoise {
 	private:
-		inline double Fade(const double t) const { return t * t * t * (t * (t * 6 - 15) + 10); }
-
-		inline uint64_t FastFloor(const double x) const {
-			return x > 0 ? ((uint64_t) x) : ((uint64_t) x - 1);
-		}
-
-		inline double Lerp(const double t, const double a, const double b) const {
-			return a + t * (b - a);
-		}
-
-
-		static unsigned char perm[];
-		float grad(int hash, float x) const;
-		float grad(int hash, float x, float y) const;
-		float grad(int hash, float x, float y , float z) const;
-		float grad(int hash, float x, float y, float z, float t) const;
+		double GradientAt(int hash, double x) const;
+		double GradientAt(int hash, double x, double y , double z) const;
+		double GradientAt(int hash, double x, double y, double z, double t) const;
 		
 	public:
 		PerlinNoise() {}
 		~PerlinNoise() {}
 
-	/**
-	 * 1D, 2D, 3D and 4D float Perlin noise, SL "noise()"
-	 */
-		float Generate(float x) const;
-		float Generate(float x, float y) const;
-		float Generate(float x, float y, float z) const;
-		float Generate(float x, float y, float z, float w) const;
+		/**
+		 * 1D, 2D, 3D and 4D double Perlin noise, SL "noise()"
+		 */
+		double Generate(double x) const;
+		double Generate(double x, double y, double z) const;
+		double Generate(double x, double y, double z, double w) const;
+		/*double GenerateFractal(
+			const double x, const double y, const double z,
+			const uint8_t numOctaves, const double persistence) const;*/
 
-	/**
-	 * 1D, 2D, 3D and 4D float Perlin periodic noise, SL "pnoise()"
-	 */
-		float GeneratePeriodic(float x, int px) const;
-		float GeneratePeriodic(float x, float y, int px, int py) const;
-		float GeneratePeriodic(float x, float y, float z, int px, int py, int pz) const;
-		float GeneratePeriodic(
-			float x, float y, float z, float w, int px, int py, int pz, int pw) const;
+		/**
+		 * 1D, 2D, 3D and 4D double Perlin periodic noise, SL "pnoise()"
+		 */
+		double GeneratePeriodic(double x, int px) const;
+		double GeneratePeriodic(double x, double y, double z, int px, int py, int pz) const;
+		double GeneratePeriodic(
+			double x, double y, double z, double w, int px, int py, int pz, int pw) const;
 	};
 
 }

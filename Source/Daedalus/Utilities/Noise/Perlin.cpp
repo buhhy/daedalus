@@ -2,6 +2,10 @@
 #include "Perlin.h"
 
 namespace utils {
+	inline double Fade(const double t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+	inline int64_t FastFloor(const double x) { return x > 0 ? ((int64_t) x) : ((int64_t) x - 1); }
+	inline double Lerp(const double t, const double a, const double b) { return a + t * (b - a); }
+
 	/*
 	 * This implementation is "Improved Noise" as presented by
 	 * Ken Perlin at Siggraph 2002. The 3D function is a direct port
@@ -13,12 +17,6 @@ namespace utils {
 	 * This is a highly reusable class. It has no dependencies
 	 * on any other file, apart from its own header file.
 	 */
-
-	// This is the new and improved, C(2) continuous interpolant
-	//#define Fade(t) (t * t * t * (t * (t * 6 - 15) + 10))
-
-	//#define FastFloor(x) (((x)>0) ? ((int)x) : ((int)x-1))
-	//#define Lerp(t, a, b) ((a) + (t)*((b)-(a)))
 
 
 	//---------------------------------------------------------------------
@@ -39,9 +37,9 @@ namespace utils {
 	 * is probably the most important aspect on most architectures.
 	 * This array is accessed a *lot* by the noise functions.
 	 * A vector-valued noise over 3D accesses it 96 times, and a
-	 * float-valued 4D noise 64 times. We want this to fit in the cache!
+	 * double-valued 4D noise 64 times. We want this to fit in the cache!
 	 */
-	unsigned char PerlinNoise::perm[] = {
+	unsigned char perm[] = {
 		151,160,137,91,90,15,
 		131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
 		190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
@@ -87,46 +85,46 @@ namespace utils {
 	 * signed version of Perlin noise. To return values according to the
 	 * RenderMan specification from the SL noise() and pnoise() functions,
 	 * the noise values need to be scaled and offset to [0,1], like this:
-	 * float SLnoise = (PerlinNoise::Generate(x,y,z) + 1.0) * 0.5;
+	 * double SLnoise = (PerlinNoise::Generate(x,y,z) + 1.0) * 0.5;
 	 */
 
-	float PerlinNoise::grad(int hash, float x) const {
+	double PerlinNoise::GradientAt(int hash, double x) const {
 		int h = hash & 15;
-		float grad = 1.0 + (h & 7);  // Gradient value 1.0, 2.0, ..., 8.0
+		double grad = 1.0 + (h & 7);  // Gradient value 1.0, 2.0, ..., 8.0
 		if (h&8) grad = -grad;         // and a random sign for the gradient
 		return (grad * x);           // Multiply the gradient with the distance
 	}
 
-	float PerlinNoise::grad(int hash, float x, float y) const {
+	double PerlinNoise2D::GradientAt(int hash, double x, double y) const {
 		int h = hash & 7;      // Convert low 3 bits of hash code
-		float u = h<4 ? x : y;  // into 8 simple gradient directions,
-		float v = h<4 ? y : x;  // and compute the dot product with (x,y).
+		double u = h<4 ? x : y;  // into 8 simple gradient directions,
+		double v = h<4 ? y : x;  // and compute the dot product with (x,y).
 		return ((h&1)? -u : u) + ((h&2)? -2.0*v : 2.0*v);
 	}
 
-	float PerlinNoise::grad(int hash, float x, float y , float z) const {
+	double PerlinNoise::GradientAt(int hash, double x, double y , double z) const {
 		int h = hash & 15;     // Convert low 4 bits of hash code into 12 simple
-		float u = h<8 ? x : y; // gradient directions, and compute dot product.
-		float v = h<4 ? y : h==12||h==14 ? x : z; // Fix repeats at h = 12 to 15
+		double u = h<8 ? x : y; // gradient directions, and compute dot product.
+		double v = h<4 ? y : h==12||h==14 ? x : z; // Fix repeats at h = 12 to 15
 		return ((h&1)? -u : u) + ((h&2)? -v : v);
 	}
 
-	float PerlinNoise::grad(int hash, float x, float y, float z, float t) const {
+	double PerlinNoise::GradientAt(int hash, double x, double y, double z, double t) const {
 		int h = hash & 31;      // Convert low 5 bits of hash code into 32 simple
-		float u = h<24 ? x : y; // gradient directions, and compute dot product.
-		float v = h<16 ? y : z;
-		float w = h<8 ? z : t;
+		double u = h<24 ? x : y; // gradient directions, and compute dot product.
+		double v = h<16 ? y : z;
+		double w = h<8 ? z : t;
 		return ((h&1)? -u : u) + ((h&2)? -v : v) + ((h&4)? -w : w);
 	}
 
 	//---------------------------------------------------------------------
 	/**
-	 * 1D float Perlin noise, SL "noise()"
+	 * 1D double Perlin noise, SL "noise()"
 	 */
-	float PerlinNoise::Generate(float x) const {
+	double PerlinNoise::Generate(double x) const {
 		uint64_t ix0, ix1;
-		float fx0, fx1;
-		float s, n0, n1;
+		double fx0, fx1;
+		double s, n0, n1;
 
 		ix0 = FastFloor(x); // Integer part of x
 		fx0 = x - ix0;       // Fractional part of x
@@ -136,19 +134,19 @@ namespace utils {
 
 		s = Fade(fx0);
 
-		n0 = grad(perm[ ix0 ], fx0);
-		n1 = grad(perm[ ix1 ], fx1);
+		n0 = GradientAt(perm[ ix0 ], fx0);
+		n1 = GradientAt(perm[ ix1 ], fx1);
 		return 0.188f * (Lerp(s, n0, n1));
 	}
 
 	//---------------------------------------------------------------------
 	/**
-	 * 1D float Perlin periodic noise, SL "pnoise()"
+	 * 1D double Perlin periodic noise, SL "pnoise()"
 	 */
-	float PerlinNoise::GeneratePeriodic(float x, int px) const {
+	double PerlinNoise::GeneratePeriodic(double x, int px) const {
 		uint64_t ix0, ix1;
-		float fx0, fx1;
-		float s, n0, n1;
+		double fx0, fx1;
+		double s, n0, n1;
 
 		ix0 = FastFloor(x); // Integer part of x
 		fx0 = x - ix0;       // Fractional part of x
@@ -158,28 +156,28 @@ namespace utils {
 
 		s = Fade(fx0);
 
-		n0 = grad(perm[ ix0 ], fx0);
-		n1 = grad(perm[ ix1 ], fx1);
+		n0 = GradientAt(perm[ ix0 ], fx0);
+		n1 = GradientAt(perm[ ix1 ], fx1);
 		return 0.188f * (Lerp(s, n0, n1));
 	}
 
 
 	//---------------------------------------------------------------------
 	/**
-	 * 2D float Perlin noise.
+	 * 2D double Perlin noise.
 	 */
-	float PerlinNoise::Generate(float x, float y) const {
-		uint64_t ix0, iy0, ix1, iy1;
-		float fx0, fy0, fx1, fy1;
-		float s, t, nx0, nx1, n0, n1;
+	double PerlinNoise2D::Generate(double x, double y) const {
+		int64_t ix0, iy0, ix1, iy1;
+		double fx0, fy0, fx1, fy1;
+		double s, t, nx0, nx1, n0, n1;
 
-		ix0 = FastFloor(x); // Integer part of x
-		iy0 = FastFloor(y); // Integer part of y
-		fx0 = x - ix0;        // Fractional part of x
-		fy0 = y - iy0;        // Fractional part of y
+		ix0 = FastFloor(x);       // Integer part of x
+		iy0 = FastFloor(y);       // Integer part of y
+		fx0 = x - ix0;            // Fractional part of x
+		fy0 = y - iy0;            // Fractional part of y
 		fx1 = fx0 - 1.0f;
 		fy1 = fy0 - 1.0f;
-		ix1 = (ix0 + 1) & 0xff;  // Wrap to 0..255
+		ix1 = (ix0 + 1) & 0xff;   // Wrap to 0..255
 		iy1 = (iy0 + 1) & 0xff;
 		ix0 = ix0 & 0xff;
 		iy0 = iy0 & 0xff;
@@ -187,25 +185,37 @@ namespace utils {
 		t = Fade(fy0);
 		s = Fade(fx0);
 
-		nx0 = grad(perm[ix0 + perm[iy0]], fx0, fy0);
-		nx1 = grad(perm[ix0 + perm[iy1]], fx0, fy1);
+		nx0 = GradientAt(perm[ix0 + perm[iy0]], fx0, fy0);
+		nx1 = GradientAt(perm[ix0 + perm[iy1]], fx0, fy1);
 		n0 = Lerp(t, nx0, nx1);
 
-		nx0 = grad(perm[ix1 + perm[iy0]], fx1, fy0);
-		nx1 = grad(perm[ix1 + perm[iy1]], fx1, fy1);
+		nx0 = GradientAt(perm[ix1 + perm[iy0]], fx1, fy0);
+		nx1 = GradientAt(perm[ix1 + perm[iy1]], fx1, fy1);
 		n1 = Lerp(t, nx0, nx1);
 
 		return 0.507f * (Lerp(s, n0, n1));
 	}
 
+	double PerlinNoise2D::GenerateFractal(
+		const double x, const double y,
+		const uint8_t numOctaves, const double persistence
+	) const {
+		double noise = 0;
+		double curPersist = 1;
+		uint32_t frequency = 1;
+		for (uint8_t i = 0; i < numOctaves; i++, frequency *= 2, curPersist *= persistence)
+			noise += curPersist * (Generate(x * frequency, y * frequency) * 1.3 + 1) * 0.5;
+		return noise;
+	}
+
 	//---------------------------------------------------------------------
 	/**
-	 * 2D float Perlin periodic noise.
+	 * 2D double Perlin periodic noise.
 	 */
-	float PerlinNoise::GeneratePeriodic(float x, float y, int px, int py) const {
+	double PerlinNoise2D::GeneratePeriodic(double x, double y, int px, int py) const {
 		uint64_t ix0, iy0, ix1, iy1;
-		float fx0, fy0, fx1, fy1;
-		float s, t, nx0, nx1, n0, n1;
+		double fx0, fy0, fx1, fy1;
+		double s, t, nx0, nx1, n0, n1;
 
 		ix0 = FastFloor(x); // Integer part of x
 		iy0 = FastFloor(y); // Integer part of y
@@ -221,12 +231,12 @@ namespace utils {
 		t = Fade(fy0);
 		s = Fade(fx0);
 
-		nx0 = grad(perm[ix0 + perm[iy0]], fx0, fy0);
-		nx1 = grad(perm[ix0 + perm[iy1]], fx0, fy1);
+		nx0 = GradientAt(perm[ix0 + perm[iy0]], fx0, fy0);
+		nx1 = GradientAt(perm[ix0 + perm[iy1]], fx0, fy1);
 		n0 = Lerp(t, nx0, nx1);
 
-		nx0 = grad(perm[ix1 + perm[iy0]], fx1, fy0);
-		nx1 = grad(perm[ix1 + perm[iy1]], fx1, fy1);
+		nx0 = GradientAt(perm[ix1 + perm[iy0]], fx1, fy0);
+		nx1 = GradientAt(perm[ix1 + perm[iy1]], fx1, fy1);
 		n1 = Lerp(t, nx0, nx1);
 
 		return 0.507f * (Lerp(s, n0, n1));
@@ -235,13 +245,13 @@ namespace utils {
 
 	//---------------------------------------------------------------------
 	/**
-	 * 3D float Perlin noise.
+	 * 3D double Perlin noise.
 	 */
-	float PerlinNoise::Generate(float x, float y, float z) const {
+	double PerlinNoise::Generate(double x, double y, double z) const {
 		uint64_t ix0, iy0, ix1, iy1, iz0, iz1;
-		float fx0, fy0, fz0, fx1, fy1, fz1;
-		float s, t, r;
-		float nxy0, nxy1, nx0, nx1, n0, n1;
+		double fx0, fy0, fz0, fx1, fy1, fz1;
+		double s, t, r;
+		double nxy0, nxy1, nx0, nx1, n0, n1;
 
 		ix0 = FastFloor(x); // Integer part of x
 		iy0 = FastFloor(y); // Integer part of y
@@ -263,22 +273,22 @@ namespace utils {
 		t = Fade(fy0);
 		s = Fade(fx0);
 
-		nxy0 = grad(perm[ix0 + perm[iy0 + perm[iz0]]], fx0, fy0, fz0);
-		nxy1 = grad(perm[ix0 + perm[iy0 + perm[iz1]]], fx0, fy0, fz1);
+		nxy0 = GradientAt(perm[ix0 + perm[iy0 + perm[iz0]]], fx0, fy0, fz0);
+		nxy1 = GradientAt(perm[ix0 + perm[iy0 + perm[iz1]]], fx0, fy0, fz1);
 		nx0 = Lerp(r, nxy0, nxy1);
 
-		nxy0 = grad(perm[ix0 + perm[iy1 + perm[iz0]]], fx0, fy1, fz0);
-		nxy1 = grad(perm[ix0 + perm[iy1 + perm[iz1]]], fx0, fy1, fz1);
+		nxy0 = GradientAt(perm[ix0 + perm[iy1 + perm[iz0]]], fx0, fy1, fz0);
+		nxy1 = GradientAt(perm[ix0 + perm[iy1 + perm[iz1]]], fx0, fy1, fz1);
 		nx1 = Lerp(r, nxy0, nxy1);
 
 		n0 = Lerp(t, nx0, nx1);
 
-		nxy0 = grad(perm[ix1 + perm[iy0 + perm[iz0]]], fx1, fy0, fz0);
-		nxy1 = grad(perm[ix1 + perm[iy0 + perm[iz1]]], fx1, fy0, fz1);
+		nxy0 = GradientAt(perm[ix1 + perm[iy0 + perm[iz0]]], fx1, fy0, fz0);
+		nxy1 = GradientAt(perm[ix1 + perm[iy0 + perm[iz1]]], fx1, fy0, fz1);
 		nx0 = Lerp(r, nxy0, nxy1);
 
-		nxy0 = grad(perm[ix1 + perm[iy1 + perm[iz0]]], fx1, fy1, fz0);
-		nxy1 = grad(perm[ix1 + perm[iy1 + perm[iz1]]], fx1, fy1, fz1);
+		nxy0 = GradientAt(perm[ix1 + perm[iy1 + perm[iz0]]], fx1, fy1, fz0);
+		nxy1 = GradientAt(perm[ix1 + perm[iy1 + perm[iz1]]], fx1, fy1, fz1);
 		nx1 = Lerp(r, nxy0, nxy1);
 
 		n1 = Lerp(t, nx0, nx1);
@@ -288,13 +298,13 @@ namespace utils {
 
 	//---------------------------------------------------------------------
 	/** 
-	 * 3D float Perlin periodic noise.
+	 * 3D double Perlin periodic noise.
 	 */
-	float PerlinNoise::GeneratePeriodic(float x, float y, float z, int px, int py, int pz) const {
+	double PerlinNoise::GeneratePeriodic(double x, double y, double z, int px, int py, int pz) const {
 		uint64_t ix0, iy0, ix1, iy1, iz0, iz1;
-		float fx0, fy0, fz0, fx1, fy1, fz1;
-		float s, t, r;
-		float nxy0, nxy1, nx0, nx1, n0, n1;
+		double fx0, fy0, fz0, fx1, fy1, fz1;
+		double s, t, r;
+		double nxy0, nxy1, nx0, nx1, n0, n1;
 
 		ix0 = FastFloor(x); // Integer part of x
 		iy0 = FastFloor(y); // Integer part of y
@@ -316,22 +326,22 @@ namespace utils {
 		t = Fade(fy0);
 		s = Fade(fx0);
 
-		nxy0 = grad(perm[ix0 + perm[iy0 + perm[iz0]]], fx0, fy0, fz0);
-		nxy1 = grad(perm[ix0 + perm[iy0 + perm[iz1]]], fx0, fy0, fz1);
+		nxy0 = GradientAt(perm[ix0 + perm[iy0 + perm[iz0]]], fx0, fy0, fz0);
+		nxy1 = GradientAt(perm[ix0 + perm[iy0 + perm[iz1]]], fx0, fy0, fz1);
 		nx0 = Lerp(r, nxy0, nxy1);
 
-		nxy0 = grad(perm[ix0 + perm[iy1 + perm[iz0]]], fx0, fy1, fz0);
-		nxy1 = grad(perm[ix0 + perm[iy1 + perm[iz1]]], fx0, fy1, fz1);
+		nxy0 = GradientAt(perm[ix0 + perm[iy1 + perm[iz0]]], fx0, fy1, fz0);
+		nxy1 = GradientAt(perm[ix0 + perm[iy1 + perm[iz1]]], fx0, fy1, fz1);
 		nx1 = Lerp(r, nxy0, nxy1);
 
 		n0 = Lerp(t, nx0, nx1);
 
-		nxy0 = grad(perm[ix1 + perm[iy0 + perm[iz0]]], fx1, fy0, fz0);
-		nxy1 = grad(perm[ix1 + perm[iy0 + perm[iz1]]], fx1, fy0, fz1);
+		nxy0 = GradientAt(perm[ix1 + perm[iy0 + perm[iz0]]], fx1, fy0, fz0);
+		nxy1 = GradientAt(perm[ix1 + perm[iy0 + perm[iz1]]], fx1, fy0, fz1);
 		nx0 = Lerp(r, nxy0, nxy1);
 
-		nxy0 = grad(perm[ix1 + perm[iy1 + perm[iz0]]], fx1, fy1, fz0);
-		nxy1 = grad(perm[ix1 + perm[iy1 + perm[iz1]]], fx1, fy1, fz1);
+		nxy0 = GradientAt(perm[ix1 + perm[iy1 + perm[iz0]]], fx1, fy1, fz0);
+		nxy1 = GradientAt(perm[ix1 + perm[iy1 + perm[iz1]]], fx1, fy1, fz1);
 		nx1 = Lerp(r, nxy0, nxy1);
 
 		n1 = Lerp(t, nx0, nx1);
@@ -342,14 +352,14 @@ namespace utils {
 
 	//---------------------------------------------------------------------
 	/**
-	 * 4D float Perlin noise.
+	 * 4D double Perlin noise.
 	 */
 
-	float PerlinNoise::Generate(float x, float y, float z, float w) const {
+	double PerlinNoise::Generate(double x, double y, double z, double w) const {
 		uint64_t ix0, iy0, iz0, iw0, ix1, iy1, iz1, iw1;
-		float fx0, fy0, fz0, fw0, fx1, fy1, fz1, fw1;
-		float s, t, r, q;
-		float nxyz0, nxyz1, nxy0, nxy1, nx0, nx1, n0, n1;
+		double fx0, fy0, fz0, fw0, fx1, fy1, fz1, fw1;
+		double s, t, r, q;
+		double nxyz0, nxyz1, nxy0, nxy1, nx0, nx1, n0, n1;
 
 		ix0 = FastFloor(x); // Integer part of x
 		iy0 = FastFloor(y); // Integer part of y
@@ -377,44 +387,44 @@ namespace utils {
 		t = Fade(fy0);
 		s = Fade(fx0);
 
-		nxyz0 = grad(perm[ix0 + perm[iy0 + perm[iz0 + perm[iw0]]]], fx0, fy0, fz0, fw0);
-		nxyz1 = grad(perm[ix0 + perm[iy0 + perm[iz0 + perm[iw1]]]], fx0, fy0, fz0, fw1);
+		nxyz0 = GradientAt(perm[ix0 + perm[iy0 + perm[iz0 + perm[iw0]]]], fx0, fy0, fz0, fw0);
+		nxyz1 = GradientAt(perm[ix0 + perm[iy0 + perm[iz0 + perm[iw1]]]], fx0, fy0, fz0, fw1);
 		nxy0 = Lerp(q, nxyz0, nxyz1);
 		
-		nxyz0 = grad(perm[ix0 + perm[iy0 + perm[iz1 + perm[iw0]]]], fx0, fy0, fz1, fw0);
-		nxyz1 = grad(perm[ix0 + perm[iy0 + perm[iz1 + perm[iw1]]]], fx0, fy0, fz1, fw1);
+		nxyz0 = GradientAt(perm[ix0 + perm[iy0 + perm[iz1 + perm[iw0]]]], fx0, fy0, fz1, fw0);
+		nxyz1 = GradientAt(perm[ix0 + perm[iy0 + perm[iz1 + perm[iw1]]]], fx0, fy0, fz1, fw1);
 		nxy1 = Lerp(q, nxyz0, nxyz1);
 		
 		nx0 = Lerp (r, nxy0, nxy1);
 
-		nxyz0 = grad(perm[ix0 + perm[iy1 + perm[iz0 + perm[iw0]]]], fx0, fy1, fz0, fw0);
-		nxyz1 = grad(perm[ix0 + perm[iy1 + perm[iz0 + perm[iw1]]]], fx0, fy1, fz0, fw1);
+		nxyz0 = GradientAt(perm[ix0 + perm[iy1 + perm[iz0 + perm[iw0]]]], fx0, fy1, fz0, fw0);
+		nxyz1 = GradientAt(perm[ix0 + perm[iy1 + perm[iz0 + perm[iw1]]]], fx0, fy1, fz0, fw1);
 		nxy0 = Lerp(q, nxyz0, nxyz1);
 		
-		nxyz0 = grad(perm[ix0 + perm[iy1 + perm[iz1 + perm[iw0]]]], fx0, fy1, fz1, fw0);
-		nxyz1 = grad(perm[ix0 + perm[iy1 + perm[iz1 + perm[iw1]]]], fx0, fy1, fz1, fw1);
+		nxyz0 = GradientAt(perm[ix0 + perm[iy1 + perm[iz1 + perm[iw0]]]], fx0, fy1, fz1, fw0);
+		nxyz1 = GradientAt(perm[ix0 + perm[iy1 + perm[iz1 + perm[iw1]]]], fx0, fy1, fz1, fw1);
 		nxy1 = Lerp(q, nxyz0, nxyz1);
 
 		nx1 = Lerp (r, nxy0, nxy1);
 
 		n0 = Lerp(t, nx0, nx1);
 
-		nxyz0 = grad(perm[ix1 + perm[iy0 + perm[iz0 + perm[iw0]]]], fx1, fy0, fz0, fw0);
-		nxyz1 = grad(perm[ix1 + perm[iy0 + perm[iz0 + perm[iw1]]]], fx1, fy0, fz0, fw1);
+		nxyz0 = GradientAt(perm[ix1 + perm[iy0 + perm[iz0 + perm[iw0]]]], fx1, fy0, fz0, fw0);
+		nxyz1 = GradientAt(perm[ix1 + perm[iy0 + perm[iz0 + perm[iw1]]]], fx1, fy0, fz0, fw1);
 		nxy0 = Lerp(q, nxyz0, nxyz1);
 		
-		nxyz0 = grad(perm[ix1 + perm[iy0 + perm[iz1 + perm[iw0]]]], fx1, fy0, fz1, fw0);
-		nxyz1 = grad(perm[ix1 + perm[iy0 + perm[iz1 + perm[iw1]]]], fx1, fy0, fz1, fw1);
+		nxyz0 = GradientAt(perm[ix1 + perm[iy0 + perm[iz1 + perm[iw0]]]], fx1, fy0, fz1, fw0);
+		nxyz1 = GradientAt(perm[ix1 + perm[iy0 + perm[iz1 + perm[iw1]]]], fx1, fy0, fz1, fw1);
 		nxy1 = Lerp(q, nxyz0, nxyz1);
 
 		nx0 = Lerp (r, nxy0, nxy1);
 
-		nxyz0 = grad(perm[ix1 + perm[iy1 + perm[iz0 + perm[iw0]]]], fx1, fy1, fz0, fw0);
-		nxyz1 = grad(perm[ix1 + perm[iy1 + perm[iz0 + perm[iw1]]]], fx1, fy1, fz0, fw1);
+		nxyz0 = GradientAt(perm[ix1 + perm[iy1 + perm[iz0 + perm[iw0]]]], fx1, fy1, fz0, fw0);
+		nxyz1 = GradientAt(perm[ix1 + perm[iy1 + perm[iz0 + perm[iw1]]]], fx1, fy1, fz0, fw1);
 		nxy0 = Lerp(q, nxyz0, nxyz1);
 		
-		nxyz0 = grad(perm[ix1 + perm[iy1 + perm[iz1 + perm[iw0]]]], fx1, fy1, fz1, fw0);
-		nxyz1 = grad(perm[ix1 + perm[iy1 + perm[iz1 + perm[iw1]]]], fx1, fy1, fz1, fw1);
+		nxyz0 = GradientAt(perm[ix1 + perm[iy1 + perm[iz1 + perm[iw0]]]], fx1, fy1, fz1, fw0);
+		nxyz1 = GradientAt(perm[ix1 + perm[iy1 + perm[iz1 + perm[iw1]]]], fx1, fy1, fz1, fw1);
 		nxy1 = Lerp(q, nxyz0, nxyz1);
 
 		nx1 = Lerp (r, nxy0, nxy1);
@@ -426,17 +436,17 @@ namespace utils {
 
 	//---------------------------------------------------------------------
 	/**
-	 * 4D float Perlin periodic noise.
+	 * 4D double Perlin periodic noise.
 	 */
 
-	float PerlinNoise::GeneratePeriodic(
-		float x, float y, float z, float w,
+	double PerlinNoise::GeneratePeriodic(
+		double x, double y, double z, double w,
 		int px, int py, int pz, int pw
 	) const {
 		uint64_t ix0, iy0, iz0, iw0, ix1, iy1, iz1, iw1;
-		float fx0, fy0, fz0, fw0, fx1, fy1, fz1, fw1;
-		float s, t, r, q;
-		float nxyz0, nxyz1, nxy0, nxy1, nx0, nx1, n0, n1;
+		double fx0, fy0, fz0, fw0, fx1, fy1, fz1, fw1;
+		double s, t, r, q;
+		double nxyz0, nxyz1, nxy0, nxy1, nx0, nx1, n0, n1;
 
 		ix0 = FastFloor(x);   // Integer part of x
 		iy0 = FastFloor(y);   // Integer part of y
@@ -464,44 +474,44 @@ namespace utils {
 		t = Fade(fy0);
 		s = Fade(fx0);
 
-		nxyz0 = grad(perm[ix0 + perm[iy0 + perm[iz0 + perm[iw0]]]], fx0, fy0, fz0, fw0);
-		nxyz1 = grad(perm[ix0 + perm[iy0 + perm[iz0 + perm[iw1]]]], fx0, fy0, fz0, fw1);
+		nxyz0 = GradientAt(perm[ix0 + perm[iy0 + perm[iz0 + perm[iw0]]]], fx0, fy0, fz0, fw0);
+		nxyz1 = GradientAt(perm[ix0 + perm[iy0 + perm[iz0 + perm[iw1]]]], fx0, fy0, fz0, fw1);
 		nxy0 = Lerp(q, nxyz0, nxyz1);
 		
-		nxyz0 = grad(perm[ix0 + perm[iy0 + perm[iz1 + perm[iw0]]]], fx0, fy0, fz1, fw0);
-		nxyz1 = grad(perm[ix0 + perm[iy0 + perm[iz1 + perm[iw1]]]], fx0, fy0, fz1, fw1);
+		nxyz0 = GradientAt(perm[ix0 + perm[iy0 + perm[iz1 + perm[iw0]]]], fx0, fy0, fz1, fw0);
+		nxyz1 = GradientAt(perm[ix0 + perm[iy0 + perm[iz1 + perm[iw1]]]], fx0, fy0, fz1, fw1);
 		nxy1 = Lerp(q, nxyz0, nxyz1);
 		
 		nx0 = Lerp (r, nxy0, nxy1);
 
-		nxyz0 = grad(perm[ix0 + perm[iy1 + perm[iz0 + perm[iw0]]]], fx0, fy1, fz0, fw0);
-		nxyz1 = grad(perm[ix0 + perm[iy1 + perm[iz0 + perm[iw1]]]], fx0, fy1, fz0, fw1);
+		nxyz0 = GradientAt(perm[ix0 + perm[iy1 + perm[iz0 + perm[iw0]]]], fx0, fy1, fz0, fw0);
+		nxyz1 = GradientAt(perm[ix0 + perm[iy1 + perm[iz0 + perm[iw1]]]], fx0, fy1, fz0, fw1);
 		nxy0 = Lerp(q, nxyz0, nxyz1);
 		
-		nxyz0 = grad(perm[ix0 + perm[iy1 + perm[iz1 + perm[iw0]]]], fx0, fy1, fz1, fw0);
-		nxyz1 = grad(perm[ix0 + perm[iy1 + perm[iz1 + perm[iw1]]]], fx0, fy1, fz1, fw1);
+		nxyz0 = GradientAt(perm[ix0 + perm[iy1 + perm[iz1 + perm[iw0]]]], fx0, fy1, fz1, fw0);
+		nxyz1 = GradientAt(perm[ix0 + perm[iy1 + perm[iz1 + perm[iw1]]]], fx0, fy1, fz1, fw1);
 		nxy1 = Lerp(q, nxyz0, nxyz1);
 
 		nx1 = Lerp (r, nxy0, nxy1);
 
 		n0 = Lerp(t, nx0, nx1);
 
-		nxyz0 = grad(perm[ix1 + perm[iy0 + perm[iz0 + perm[iw0]]]], fx1, fy0, fz0, fw0);
-		nxyz1 = grad(perm[ix1 + perm[iy0 + perm[iz0 + perm[iw1]]]], fx1, fy0, fz0, fw1);
+		nxyz0 = GradientAt(perm[ix1 + perm[iy0 + perm[iz0 + perm[iw0]]]], fx1, fy0, fz0, fw0);
+		nxyz1 = GradientAt(perm[ix1 + perm[iy0 + perm[iz0 + perm[iw1]]]], fx1, fy0, fz0, fw1);
 		nxy0 = Lerp(q, nxyz0, nxyz1);
 		
-		nxyz0 = grad(perm[ix1 + perm[iy0 + perm[iz1 + perm[iw0]]]], fx1, fy0, fz1, fw0);
-		nxyz1 = grad(perm[ix1 + perm[iy0 + perm[iz1 + perm[iw1]]]], fx1, fy0, fz1, fw1);
+		nxyz0 = GradientAt(perm[ix1 + perm[iy0 + perm[iz1 + perm[iw0]]]], fx1, fy0, fz1, fw0);
+		nxyz1 = GradientAt(perm[ix1 + perm[iy0 + perm[iz1 + perm[iw1]]]], fx1, fy0, fz1, fw1);
 		nxy1 = Lerp(q, nxyz0, nxyz1);
 
 		nx0 = Lerp (r, nxy0, nxy1);
 
-		nxyz0 = grad(perm[ix1 + perm[iy1 + perm[iz0 + perm[iw0]]]], fx1, fy1, fz0, fw0);
-		nxyz1 = grad(perm[ix1 + perm[iy1 + perm[iz0 + perm[iw1]]]], fx1, fy1, fz0, fw1);
+		nxyz0 = GradientAt(perm[ix1 + perm[iy1 + perm[iz0 + perm[iw0]]]], fx1, fy1, fz0, fw0);
+		nxyz1 = GradientAt(perm[ix1 + perm[iy1 + perm[iz0 + perm[iw1]]]], fx1, fy1, fz0, fw1);
 		nxy0 = Lerp(q, nxyz0, nxyz1);
 		
-		nxyz0 = grad(perm[ix1 + perm[iy1 + perm[iz1 + perm[iw0]]]], fx1, fy1, fz1, fw0);
-		nxyz1 = grad(perm[ix1 + perm[iy1 + perm[iz1 + perm[iw1]]]], fx1, fy1, fz1, fw1);
+		nxyz0 = GradientAt(perm[ix1 + perm[iy1 + perm[iz1 + perm[iw0]]]], fx1, fy1, fz1, fw0);
+		nxyz1 = GradientAt(perm[ix1 + perm[iy1 + perm[iz1 + perm[iw1]]]], fx1, fy1, fz1, fw1);
 		nxy1 = Lerp(q, nxyz0, nxyz1);
 
 		nx1 = Lerp (r, nxy0, nxy1);
