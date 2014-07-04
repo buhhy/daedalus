@@ -49,7 +49,7 @@ typedef std::tuple<utils::Vector2<int64_t>, uint64_t, uint32_t> DelaunayTestPara
 
 class DelaunayGridGraph : public testing::TestWithParam<DelaunayTestParam> {
 protected:
-	DelaunayDivideAndConquerBuilder2D Builder;
+	DelaunayBuilderDAC2D Builder;
 	DelaunayGraph * Graph;
 	std::vector<Vector2<>> Points;
 	std::vector<Vertex const *> Vertices;

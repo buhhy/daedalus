@@ -73,6 +73,11 @@ namespace utils {
 	}
 
 	template <typename T>
+	inline bool operator != (const Vector2<T> & lhs, const Vector2<T> & rhs) {
+		return lhs.X != rhs.X || lhs.Y != rhs.Y;
+	}
+
+	template <typename T>
 	inline bool operator < (const Vector2<T> & lhs, const Vector2<T> & rhs) {
 		return lhs.X == rhs.X ? lhs.Y < rhs.Y : lhs.X < rhs.X;
 	}
@@ -93,11 +98,11 @@ namespace utils {
 	/**
 	 * Returns -1: outside circumcircle, 0: on perimeter of circumcircle, 1: inside circumcircle
 	 */
-	int8_t IsWithinCircumcircle(const Vector2<> & point, const Circle2D & circle);
+	Int8 IsWithinCircumcircle(const Vector2<> & point, const Circle2D & circle);
 
 	/**
 	 * Returns -1: >180 degrees, 0: straight, 1: < 180
 	 */
-	int8_t FindWinding(const Vector2<> & p1, const Vector2<> & pivot, const Vector2<> & p3);
+	Int8 FindWinding(const Vector2<> & p1, const Vector2<> & pivot, const Vector2<> & p3);
 	double FindAngle(const Vector2<> & v1, const Vector2<> & v2);
 }

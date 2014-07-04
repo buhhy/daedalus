@@ -373,7 +373,7 @@ namespace utils {
 				isoThreshold, grid.points[3], grid.points[7], grid.values[3], grid.values[7]);
 
 		/* Create the triangle */
-		for (uint32_t i = 0; TriTable[cubeindex][i] != -1; i += 3) {
+		for (Uint32 i = 0; TriTable[cubeindex][i] != -1; i += 3) {
 			resultTries.push_back(Triangle(
 				vertlist[TriTable[cubeindex][i]],
 				vertlist[TriTable[cubeindex][i + 2]],

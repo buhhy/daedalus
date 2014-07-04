@@ -5,29 +5,33 @@
 #include <vector>
 
 namespace utils {
+	class IDelaunayDAC2DDebug;
+
 	/**
 	 * Basic divide and conquer algorithm and data structure taken from here:
 	 * http://www.geom.uiuc.edu/~samuelp/del_project.html. My implementation will handle
 	 * merging tileable graphs without consolidating them into a single graph.
 	 */
-	class DelaunayDivideAndConquerBuilder2D {
+	class DelaunayBuilderDAC2D {
 	public:
-		using InputPointList = std::vector<std::pair<utils::Vector2<>, uint64_t>>;
-		using GraphHullIndexArray = std::array<std::pair<DelaunayGraph *, uint32_t>, 4>;
-		using Tangent = std::pair<uint64_t, uint64_t>;
+		using InputPointList = std::vector<std::pair<utils::Vector2<>, Uint64>>;
+		using GraphHullIndexArray = std::array<std::pair<DelaunayGraph *, Uint32>, 4>;
+		using Tangent = std::pair<Uint64, Uint64>;
+		using AddedFaceList = std::vector<std::array<delaunay::Vertex *, 3>>;
 
 		using VertexComparator =
 			std::function<bool (delaunay::Vertex * const p1, delaunay::Vertex * const p2)>;
 
 		using NextIndexFunction =
-			std::function<uint64_t (const delaunay::ConvexHull &, uint64_t)>;
+			std::function<Uint64 (const delaunay::ConvexHull &, Uint64)>;
 
 		using FindWindingFunction =
-			std::function<int8_t (
+			std::function<Int8 (
 				delaunay::Vertex * const, delaunay::Vertex * const, delaunay::Vertex * const)>;
 
 	private:
-		uint32_t SubdivisionDepthCap;
+		Uint32 SubdivisionDepthCap;
+		std::shared_ptr<IDelaunayDAC2DDebug> Debugger;
 
 		void MergeDelaunay(
 			DelaunayGraph & leftGraph,
@@ -102,12 +106,15 @@ namespace utils {
 		delaunay::ConvexHull Divide(
 			DelaunayGraph & results,
 			std::vector<delaunay::Vertex *> & vertices,
-			const uint32_t subdivisionDepth) const;
+			const Uint32 subdivisionDepth) const;
 
 	public:
-		DelaunayDivideAndConquerBuilder2D() : SubdivisionDepthCap(0) {}
-		DelaunayDivideAndConquerBuilder2D(const uint32_t subdivisionDepthCap) :
-			SubdivisionDepthCap(subdivisionDepthCap) {}
+		DelaunayBuilderDAC2D() : SubdivisionDepthCap(0), Debugger(NULL) {}
+		DelaunayBuilderDAC2D(
+			const Uint32 subdivisionDepthCap,
+			const std::shared_ptr<IDelaunayDAC2DDebug> debugger
+		) : SubdivisionDepthCap(subdivisionDepthCap), Debugger(debugger)
+		{}
 
 		void BuildDelaunayGraph(
 			DelaunayGraph & graph,
@@ -115,8 +122,8 @@ namespace utils {
 
 		void MergeDelaunayTileEdge(
 			DelaunayGraph & leftGraph, DelaunayGraph & rightGraph,
-			const uint32_t lowerTangentLeft, const uint32_t lowerTangentRight,
-			const uint32_t upperTangentLeft, const uint32_t upperTangentRight) const;
+			const Uint32 lowerTangentLeft, const Uint32 lowerTangentRight,
+			const Uint32 upperTangentLeft, const Uint32 upperTangentRight) const;
 
 		/**
 		 * @param graphs An array containing the 4 corner Delaunay graphs in the following
@@ -125,5 +132,18 @@ namespace utils {
 		 *               that is used in the merging procedure.
 		 */
 		void MergeDelaunayTileCorner(GraphHullIndexArray & graphs) const;
+	};
+	
+	class IDelaunayDAC2DDebug {
+	public:
+		virtual void MergeStep(
+			const DelaunayGraph & leftGraph,
+			const DelaunayGraph & rightGraph,
+			const delaunay::ConvexHull & leftHull,
+			const delaunay::ConvexHull & rightHull,
+			const DelaunayBuilderDAC2D::Tangent & upperTangent,
+			const DelaunayBuilderDAC2D::Tangent & lowerTangent,
+			const DelaunayBuilderDAC2D::AddedFaceList & leftAddedFaces,
+			const DelaunayBuilderDAC2D::AddedFaceList & rightAddedFaces) = 0;
 	};
 }

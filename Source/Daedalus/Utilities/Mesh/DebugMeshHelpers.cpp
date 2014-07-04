@@ -13,7 +13,7 @@ namespace utils {
 		output.push_back({ f1, f2, f3 });
 	}
 
-	uint16_t CreatePrism(
+	Uint16 CreatePrism(
 		std::vector<Triangle> & output,
 		Vector3<> * const input
 	) {
@@ -38,7 +38,7 @@ namespace utils {
 		{ -1., 1., 1. }
 	};
 
-	uint16_t CreatePoint(
+	Uint16 CreatePoint(
 		std::vector<Triangle> & results, const Vector3<> & position, const float radius
 	) {
 		
@@ -47,13 +47,13 @@ namespace utils {
 
 		Vector3<> transformedVertices[8];
 
-		for (uint16_t i = 0; i < 8; i++)
+		for (Uint16 i = 0; i < 8; i++)
 			transformedVertices[i] = (transform * Vector4<>(CubeVertices[i], 1)).Truncate();
 
 		return CreatePrism(results, transformedVertices);
 	}
 
-	uint16_t CreateLine(
+	Uint16 CreateLine(
 		std::vector<Triangle> & results, const Vector3<> & startPoint,
 		const Vector3<> & endPoint, const float radius
 	) {
@@ -68,7 +68,7 @@ namespace utils {
 
 		Vector3<> transformedVertices[8];
 
-		for (uint16_t i = 0; i < 8; i++) {
+		for (Uint16 i = 0; i < 8; i++) {
 			if (CubeVertices[i].X < 0)
 				transformedVertices[i] = (startTransform * Vector4<>(CubeVertices[i], 1)).Truncate();
 			else

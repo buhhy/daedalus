@@ -8,12 +8,13 @@
 
 namespace utils {
 	using namespace delaunay;
-	using InputPointList = DelaunayDivideAndConquerBuilder2D::InputPointList;
-	using GraphHullIndexArray = DelaunayDivideAndConquerBuilder2D::GraphHullIndexArray;
-	using Tangent = DelaunayDivideAndConquerBuilder2D::Tangent;
-	using VertexComparator = DelaunayDivideAndConquerBuilder2D::VertexComparator;
-	using NextIndexFunction = DelaunayDivideAndConquerBuilder2D::NextIndexFunction;
-	using FindWindingFunction = DelaunayDivideAndConquerBuilder2D::FindWindingFunction;
+	using InputPointList = DelaunayBuilderDAC2D::InputPointList;
+	using GraphHullIndexArray = DelaunayBuilderDAC2D::GraphHullIndexArray;
+	using Tangent = DelaunayBuilderDAC2D::Tangent;
+	using VertexComparator = DelaunayBuilderDAC2D::VertexComparator;
+	using NextIndexFunction = DelaunayBuilderDAC2D::NextIndexFunction;
+	using FindWindingFunction = DelaunayBuilderDAC2D::FindWindingFunction;
+	using AddedFaceList = DelaunayBuilderDAC2D::AddedFaceList;
 
 	const VertexComparator HorizontalVertexComparator =
 		[] (Vertex * const v1, Vertex * const v2) {
@@ -29,7 +30,7 @@ namespace utils {
 			return std::abs(y) < FLOAT_ERROR ? p1.X < p2.X : y > 0;
 		};
 
-	void DelaunayDivideAndConquerBuilder2D::MergeDelaunay(
+	void DelaunayBuilderDAC2D::MergeDelaunay(
 		DelaunayGraph & leftGraph,
 		DelaunayGraph & rightGraph,
 		const ConvexHull & leftHull,
@@ -42,7 +43,7 @@ namespace utils {
 		bool takeLeft, takeRight;
 		bool isLeftDone = false, isRightDone = false;
 
-		const Vector2<int64_t> rightOffset = rightGraph.GraphOffset() - leftGraph.GraphOffset();
+		const Vector2<Int64> rightOffset = rightGraph.GraphOffset() - leftGraph.GraphOffset();
 
 		// If the left and right graphs are different, we need to the add an offset to the
 		// right graph since coordinates are local to the tile, and not absolute.
@@ -50,8 +51,8 @@ namespace utils {
 			return isSame ? input : Vector2<>(rightOffset.X + input.X, rightOffset.Y + input.Y);
 		};
 
-		std::vector<std::array<Vertex *, 3> > leftAddedFaces;
-		std::vector<std::array<Vertex *, 3> > rightAddedFaces;
+		AddedFaceList leftAddedFaces;
+		AddedFaceList rightAddedFaces;
 		std::deque<Vertex *> leftVertexQueue;
 		std::deque<Vertex *> rightVertexQueue;
 
@@ -70,6 +71,14 @@ namespace utils {
 		Face * faceIt = NULL;
 
 		do {
+			// DEBUG POINT
+			if (Debugger) {
+				Debugger->MergeStep(
+					leftGraph, rightGraph, leftHull, rightHull,
+					upperTangent, lowerTangent,
+					leftAddedFaces, rightAddedFaces);
+			}
+
 			foundLeft = false, foundRight = false;
 
 			if (isLeftDone) {
@@ -226,7 +235,7 @@ namespace utils {
 			rightGraph.AddFace(f[0], f[1], f[2]);
 	}
 
-	Tangent DelaunayDivideAndConquerBuilder2D::FindTangent(
+	Tangent DelaunayBuilderDAC2D::FindTangent(
 		const ConvexHull & leftHull,
 		const ConvexHull & rightHull,
 		const NextIndexFunction & nextLeftIndex,
@@ -236,10 +245,10 @@ namespace utils {
 		// Find the index of the closest vertex in the left hull to the centroid of the right
 		// hull, and do the same, but inverse for the right hull. This is a good starting point
 		// because these 2 vertices are guaranteed to form a non-intersecting edge.
-		uint64_t leftIndex = leftHull.ClosestVertexIndex(rightHull.Centroid());
-		uint64_t rightIndex = rightHull.ClosestVertexIndex(leftHull.Centroid());
-		uint64_t nextLeft = nextLeftIndex(leftHull, leftIndex);
-		uint64_t nextRight = nextRightIndex(rightHull, rightIndex);
+		Uint64 leftIndex = leftHull.ClosestVertexIndex(rightHull.Centroid());
+		Uint64 rightIndex = rightHull.ClosestVertexIndex(leftHull.Centroid());
+		Uint64 nextLeft = nextLeftIndex(leftHull, leftIndex);
+		Uint64 nextRight = nextRightIndex(rightHull, rightIndex);
 		
 		bool done;
 
@@ -248,7 +257,7 @@ namespace utils {
 			
 			// Loop until the next left vertex is below the tangent
 			while (true) {
-				int8_t winding = getWinding(
+				Int8 winding = getWinding(
 					leftHull[nextLeft], leftHull[leftIndex], rightHull[rightIndex]);
 
 				// If the next left is below the tangent, then we've reached the apex
@@ -270,7 +279,7 @@ namespace utils {
 			
 			// Loop until the next right vertex is below the tangent
 			while (true) {
-				int8_t winding = getWinding(
+				Int8 winding = getWinding(
 					rightHull[nextRight], leftHull[leftIndex], rightHull[rightIndex]);
 
 				// If the next right is below the tangent, then we've reached the apex
@@ -295,17 +304,17 @@ namespace utils {
 		return std::make_pair(leftIndex, rightIndex);
 	}
 
-	Tangent DelaunayDivideAndConquerBuilder2D::UpperTangent(
+	Tangent DelaunayBuilderDAC2D::UpperTangent(
 		const ConvexHull & leftHull,
 		const ConvexHull & rightHull
 	) const {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
 		return FindTangent(
 			leftHull, rightHull,
-			[] (const ConvexHull & leftHull, const uint64_t index) {
+			[] (const ConvexHull & leftHull, const Uint64 index) {
 				return leftHull.PrevIndex(index);
 			},
-			[] (const ConvexHull & rightHull, const uint64_t index) {
+			[] (const ConvexHull & rightHull, const Uint64 index) {
 				return rightHull.NextIndex(index);
 			},
 			[] (Vertex * const nextVert, Vertex * const leftVert, Vertex * const rightVert) {
@@ -313,17 +322,17 @@ namespace utils {
 			});
 	}
 
-	Tangent DelaunayDivideAndConquerBuilder2D::LowerTangent(
+	Tangent DelaunayBuilderDAC2D::LowerTangent(
 		const ConvexHull & leftHull,
 		const ConvexHull & rightHull
 	) const {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
 		return FindTangent(
 			leftHull, rightHull,
-			[] (const ConvexHull & leftHull, const uint64_t index) {
+			[] (const ConvexHull & leftHull, const Uint64 index) {
 				return leftHull.NextIndex(index);
 			},
-			[] (const ConvexHull & rightHull, const uint64_t index) {
+			[] (const ConvexHull & rightHull, const Uint64 index) {
 				return rightHull.PrevIndex(index);
 			},
 			[] (Vertex * const nextVert, Vertex * const leftVert, Vertex * const rightVert) {
@@ -331,7 +340,7 @@ namespace utils {
 			});
 	}
 
-	ConvexHull DelaunayDivideAndConquerBuilder2D::MergeConvexHulls(
+	ConvexHull DelaunayBuilderDAC2D::MergeConvexHulls(
 		const ConvexHull & leftHull,
 		const ConvexHull & rightHull,
 		const Tangent & upperTangent,
@@ -339,16 +348,16 @@ namespace utils {
 	) const {
 		ConvexHull newConvexHull;
 
-		uint64_t count = (upperTangent.first - lowerTangent.first + leftHull.Size()) %
+		Uint64 count = (upperTangent.first - lowerTangent.first + leftHull.Size()) %
 			leftHull.Size() + 1;
-		for (uint64_t i = lowerTangent.first, c = 0; c < count; c++, i++) {
+		for (Uint64 i = lowerTangent.first, c = 0; c < count; c++, i++) {
 			if (i >= leftHull.Size()) i -= leftHull.Size();
 			newConvexHull.AddVertex(leftHull[i]);
 		}
 		
 		count = (lowerTangent.second - upperTangent.second + rightHull.Size()) %
 			rightHull.Size() + 1;
-		for (uint64_t i = upperTangent.second, c = 0; c < count; c++, i++) {
+		for (Uint64 i = upperTangent.second, c = 0; c < count; c++, i++) {
 			if (i >= rightHull.Size()) i -= rightHull.Size();
 			newConvexHull.AddVertex(rightHull[i]);
 		}
@@ -356,7 +365,7 @@ namespace utils {
 		return newConvexHull;
 	}
 
-	void DelaunayDivideAndConquerBuilder2D::DivideVertexList(
+	void DelaunayBuilderDAC2D::DivideVertexList(
 		std::vector<Vertex *> & leftHalf, std::vector<Vertex *> & rightHalf,
 		std::vector<Vertex *> & vertices,
 		const VertexComparator & comparator
@@ -369,13 +378,13 @@ namespace utils {
 			rightHalf.push_back(vertices[i]);
 	}
 
-	ConvexHull DelaunayDivideAndConquerBuilder2D::Divide(
+	ConvexHull DelaunayBuilderDAC2D::Divide(
 		DelaunayGraph & results,
 		std::vector<Vertex *> & vertices,
-		const uint32_t currentSubdivisionDepth = 0
+		const Uint32 currentSubdivisionDepth = 0
 	) const {
 		// End condition when less than 4 vertices counted
-		uint64_t count = vertices.size();
+		Uint64 count = vertices.size();
 		if (count < 4) {
 			ConvexHull hull;
 			if (count == 3) {
@@ -383,14 +392,14 @@ namespace utils {
 				auto newFace = results.AddFace(vertices[0], vertices[1], vertices[2]);
 				
 				if (newFace != NULL) {
-					for (uint8_t i = 0u; i < newFace->VertexCount(); i++)
+					for (Uint8 i = 0u; i < newFace->VertexCount(); i++)
 						hull.AddVertex(newFace->Vertices[i]);
 				} else {
 					// The 3 points are colinear, add 2 edges instead
 					results.AddFace(vertices[0], vertices[1]);
 					results.AddFace(vertices[1], vertices[2]);
 
-					for (uint8_t i = 0u; i < 3; i++)
+					for (Uint8 i = 0u; i < 3; i++)
 						hull.AddVertex(vertices[i]);
 				}
 			} else if (count == 2) {
@@ -399,7 +408,7 @@ namespace utils {
 					vertices[0],
 					vertices[1]);
 
-				for (uint8_t i = 0u; i < newFace->VertexCount(); i++)
+				for (Uint8 i = 0u; i < newFace->VertexCount(); i++)
 					hull.AddVertex(newFace->Vertices[i]);
 			} else {
 				assert(!"Divide: we should never divide to the point where there are less than 2 vertices");
@@ -434,7 +443,7 @@ namespace utils {
 	 * Public
 	 */
 
-	void DelaunayDivideAndConquerBuilder2D::BuildDelaunayGraph(
+	void DelaunayBuilderDAC2D::BuildDelaunayGraph(
 		DelaunayGraph & graph,
 		const InputPointList & inputPoints
 	) const {
@@ -450,10 +459,10 @@ namespace utils {
 		//Test(graph);
 	}
 
-	void DelaunayDivideAndConquerBuilder2D::MergeDelaunayTileEdge(
+	void DelaunayBuilderDAC2D::MergeDelaunayTileEdge(
 		DelaunayGraph & leftGraph, DelaunayGraph & rightGraph,
-		const uint32_t lowerTangentLeft, const uint32_t lowerTangentRight,
-		const uint32_t upperTangentLeft, const uint32_t upperTangentRight
+		const Uint32 lowerTangentLeft, const Uint32 lowerTangentRight,
+		const Uint32 upperTangentLeft, const Uint32 upperTangentRight
 	) const {
 		MergeDelaunay(
 			leftGraph, rightGraph,
@@ -462,13 +471,13 @@ namespace utils {
 			Tangent(lowerTangentLeft, lowerTangentRight));
 	}
 
-	void DelaunayDivideAndConquerBuilder2D::MergeDelaunayTileCorner(GraphHullIndexArray & graphs) const {
-		const uint8_t size = 4;
+	void DelaunayBuilderDAC2D::MergeDelaunayTileCorner(GraphHullIndexArray & graphs) const {
+		const Uint8 size = 4;
 		std::array<utils::Vector2<>, size> points;
 		std::array<Vertex *, size> vertices;
 
 		// Get all 4 points with offsets to the top-left graph
-		for (uint8_t i = 0; i < size; i++) {
+		for (Uint8 i = 0; i < size; i++) {
 			auto & graph = graphs[i];
 			auto offset = graph.first->GraphOffset() - graphs[0].first->GraphOffset();
 			auto vertex = graph.first->ConvexHull[graph.second];
@@ -477,7 +486,7 @@ namespace utils {
 		}
 
 		// Determine which cross-edge to use by checking for collinearity and circumcircles
-		uint8_t p1, p2, p3, p4;
+		Uint8 p1, p2, p3, p4;
 		auto circumcircle1 = utils::CalculateCircumcircle(
 			points[0], points[1], points[2]);
 		auto circumcircle2 = utils::CalculateCircumcircle(
@@ -490,7 +499,7 @@ namespace utils {
 		}
 
 		// Add these 2 filler faces to every size
-		for (uint8_t i = 0; i < size; i++) {
+		for (Uint8 i = 0; i < size; i++) {
 			auto & graph = graphs[i].first;
 			graph->AddFace(vertices[p1], vertices[p2], vertices[p3]);
 			graph->AddFace(vertices[p4], vertices[p3], vertices[p2]);

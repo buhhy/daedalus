@@ -28,14 +28,14 @@ namespace terrain {
 		const BiomeRegionData & data,
 		const bool cornerX, const bool cornerY
 	) const {
-		const int8_t dirX = cornerX ? -1 : 1;
-		const int8_t dirY = cornerY ? -1 : 1;
-		const uint32_t startX = cornerX ? data.GetBiomeGridSize() - 1 : 0;
-		const uint32_t startY = cornerY ? data.GetBiomeGridSize() - 1 : 0;
-		const uint16_t cornerLimit = BiomeGenParams.BufferSize;
+		const Int8 dirX = cornerX ? -1 : 1;
+		const Int8 dirY = cornerY ? -1 : 1;
+		const Uint32 startX = cornerX ? data.GetBiomeGridSize() - 1 : 0;
+		const Uint32 startY = cornerY ? data.GetBiomeGridSize() - 1 : 0;
+		const Uint16 cornerLimit = BiomeGenParams.BufferSize;
 		const VertexWithHullIndex * vertex = NULL;
 
-		int8_t accumX = 0, accumY = 0;
+		Int8 accumX = 0, accumY = 0;
 		bool found;
 
 		do {
@@ -116,7 +116,7 @@ namespace terrain {
 		BiomeRegionData & tl, BiomeRegionData & tr,
 		BiomeRegionData & bl, BiomeRegionData & br
 	) {
-		const uint8_t size = 4;
+		const Uint8 size = 4;
 		std::array<BiomeRegionData *, size> data = {{ &tl, &tr, &bl, &br }};
 		std::array<std::shared_ptr<const VertexWithHullIndex>, size> vertices = {{
 			GetCornerHullVertex(tl, true, false),
@@ -125,9 +125,9 @@ namespace terrain {
 			GetCornerHullVertex(br, false, true)
 		}};
 
-		std::array<std::pair<utils::DelaunayGraph *, uint32_t>, size> input;
+		std::array<std::pair<utils::DelaunayGraph *, Uint32>, size> input;
 
-		for (uint8_t i = 0; i < size; i++)
+		for (Uint8 i = 0; i < size; i++)
 			input[i] = std::make_pair(&data[i]->DelaunayGraph, vertices[i]->second);
 
 		DelaunayBuilder->MergeDelaunayTileCorner(input);
@@ -162,8 +162,8 @@ namespace terrain {
 
 		// Load up the neighboring biome regions if they haven't already been cached
 		// and the sides haven't already been merged
-		for (int8_t offY = -1; offY <= 1; offY++) {
-			for (int8_t offX = -1; offX <= 1; offX++) {
+		for (Int8 offY = -1; offY <= 1; offY++) {
+			for (Int8 offX = -1; offX <= 1; offX++) {
 				if (offY != 0 || offX != 0) {
 					currentOffset.Reset(offX + biomeOffset.X, offY + biomeOffset.Y);
 					neighbors.Set(offX + 1, offY + 1, GetBiomeRegionFromCache(currentOffset));
@@ -175,8 +175,8 @@ namespace terrain {
 		std::unordered_set<BiomeRegionOffsetVector> mergedRegions;
 
 		// Merge shared edges
-		for (int8_t offY = -1; offY <= 1; offY++) {
-			for (int8_t offX = -1; offX <= 1; offX++) {
+		for (Int8 offY = -1; offY <= 1; offY++) {
+			for (Int8 offX = -1; offX <= 1; offX++) {
 				if ((offY == 0) ^ (offX == 0)) { // edge
 					// If the side hasn't been merged
 					if (!targetRegion->NeighboursMerged.Get(offX + 1, offY + 1)) {
@@ -189,8 +189,8 @@ namespace terrain {
 		}
 
 		// Merge shared corners
-		for (int8_t offY = -1; offY <= 0; offY++) {
-			for (int8_t offX = -1; offX <= 0; offX++) {
+		for (Int8 offY = -1; offY <= 0; offY++) {
+			for (Int8 offX = -1; offX <= 0; offX++) {
 				auto blr = neighbors.Get(offX + 1, offY + 1);
 				auto brr = neighbors.Get(offX + 2, offY + 1);
 				auto tlr = neighbors.Get(offX + 1, offY + 2);
@@ -255,7 +255,7 @@ namespace terrain {
 		auto randPosition = std::bind(
 			std::uniform_real_distribution<double>(0.1, 0.9), std::mt19937(mtSeed));
 
-		uint16_t numPoints = 0;
+		Uint16 numPoints = 0;
 		BiomeCellVertex point;
 		utils::Vector2<> offset;
 		
@@ -283,17 +283,17 @@ namespace terrain {
 
 	BiomeRegionDataPtr BiomeRegionLoader::GenerateBiomeRegionArea(
 		const BiomeRegionOffsetVector & offset,
-		const uint8_t radius
+		const Uint8 radius
 	) {
-		const uint8_t diameter = radius * 2 + 1;
+		const Uint8 diameter = radius * 2 + 1;
 
 		// Generate 8 surrounding regions as well as the current region
 		BiomeRegionDataPtr newRegion;
 		BiomeRegionOffsetVector currentOffset;
 		utils::Tensor2D<BiomeRegionDataPtr> loadedRegions(diameter, diameter);
 
-		for (int64_t offY = 0; offY < diameter; offY++) {
-			for (int64_t offX = 0; offX < diameter; offX++) {
+		for (Int64 offY = 0; offY < diameter; offY++) {
+			for (Int64 offX = 0; offX < diameter; offX++) {
 				currentOffset.Reset(offset.X - radius + offX, offset.Y - radius + offY);
 				// Don't generate region if it has already been generated
 				auto currentRegion = GetBiomeRegionFromCache(currentOffset);
@@ -306,8 +306,8 @@ namespace terrain {
 
 		// Run the merge algorithm on all generated regions
 		std::unordered_set<BiomeRegionOffsetVector> updatedRegions;
-		for (int64_t offY = 0; offY < diameter; offY++) {
-			for (int64_t offX = 0; offX < diameter; offX++) {
+		for (Int64 offY = 0; offY < diameter; offY++) {
+			for (Int64 offX = 0; offX < diameter; offX++) {
 				auto currentRegion = loadedRegions.Get(offX, offY);
 				auto updated = MergeRegion(currentRegion);
 				updatedRegions.insert(currentRegion->GetBiomeRegionOffset());
@@ -382,20 +382,20 @@ namespace terrain {
 		const auto foundResults = GetBiomeRegionAt(offset)->FindNearestPoint(position);
 
 		const auto & foundGridOffset = std::get<1>(foundResults);
-		const int8_t startX = foundGridOffset.X < 2 ? -1 : 0;
-		const int8_t startY = foundGridOffset.Y < 2 ? -1 : 0;
-		const int8_t endX = foundGridOffset.X >= BiomeGenParams.GridCellCount - 2 ? 1 : 0;
-		const int8_t endY = foundGridOffset.Y >= BiomeGenParams.GridCellCount - 2 ? 1 : 0;
+		const Int8 startX = foundGridOffset.X < 2 ? -1 : 0;
+		const Int8 startY = foundGridOffset.Y < 2 ? -1 : 0;
+		const Int8 endX = foundGridOffset.X >= BiomeGenParams.GridCellCount - 2 ? 1 : 0;
+		const Int8 endY = foundGridOffset.Y >= BiomeGenParams.GridCellCount - 2 ? 1 : 0;
 
 		BiomeRegionOffsetVector foundGlobalOffset(offset);
-		uint64_t vid = std::get<0>(foundResults);
+		Uint64 vid = std::get<0>(foundResults);
 		double min = std::get<2>(foundResults);
 
 		// If the found vertex is on the very edge of that particular region, then we must
 		// search surrounding regions to ensure we have the nearest possible vertex to
 		// the given location.
-		for (int8_t x = startX; x <= endX; x++) {
-			for (int8_t y = startY; y <= endY; y++) {
+		for (Int8 x = startX; x <= endX; x++) {
+			for (Int8 y = startY; y <= endY; y++) {
 				if (x != 0 || y != 0) {
 					auto newOffsetVector = BiomeRegionOffsetVector(offset.X + x, offset.Y + y);
 					auto compare = GetBiomeRegionAt(newOffsetVector)

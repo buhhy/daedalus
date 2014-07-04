@@ -13,14 +13,14 @@ namespace utils {
 	 */
 	class PerlinNoise2D {
 	private:
-		Vector2<int64_t> Offset;
-		uint64_t Seed;
+		Vector2<Int64> Offset;
+		Uint64 Seed;
 		
 		double GradientAt(int hash, double x, double y) const;
 
 	public:
-		PerlinNoise2D(const uint64_t seed) : Offset(0, 0), Seed(seed) {}
-		PerlinNoise2D(const Vector2<int64_t> & offset, const uint64_t seed) :
+		PerlinNoise2D(const Uint64 seed) : Offset(0, 0), Seed(seed) {}
+		PerlinNoise2D(const Vector2<Int64> & offset, const Uint64 seed) :
 			Offset(offset), Seed(seed)
 		{}
 
@@ -38,7 +38,7 @@ namespace utils {
 		 */
 		double GenerateFractal(
 			const double x, const double y,
-			const uint8_t numOctaves, const double persistence) const;
+			const Uint8 numOctaves, const double persistence) const;
 
 	};
 
@@ -60,7 +60,7 @@ namespace utils {
 		double Generate(double x, double y, double z, double w) const;
 		/*double GenerateFractal(
 			const double x, const double y, const double z,
-			const uint8_t numOctaves, const double persistence) const;*/
+			const Uint8 numOctaves, const double persistence) const;*/
 
 		/**
 		 * 1D, 2D, 3D and 4D double Perlin periodic noise, SL "pnoise()"

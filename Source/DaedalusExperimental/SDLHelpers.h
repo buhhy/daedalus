@@ -13,3 +13,8 @@ void Quit(const char * error, const bool sdl = false, const bool ttf = false, SD
 	if (sdl) SDL_Quit();
 	exit(1);
 }
+
+void ClearCanvas(SDL_Renderer * renderer) {
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+	SDL_RenderClear(renderer);
+}

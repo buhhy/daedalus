@@ -11,7 +11,7 @@ namespace utils {
 		 *********************************************************************/
 
 
-		uint64_t Vertex::AddFace(Face * const face) {
+		Uint64 Vertex::AddFace(Face * const face) {
 			IncidentFaces.insert({ face->FaceId(), face });
 			// TODO: remove - this is simply for verification
 			//IsSurrounded();
@@ -19,7 +19,7 @@ namespace utils {
 			return FaceCount();
 		}
 
-		uint64_t Vertex::RemoveFace(Face * const face) {
+		Uint64 Vertex::RemoveFace(Face * const face) {
 			assert(IncidentFaces.count(face->FaceId()) > 0 &&
 				"Vertex::RemoveFace: vertex does not contain this face ID");
 
@@ -38,7 +38,7 @@ namespace utils {
 			Face * curFace = GetFirstIncidentFace();
 			bool surrounded = true;
 
-			for (uint32_t i = 0; i < FaceCount(); i++) {
+			for (Uint32 i = 0; i < FaceCount(); i++) {
 				auto nextFace = curFace->GetAdjacentFaceCCW(this);
 				auto curVertex = curFace->GetCWVertex(this);
 				auto nextVertex = nextFace->GetCCWVertex(this);
@@ -60,14 +60,14 @@ namespace utils {
 		 *********************************************************************/
 		
 
-		int8_t Face::FindVertex(Vertex const * const vertex) const {
-			for (int8_t i = NumVertices - 1; i >= 0; i--)
+		Int8 Face::FindVertex(Vertex const * const vertex) const {
+			for (Int8 i = NumVertices - 1; i >= 0; i--)
 				if (Vertices[i] == vertex) return i;
 			return -1;
 		}
 
-		int8_t Face::FindFace(Face const * const face) const {
-			for (int8_t i = NumVertices - 1; i >= 0; i--)
+		Int8 Face::FindFace(Face const * const face) const {
+			for (Int8 i = NumVertices - 1; i >= 0; i--)
 				if (AdjacentFaces[i] == face) return i;
 			return -1;
 		}
@@ -79,7 +79,7 @@ namespace utils {
 			Face * nextFace = this;
 			const auto fcount = sharedVertex->FaceCount();
 
-			for (uint64_t c = 0; c < fcount; c++) {
+			for (Uint64 c = 0; c < fcount; c++) {
 				curFace = nextFace;
 				nextFace = nextFace->GetAdjacentFaceCCW(sharedVertex);
 				assert(nextFace != NULL &&
@@ -93,7 +93,7 @@ namespace utils {
 		}
 
 		Face * Face::GetAdjacentFaceCCW(Vertex const * const sharedVertex) {
-			int8_t found = FindVertex(sharedVertex);
+			Int8 found = FindVertex(sharedVertex);
 			// Shared vertex doesn't actually exist in this face
 			if (found == -1) return NULL;
 			return AdjacentFaces[GetCCWVertexIndex(found)];
@@ -127,33 +127,33 @@ namespace utils {
 			return bIsCollinear;
 		}
 		
-		int32_t ConvexHull::FindVertexById(const uint64_t id) const {
+		Int32 ConvexHull::FindVertexById(const Uint64 id) const {
 			for (size_t i = 0; i < Size(); i++)
 				if (HullVertices[i]->VertexId() == id) return i;
 			return -1;
 		}
 		
-		uint32_t ConvexHull::LeftVertexIndex() const {
+		Uint32 ConvexHull::LeftVertexIndex() const {
 			return MinIndex([] (Vertex * const v) { return v->GetPoint().X; });
 		}
 		
-		uint32_t ConvexHull::RightVertexIndex() const {
+		Uint32 ConvexHull::RightVertexIndex() const {
 			return MinIndex([] (Vertex * const v) { return -v->GetPoint().X; });
 		}
 		
 		
-		uint32_t ConvexHull::ClosestVertexIndex(const utils::Vector2<> & compare) const {
+		Uint32 ConvexHull::ClosestVertexIndex(const utils::Vector2<> & compare) const {
 			return MinIndex([&] (Vertex * const v) {
 				return (v->GetPoint() - compare).Length2();
 			});
 		}
 
-		uint32_t ConvexHull::MinIndex(const ConvexHull::VertexValueExtractor & valueOf) const {
+		Uint32 ConvexHull::MinIndex(const ConvexHull::VertexValueExtractor & valueOf) const {
 			if (HullVertices.empty())
 				return 0;
-			uint32_t minIndex = 0;
+			Uint32 minIndex = 0;
 			double threshold = valueOf(HullVertices[0]);
-			for (uint32_t i = 1u; i < HullVertices.size(); i++) {
+			for (Uint32 i = 1u; i < HullVertices.size(); i++) {
 				auto value = valueOf(HullVertices[i]);
 				if (value < threshold) {
 					minIndex = i;
@@ -163,26 +163,26 @@ namespace utils {
 			return minIndex;
 		}
 
-		uint64_t ConvexHull::GetSequence(
+		Uint64 ConvexHull::GetSequence(
 			std::deque<Vertex *> & deque,
-			const uint64_t start, const uint64_t end,
+			const Uint64 start, const Uint64 end,
 			const bool isCW
 		) const {
-			uint64_t c = 0, size = Size();
-			uint64_t count = GetRange(start, end, isCW);
-			int8_t direction = (isCW ? 1 : -1);
+			Uint64 c = 0, size = Size();
+			Uint64 count = GetRange(start, end, isCW);
+			Int8 direction = (isCW ? 1 : -1);
 
 			if (bIsCollinear) {
 				// If the hull is collinear, iterate in the original intended direction, then
 				// ping-pong when reaching an extreme rather than loop around
-				for (int64_t i = start; c < count; c++, i += direction) {
+				for (Int64 i = start; c < count; c++, i += direction) {
 					deque.push_back((*this)[(unsigned) i]);
 					if ((direction < 0 && i == 0) || (direction > 0 && i == size - 1))
 						direction *= -1;
 				}
 				return count;
 			} else {
-				for (int64_t i = start; c < count; c++, i += direction) {
+				for (Int64 i = start; c < count; c++, i += direction) {
 					if (i >= (signed) size) i -= size;
 					if (i < 0) i += size;
 					deque.push_back((*this)[(unsigned) i]);
@@ -191,15 +191,15 @@ namespace utils {
 			}
 		}
 
-		uint64_t ConvexHull::GetRange(
-			const uint64_t start, const uint64_t end,
+		Uint64 ConvexHull::GetRange(
+			const Uint64 start, const Uint64 end,
 			const bool isCW
 		) const {
-			uint64_t size = Size();
-			int8_t direction = (isCW ? 1 : -1);
+			Uint64 size = Size();
+			Int8 direction = (isCW ? 1 : -1);
 			if (bIsCollinear) {
-				int64_t compare = direction * (end - start);
-				uint64_t count;
+				Int64 compare = direction * (end - start);
+				Uint64 count;
 				if (compare <= 0) {
 					if (isCW)
 						count = (2 * (size - 1)) - end - start + 1;
@@ -211,7 +211,7 @@ namespace utils {
 
 				return count;
 			} else {
-				uint64_t count = (direction * (end - start) + size) % Size() + 1;
+				Uint64 count = (direction * (end - start) + size) % Size() + 1;
 				if (count == 1)
 					count += size;
 				return count;
@@ -255,7 +255,7 @@ namespace utils {
 
 		for (auto it : copy.Faces) {
 			auto & face = IdFaceMap.at(it->FaceId());
-			for (uint8_t i = 0; i < face->VertexCount(); i++)
+			for (Uint8 i = 0; i < face->VertexCount(); i++)
 				face->AdjacentFaces[i] = IdFaceMap.at(it->AdjacentFaces[i]->FaceId());
 		}
 
@@ -271,12 +271,12 @@ namespace utils {
 		ConvexHull = newHullVerts;
 	}
 	
-	std::pair<Face *, int8_t> DelaunayGraph::AdjustNewFaceAdjacencies(
+	std::pair<Face *, Int8> DelaunayGraph::AdjustNewFaceAdjacencies(
 		Face * const newFace,
-		const uint8_t pivotIndex
+		const Uint8 pivotIndex
 	) {
-		int8_t pivotCWIndex = newFace->GetCWVertexIndex(pivotIndex);
-		int8_t pivotCCWIndex = newFace->GetCCWVertexIndex(pivotIndex);
+		Int8 pivotCWIndex = newFace->GetCWVertexIndex(pivotIndex);
+		Int8 pivotCCWIndex = newFace->GetCCWVertexIndex(pivotIndex);
 
 		const auto pivotPoint = newFace->Vertices[pivotIndex];
 		const auto pivotCWPoint = newFace->Vertices[pivotCWIndex];
@@ -294,8 +294,8 @@ namespace utils {
 		// immediate CCW face.
 			
 		double CCWMinAngle = 10.0, CWMinAngle = 10.0;
-		int8_t CWVertexIndex = -1;
-		uint64_t index = 0;
+		Int8 CWVertexIndex = -1;
+		Uint64 index = 0;
 		Face * CCWFace = NULL, * CWFace = NULL;
 
 		Vector2<> CCWCompareEdge = pivotCWPoint->GetPoint() - pivotPoint->GetPoint();
@@ -304,9 +304,9 @@ namespace utils {
 		// Traverse faces currently at pivot point in CCW fashion, keeping the smallest
 		// available CCW angle, as well as the smallest available CW angle.
 		do {
-			int8_t otherPivotIndex = otherFace->FindVertex(pivotPoint);
-			int8_t otherPivotCWIndex = otherFace->GetCWVertexIndex(otherPivotIndex);
-			int8_t otherPivotCCWIndex = otherFace->GetCCWVertexIndex(otherPivotIndex);
+			Int8 otherPivotIndex = otherFace->FindVertex(pivotPoint);
+			Int8 otherPivotCWIndex = otherFace->GetCWVertexIndex(otherPivotIndex);
+			Int8 otherPivotCCWIndex = otherFace->GetCCWVertexIndex(otherPivotIndex);
 
 			// Get the CCW point from the pivot from the other face
 			const auto otherPivotCCW = otherFace->Vertices[otherPivotCCWIndex];
@@ -363,7 +363,7 @@ namespace utils {
 		return std::make_pair((Face *) NULL, -1);
 	}
 
-	void DelaunayGraph::AdjustRemovedFaceAdjacencies(Face * const face, const uint8_t pivotIndex) {
+	void DelaunayGraph::AdjustRemovedFaceAdjacencies(Face * const face, const Uint8 pivotIndex) {
 		Vertex * const pivot = face->Vertices[pivotIndex];
 		Face * const CCWFace = face->GetAdjacentFaceCCW(pivot);
 		Face * const CWFace = face->GetAdjacentFaceCW(pivot);
@@ -385,8 +385,8 @@ namespace utils {
 		CWFace->AdjacentFaces[CWFace->GetCCWVertexIndex(pivot)] = CCWFace;
 	}
 
-	uint64_t DelaunayGraph::GetNextFaceId() { return CurrentFaceId++; }
-	uint64_t DelaunayGraph::GetNextVertexId() { return CurrentVertexId++; }
+	Uint64 DelaunayGraph::GetNextFaceId() { return CurrentFaceId++; }
+	Uint64 DelaunayGraph::GetNextVertexId() { return CurrentVertexId++; }
 
 	Vertex * DelaunayGraph::AddVertexToCache(Vertex * const vertex) {
 		auto id = vertex->VertexId();
@@ -444,7 +444,7 @@ namespace utils {
 		}
 	}
 
-	Vertex * DelaunayGraph::AddVertex(const Vector2<> & point, const uint64_t id) {
+	Vertex * DelaunayGraph::AddVertex(const Vector2<> & point, const Uint64 id) {
 		return AddVertexToCache(new Vertex(Offset, point, id));
 	}
 
@@ -452,7 +452,7 @@ namespace utils {
 		Face * newFace = new Face(v1, v2, GetNextFaceId());
 
 		// Modify adjacencies
-		std::array<std::pair<Face *, uint8_t>, 3> adjusts = {{
+		std::array<std::pair<Face *, Uint8>, 3> adjusts = {{
 			AdjustNewFaceAdjacencies(newFace, 0),
 			AdjustNewFaceAdjacencies(newFace, 1)
 		}};
@@ -463,7 +463,7 @@ namespace utils {
 		}
 
 		// Add new face to face vertices
-		for (uint8_t i = 0; i < newFace->VertexCount(); i++)
+		for (Uint8 i = 0; i < newFace->VertexCount(); i++)
 			newFace->Vertices[i]->AddFace(newFace);
 
 		AddFaceToCache(newFace);
@@ -504,7 +504,7 @@ namespace utils {
 		Face * newFace = new Face(inV1, inV2, inV3, GetNextFaceId());
 
 		// Modify adjacencies
-		std::array<std::pair<Face *, int8_t>, 3> adjusts = {{
+		std::array<std::pair<Face *, Int8>, 3> adjusts = {{
 			AdjustNewFaceAdjacencies(newFace, 0),
 			AdjustNewFaceAdjacencies(newFace, 1),
 			AdjustNewFaceAdjacencies(newFace, 2)
@@ -516,7 +516,7 @@ namespace utils {
 		}
 
 		// Add new face to face vertices
-		for (uint8_t i = 0; i < newFace->VertexCount(); i++)
+		for (Uint8 i = 0; i < newFace->VertexCount(); i++)
 			newFace->Vertices[i]->AddFace(newFace);
 
 		AddFaceToCache(newFace);
@@ -527,9 +527,9 @@ namespace utils {
 	bool DelaunayGraph::RemoveFace(Face * const face) {
 		if (Faces.count(face) == 0)
 			return false;
-		for (uint8_t i = 0; i < face->VertexCount(); i++)
+		for (Uint8 i = 0; i < face->VertexCount(); i++)
 			AdjustRemovedFaceAdjacencies(face, i);
-		for (uint8_t i = 0; i < face->VertexCount(); i++)
+		for (Uint8 i = 0; i < face->VertexCount(); i++)
 			face->Vertices[i]->RemoveFace(face);
 		RemoveFaceFromCache(face);
 		delete face;
@@ -544,7 +544,7 @@ namespace utils {
 
 		bool found = false;
 		Face * foundFace = NULL;
-		for (uint64_t c = 0; c < v1->FaceCount(); c++) {
+		for (Uint64 c = 0; c < v1->FaceCount(); c++) {
 			found = curFace->FindVertex(v1) != -1 && curFace->FindVertex(v2) != -1;
 			if (found && (foundFace == NULL || foundFace->FaceId() < curFace->FaceId()))
 				foundFace = curFace;

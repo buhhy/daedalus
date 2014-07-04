@@ -1,28 +1,28 @@
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+
 #include "BiomeRegionRenderer.h"
 #include "SDLHelpers.h"
 
 #include <Utilities/DataStructures.h>
 #include <Utilities/Noise/Perlin.h>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-
 #include <iostream>
 
-const uint16_t SizeX = 800, SizeY = 800;
+const Uint16 SizeX = 800, SizeY = 800;
 
 void DrawNoise(
 	SDL_Renderer * renderer, const utils::PerlinNoise2D * generator,
-	const uint16_t sizeX, const uint16_t sizeY, const float scale
+	const Uint16 sizeX, const Uint16 sizeY, const float scale
 ) {
 	double min = 2, max = -2;
-	for (uint16_t x = 1; x <= sizeX; x++) {
-		for (uint16_t y = 1; y <= sizeY; y++) {
+	for (Uint16 x = 1; x <= sizeX; x++) {
+		for (Uint16 y = 1; y <= sizeY; y++) {
 			//double noise = (generator->Generate(x*0.12, y*0.12) * 1.3 + 1) * 0.5;
 			double noise = generator->GenerateFractal(x * 0.005, y * 0.005, 6u, 0.5) * 0.5;
 			if (noise < min) min = noise;
 			if (noise > max) max = noise;
-			uint8_t r = noise * 255, g = noise * 255, b = noise * 255;
+			Uint8 r = noise * 255, g = noise * 255, b = noise * 255;
 			SDL_SetRenderDrawColor(renderer, r, g, b, SDL_ALPHA_OPAQUE);
 			SDL_RenderDrawPoint(renderer, x, y);
 		}
@@ -50,7 +50,7 @@ int main(int argc, char ** argv) {
 	if (fontRegular == NULL)
 		Quit("TTF_OpenFont() Error: ", true, true, window);
 
-	BiomeRegionRenderer regionRenderer(SizeX, SizeY, fontRegular);
+	BiomeRegionRenderer regionRenderer(renderer, SizeX, SizeY, fontRegular);
 
 	bool running = true;
 	bool updated = false;
@@ -64,11 +64,9 @@ int main(int argc, char ** argv) {
 		}
 
 		if (!updated) {
-			SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-			SDL_RenderClear(renderer);
-			regionRenderer.DrawBiomeRegion(renderer, { -28, 3});
+			ClearCanvas(renderer);
+			regionRenderer.DrawBiomeRegion({ -28, 3});
 			//DrawNoise(renderer, generator, SizeX, SizeY, 0.005f);
-			SDL_RenderPresent(renderer);
 			updated = true;
 		}
 	}

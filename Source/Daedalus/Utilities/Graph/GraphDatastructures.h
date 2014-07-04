@@ -13,20 +13,20 @@ namespace utils {
 		class Vertex {
 		private:
 			Vector2<> Point;
-			uint64_t Id;
-			uint64_t NumEdges;
+			Uint64 Id;
+			Uint64 NumEdges;
 			Edge * ExitEdge;
 
 		public:
 			const Vector2<> & GetPoint() const { return Point; }
-			uint64_t VertexId() const { return Id; }
-			uint64_t EdgeCount() const { return NumEdges; }
+			Uint64 VertexId() const { return Id; }
+			Uint64 EdgeCount() const { return NumEdges; }
 			Edge * GetExitEdge() { return ExitEdge; }
 			
-			uint64_t AddEdge(Edge * const edge);
-			uint64_t RemoveEdge(Edge * const edge);
+			Uint64 AddEdge(Edge * const edge);
+			Uint64 RemoveEdge(Edge * const edge);
 
-			Vertex(const Vector2<> & point, const uint64_t id): Point(point), Id(id) {}
+			Vertex(const Vector2<> & point, const Uint64 id): Point(point), Id(id) {}
 
 		};
 
@@ -35,7 +35,7 @@ namespace utils {
 		 */
 		class Edge {
 		private:
-			uint64_t Id;
+			Uint64 Id;
 
 		public:
 			Vertex * Origin;
@@ -43,22 +43,22 @@ namespace utils {
 			Edge * NextLeft;
 			Edge * Twin;
 			
-			uint64_t VertexId() const { return Id; }
+			Uint64 VertexId() const { return Id; }
 
 		};
 
 		class Face {
 		private:
-			uint64_t Id;
-			uint64_t NumEdges;
+			Uint64 Id;
+			Uint64 NumEdges;
 			Edge * BorderEdge;
 
 		public:
-			uint64_t FaceId() const { return Id; }
-			uint64_t EdgeCount() const { return NumEdges; }
+			Uint64 FaceId() const { return Id; }
+			Uint64 EdgeCount() const { return NumEdges; }
 			Edge * GetBorderEdge() { return BorderEdge; }
 
-			Face(const uint64_t id): Id(id) {}
+			Face(const Uint64 id): Id(id) {}
 
 		};
 	}
@@ -81,8 +81,8 @@ namespace utils {
 			Edges.clear();
 		}
 			
-		inline uint64_t VertexCount() const { return Vertices.size(); }
-		inline uint64_t FaceCount() const { return Faces.size(); }
-		inline uint64_t EdgeCount() const { return Edges.size(); }
+		inline Uint64 VertexCount() const { return Vertices.size(); }
+		inline Uint64 FaceCount() const { return Faces.size(); }
+		inline Uint64 EdgeCount() const { return Edges.size(); }
 	};
 }

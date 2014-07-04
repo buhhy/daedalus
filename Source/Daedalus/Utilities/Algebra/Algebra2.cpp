@@ -21,14 +21,14 @@ namespace utils {
 		return Circle2D({ UX, UY }, radius);
 	}
 
-	int8_t IsWithinCircumcircle(const Vector2<> & point, const Circle2D & circle) {
+	Int8 IsWithinCircumcircle(const Vector2<> & point, const Circle2D & circle) {
 		auto result = (point - circle.Center).Length2() - (circle.Radius * circle.Radius);
 		if (result < -FLOAT_ERROR) return 1;
 		else if (result > FLOAT_ERROR) return -1;
 		else return 0;
 	}
 
-	int8_t FindWinding(const Vector2<> & p1, const Vector2<> & pivot, const Vector2<> & p3) {
+	Int8 FindWinding(const Vector2<> & p1, const Vector2<> & pivot, const Vector2<> & p3) {
 		double result = (p1 - pivot).Determinant(p3 - pivot);
 		if (result < -FLOAT_ERROR) return -1;       // Obtuse
 		if (result > FLOAT_ERROR) return 1;         // Acute

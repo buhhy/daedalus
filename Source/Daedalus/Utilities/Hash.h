@@ -4,17 +4,17 @@
 
 namespace utils {
 	template <typename T>
-	int64_t HashFromVector(
-		const int64_t seed,
+	Int64 HashFromVector(
+		const Int64 seed,
 		const Vector3<T> & absolutePos
 	) {
-		int64_t collapsed = (
+		Int64 collapsed = (
 			absolutePos.X * 6151 +
 			absolutePos.Y * 3079 +
 			absolutePos.Z * 1543 + 769) ^ ((seed + 123456789012345) * 389);
 
 		// FNV-1a hashing
-		int64_t hash = 14695981039346656037ull;
+		Int64 hash = 14695981039346656037ull;
 		for (auto i = 0; i < 8; i++) {
 			hash *= 1099511628211;
 			hash ^= collapsed & 0xff;
@@ -25,16 +25,16 @@ namespace utils {
 	}
 
 	template <typename T>
-	int64_t HashFromVector(
-		const int64_t seed,
+	Int64 HashFromVector(
+		const Int64 seed,
 		const Vector2<T> & absolutePos
 	) {
-		int64_t collapsed = (
+		Int64 collapsed = (
 			absolutePos.X * 6151 +
 			absolutePos.Y * 3079 +  1543) ^ ((seed + 123456789012345) * 769);
 
 		// FNV-1a hashing
-		int64_t hash = 14695981039346656037ull;
+		Int64 hash = 14695981039346656037ull;
 		for (auto i = 0; i < 8; i++) {
 			hash *= 1099511628211;
 			hash ^= collapsed & 0xff;

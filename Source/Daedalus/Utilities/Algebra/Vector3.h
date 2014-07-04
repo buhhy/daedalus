@@ -65,7 +65,7 @@ namespace std {
 	template <typename T>
 	struct hash<utils::Vector3<T> > {
 		size_t operator()(const utils::Vector3<T> & v) const {
-			int64_t seed = 0;
+			Int64 seed = 0;
 			std::hashCombine(seed, v.X);
 			std::hashCombine(seed, v.Y);
 			std::hashCombine(seed, v.Z);

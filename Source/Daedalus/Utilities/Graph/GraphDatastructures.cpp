@@ -12,7 +12,7 @@ namespace utils {
 	VoronoiGraph::VoronoiGraph(const DelaunayGraph & source) {
 		// Generate all Voronoi vertices from circumcenters of faces
 		auto dFaces = source.GetFaces();
-		std::unordered_map<uint64_t, Vertex *> vVertices;
+		std::unordered_map<Uint64, Vertex *> vVertices;
 		for (auto i : dFaces)
 			vVertices.insert({ i->FaceId(), new Vertex(i->GetCircumcircle().Center, i->FaceId()) });
 

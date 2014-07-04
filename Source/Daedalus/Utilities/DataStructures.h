@@ -82,8 +82,8 @@ namespace utils {
 		Tensor3() : Tensor3(0, 0, 0) {}
 		Tensor3(const size_t size) : Tensor3(size, size, size) {}
 		Tensor3(const size_t size, const T & value) : Tensor3(size, size, size, value) {}
-		Tensor3(const Vector3<uint16_t> & size) : Tensor3(size.X, size.Y, size.Z) {}
-		Tensor3(const Vector3<uint16_t> & size, const T & value) :
+		Tensor3(const Vector3<Uint16> & size) : Tensor3(size.X, size.Y, size.Z) {}
+		Tensor3(const Vector3<Uint16> & size, const T & value) :
 			Tensor3(size.X, size.Y, size.Z, value) {}
 		Tensor3(const Vector3<size_t> & size) : Tensor3(size.X, size.Y, size.Z) {}
 		Tensor3(const Vector3<size_t> & size, const T & value) :

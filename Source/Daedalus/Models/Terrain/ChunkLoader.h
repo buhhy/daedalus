@@ -8,7 +8,7 @@
 
 namespace terrain {
 	typedef std::unordered_map<
-		utils::Vector3<int64_t>,
+		utils::Vector3<Int64>,
 		std::shared_ptr<ChunkData>
 	> ChunkCache;
 
@@ -28,7 +28,7 @@ namespace terrain {
 		std::shared_ptr<ChunkData> GenerateMissingChunk(const ChunkOffsetVector & offset);
 
 		//void RunDiamondSquare(ChunkData & data);
-		void SetDefaultHeight(ChunkData & data, int32_t height);
+		void SetDefaultHeight(ChunkData & data, Int32 height);
 
 	public:
 		ChunkLoader(const TerrainGeneratorParameters & params);

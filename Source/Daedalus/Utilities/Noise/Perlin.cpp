@@ -3,7 +3,7 @@
 
 namespace utils {
 	inline double Fade(const double t) { return t * t * t * (t * (t * 6 - 15) + 10); }
-	inline int64_t FastFloor(const double x) { return x > 0 ? ((int64_t) x) : ((int64_t) x - 1); }
+	inline Int64 FastFloor(const double x) { return x > 0 ? ((Int64) x) : ((Int64) x - 1); }
 	inline double Lerp(const double t, const double a, const double b) { return a + t * (b - a); }
 
 	/*
@@ -122,7 +122,7 @@ namespace utils {
 	 * 1D double Perlin noise, SL "noise()"
 	 */
 	double PerlinNoise::Generate(double x) const {
-		uint64_t ix0, ix1;
+		Uint64 ix0, ix1;
 		double fx0, fx1;
 		double s, n0, n1;
 
@@ -144,7 +144,7 @@ namespace utils {
 	 * 1D double Perlin periodic noise, SL "pnoise()"
 	 */
 	double PerlinNoise::GeneratePeriodic(double x, int px) const {
-		uint64_t ix0, ix1;
+		Uint64 ix0, ix1;
 		double fx0, fx1;
 		double s, n0, n1;
 
@@ -167,7 +167,7 @@ namespace utils {
 	 * 2D double Perlin noise.
 	 */
 	double PerlinNoise2D::Generate(double x, double y) const {
-		int64_t ix0, iy0, ix1, iy1;
+		Int64 ix0, iy0, ix1, iy1;
 		double fx0, fy0, fx1, fy1;
 		double s, t, nx0, nx1, n0, n1;
 
@@ -198,12 +198,12 @@ namespace utils {
 
 	double PerlinNoise2D::GenerateFractal(
 		const double x, const double y,
-		const uint8_t numOctaves, const double persistence
+		const Uint8 numOctaves, const double persistence
 	) const {
 		double noise = 0;
 		double curPersist = 1;
-		uint32_t frequency = 1;
-		for (uint8_t i = 0; i < numOctaves; i++, frequency *= 2, curPersist *= persistence)
+		Uint32 frequency = 1;
+		for (Uint8 i = 0; i < numOctaves; i++, frequency *= 2, curPersist *= persistence)
 			noise += curPersist * (Generate(x * frequency, y * frequency) * 1.3 + 1) * 0.5;
 		return noise;
 	}
@@ -213,7 +213,7 @@ namespace utils {
 	 * 2D double Perlin periodic noise.
 	 */
 	double PerlinNoise2D::GeneratePeriodic(double x, double y, int px, int py) const {
-		uint64_t ix0, iy0, ix1, iy1;
+		Uint64 ix0, iy0, ix1, iy1;
 		double fx0, fy0, fx1, fy1;
 		double s, t, nx0, nx1, n0, n1;
 
@@ -248,7 +248,7 @@ namespace utils {
 	 * 3D double Perlin noise.
 	 */
 	double PerlinNoise::Generate(double x, double y, double z) const {
-		uint64_t ix0, iy0, ix1, iy1, iz0, iz1;
+		Uint64 ix0, iy0, ix1, iy1, iz0, iz1;
 		double fx0, fy0, fz0, fx1, fy1, fz1;
 		double s, t, r;
 		double nxy0, nxy1, nx0, nx1, n0, n1;
@@ -301,7 +301,7 @@ namespace utils {
 	 * 3D double Perlin periodic noise.
 	 */
 	double PerlinNoise::GeneratePeriodic(double x, double y, double z, int px, int py, int pz) const {
-		uint64_t ix0, iy0, ix1, iy1, iz0, iz1;
+		Uint64 ix0, iy0, ix1, iy1, iz0, iz1;
 		double fx0, fy0, fz0, fx1, fy1, fz1;
 		double s, t, r;
 		double nxy0, nxy1, nx0, nx1, n0, n1;
@@ -356,7 +356,7 @@ namespace utils {
 	 */
 
 	double PerlinNoise::Generate(double x, double y, double z, double w) const {
-		uint64_t ix0, iy0, iz0, iw0, ix1, iy1, iz1, iw1;
+		Uint64 ix0, iy0, iz0, iw0, ix1, iy1, iz1, iw1;
 		double fx0, fy0, fz0, fw0, fx1, fy1, fz1, fw1;
 		double s, t, r, q;
 		double nxyz0, nxyz1, nxy0, nxy1, nx0, nx1, n0, n1;
@@ -443,7 +443,7 @@ namespace utils {
 		double x, double y, double z, double w,
 		int px, int py, int pz, int pw
 	) const {
-		uint64_t ix0, iy0, iz0, iw0, ix1, iy1, iz1, iw1;
+		Uint64 ix0, iy0, iz0, iw0, ix1, iy1, iz1, iw1;
 		double fx0, fy0, fz0, fw0, fx1, fy1, fz1, fw1;
 		double s, t, r, q;
 		double nxyz0, nxyz1, nxy0, nxy1, nx0, nx1, n0, n1;

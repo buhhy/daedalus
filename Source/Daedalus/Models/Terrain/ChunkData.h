@@ -13,14 +13,14 @@ namespace terrain {
 	 */
 	struct ChunkData {
 		utils::Tensor3<float> DensityData;
-		utils::Tensor3<uint64_t> MaterialData;
+		utils::Tensor3<Uint64> MaterialData;
 
-		uint32_t ChunkGridSize;			// Size of the chunk in polygons
-		uint32_t ChunkFieldSize;			// Size of the chunk scalar field
+		Uint32 ChunkGridSize;			// Size of the chunk in polygons
+		Uint32 ChunkFieldSize;			// Size of the chunk scalar field
 		ChunkOffsetVector ChunkOffset;
 
 		ChunkData(
-			const uint32_t chunkSize,
+			const Uint32 chunkSize,
 			const ChunkOffsetVector & chunkOffset
 		) : ChunkGridSize(chunkSize),
 			ChunkFieldSize(chunkSize + 1),

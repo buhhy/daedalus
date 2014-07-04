@@ -39,12 +39,12 @@ namespace events {
 			const events::EventType type,
 			EventListener * const listener);
 
-		uint32_t Count(const events::EventType type) const;
+		Uint32 Count(const events::EventType type) const;
 
 		/**
 		 * Broadcast the event along with its event data to all listening interfaces.
 		 */
-		uint32_t BroadcastEvent(
+		Uint32 BroadcastEvent(
 			const events::EventType type,
 			const std::shared_ptr<events::EventData> & data);
 	};

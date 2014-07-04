@@ -51,17 +51,17 @@ namespace events {
 		}
 	}
 
-	uint32_t EventBus::Count(const events::EventType type) const {
+	Uint32 EventBus::Count(const events::EventType type) const {
 		if (Listeners.count(type) > 0)
 			return Listeners.at(type)->size();
 		return 0;
 	}
 
-	uint32_t EventBus::BroadcastEvent(
+	Uint32 EventBus::BroadcastEvent(
 		const events::EventType type,
 		const std::shared_ptr<events::EventData> & data
 	) {
-		uint32_t broadcastCount = 0;
+		Uint32 broadcastCount = 0;
 
 		if (Listeners.count(type) > 0) {
 			auto & listeners = Listeners.at(type);

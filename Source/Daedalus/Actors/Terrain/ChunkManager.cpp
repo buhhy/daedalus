@@ -20,13 +20,13 @@ void AChunkManager::UpdateChunksAt(const utils::Vector3<> & playerPosition) {
 	// Get player's current chunk location
 	auto playerChunkPos = genParams.ToChunkCoordinates(playerPosition);
 
-	int64_t fromX = playerChunkPos.X - RenderDistance;
-	int64_t fromY = playerChunkPos.Y - RenderDistance;
-	int64_t fromZ = playerChunkPos.Z - RenderDistance;
+	Int64 fromX = playerChunkPos.X - RenderDistance;
+	Int64 fromY = playerChunkPos.Y - RenderDistance;
+	Int64 fromZ = playerChunkPos.Z - RenderDistance;
 
-	int64_t toX = playerChunkPos.X + RenderDistance;
-	int64_t toY = playerChunkPos.Y + RenderDistance;
-	int64_t toZ = playerChunkPos.Z + RenderDistance;
+	Int64 toX = playerChunkPos.X + RenderDistance;
+	Int64 toY = playerChunkPos.Y + RenderDistance;
+	Int64 toZ = playerChunkPos.Z + RenderDistance;
 
 	// Once the player leaves an area, the chunks are cleared
 	for (auto chunkKey = LocalCache.begin(); chunkKey != LocalCache.end(); ) {
@@ -40,9 +40,9 @@ void AChunkManager::UpdateChunksAt(const utils::Vector3<> & playerPosition) {
 	}
 
 	// Begin preloading chunks for the area the player is near
-	for (int64_t x = fromX; x <= toX; x++) {
-		for (int64_t y = fromY; y <= toY; y++) {
-			for (int64_t z = fromZ; z <= toZ; z++) {
+	for (Int64 x = fromX; x <= toX; x++) {
+		for (Int64 y = fromY; y <= toY; y++) {
+			for (Int64 z = fromZ; z <= toZ; z++) {
 				offset.Reset(x, y, z);
 				// Chunk is cached already
 				if (LocalCache.count(offset) > 0) {

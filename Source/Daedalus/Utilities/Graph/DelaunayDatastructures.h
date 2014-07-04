@@ -13,8 +13,8 @@
  */
 namespace utils {
 	namespace delaunay {
-		typedef Vector2<int64_t> DelaunayId;                   // Positional ID
-		typedef std::pair<DelaunayId, uint64_t> GhostId;       // Position & local ID aggregate
+		typedef Vector2<Int64> DelaunayId;                   // Positional ID
+		typedef std::pair<DelaunayId, Uint64> GhostId;       // Position & local ID aggregate
 	}
 }
 
@@ -22,8 +22,8 @@ namespace std {
 	template <>
 	struct hash<utils::delaunay::GhostId> {
 		size_t operator()(const utils::delaunay::GhostId & g) const {
-			int64_t seed = 0;
-			std::hashCombine(seed, hash<utils::Vector2<int64_t>>()(g.first));
+			Int64 seed = 0;
+			std::hashCombine(seed, hash<utils::Vector2<Int64>>()(g.first));
 			std::hashCombine(seed, g.second);
 			return (unsigned) seed;
 		}
@@ -38,7 +38,7 @@ namespace utils {
 		class Face;
 		class ConvexHull;
 
-		typedef std::unordered_map<uint64_t, Face * const> IdFaceMap;
+		typedef std::unordered_map<Uint64, Face * const> IdFaceMap;
 
 
 
@@ -48,8 +48,8 @@ namespace utils {
 		class Vertex {
 		private:
 			IdFaceMap IncidentFaces;
-			uint64_t Id;
-			uint64_t ForeignId;      // Local ID of the vertex in the foreign graph
+			Uint64 Id;
+			Uint64 ForeignId;      // Local ID of the vertex in the foreign graph
 			Vector2<> Point;
 			bool bIsForeign;
 			
@@ -58,26 +58,26 @@ namespace utils {
 			// TODO: update copy constructor for face map
 			Vertex(
 				const DelaunayId & gid, const Vector2<> & point,
-				const uint64_t id, const uint64_t fid, bool isForeign
+				const Uint64 id, const Uint64 fid, bool isForeign
 			) : GraphOffset(gid), Point(point),
 				Id(id), ForeignId(fid), bIsForeign(isForeign)
 			{}
 
 		public:
-			Vertex(const DelaunayId & gid, const Vector2<> & point, const uint64_t id) :
+			Vertex(const DelaunayId & gid, const Vector2<> & point, const Uint64 id) :
 				Vertex(gid, point, id, 0, false)
 			{}
 			Vertex(
 				const DelaunayId & gid, const Vector2<> & point,
-				const uint64_t id, const uint64_t fid
+				const Uint64 id, const Uint64 fid
 			) : Vertex(gid, point, id, fid, true)
 			{}
 			Vertex(const Vertex & copy) :
 				Vertex(copy.GraphOffset, copy.Point, copy.Id, copy.ForeignId, copy.bIsForeign)
 			{}
 
-			uint64_t AddFace(Face * const face);
-			uint64_t RemoveFace(Face * const face);
+			Uint64 AddFace(Face * const face);
+			Uint64 RemoveFace(Face * const face);
 
 			/**
 			 * @return true if the current vertex is not part of the concave/convex hull
@@ -94,9 +94,9 @@ namespace utils {
 			}
 			inline const DelaunayId & ParentGraphOffset() const { return GraphOffset; }
 			inline const Vector2<> & GetPoint() const { return Point; }
-			inline uint64_t VertexId() const { return Id; };
-			inline uint64_t ForeignVertexId() const { return ForeignId; }
-			inline uint64_t FaceCount() const { return IncidentFaces.size(); }
+			inline Uint64 VertexId() const { return Id; };
+			inline Uint64 ForeignVertexId() const { return ForeignId; }
+			inline Uint64 FaceCount() const { return IncidentFaces.size(); }
 			inline bool IsForeign() const { return bIsForeign; }
 		};
 
@@ -132,23 +132,23 @@ namespace utils {
 		class Face {
 		private:
 			bool bIsDegenerate;
-			uint8_t NumVertices;
-			uint64_t Id;
+			Uint8 NumVertices;
+			Uint64 Id;
 
 		public:
 			std::array<Vertex *, 3> Vertices;        // Vertices of the triangle provided in CW order
 			std::array<Face *, 3> AdjacentFaces;     // Each adjacent face opposite of the vertex provided
 
 			inline bool IsDegenerate() const { return bIsDegenerate; }
-			inline uint8_t VertexCount() const { return NumVertices; }
-			inline uint64_t FaceId() const { return Id; }
+			inline Uint8 VertexCount() const { return NumVertices; }
+			inline Uint64 FaceId() const { return Id; }
 
 			/** Creates a degenerate face */
-			Face(Vertex * const v1, Vertex * const v2, const uint64_t id) :
+			Face(Vertex * const v1, Vertex * const v2, const Uint64 id) :
 				Face(v1, v2, NULL, id)
 			{}
 
-			Face(Vertex * const v1, Vertex * const v2, Vertex * const v3, const uint64_t id) :
+			Face(Vertex * const v1, Vertex * const v2, Vertex * const v3, const Uint64 id) :
 				Vertices({{ v1, v2, v3 }}),
 				AdjacentFaces({{ this, this, v3 == NULL ? NULL : this }}),
 				bIsDegenerate(v3 == NULL),
@@ -158,11 +158,11 @@ namespace utils {
 
 			Face(const Face & copy) : Face(copy.Vertices[0], copy.Vertices[1], copy.Vertices[2], copy.Id) {}
 
-			inline uint8_t GetCWVertexIndex(const uint8_t current) const {
+			inline Uint8 GetCWVertexIndex(const Uint8 current) const {
 				return (current + 1) % NumVertices;
 			}
 
-			inline int8_t GetCWVertexIndex(Vertex const * const current) const {
+			inline Int8 GetCWVertexIndex(Vertex const * const current) const {
 				auto value = FindVertex(current);
 				return value == -1 ? -1 : GetCWVertexIndex(value);
 			}
@@ -172,12 +172,12 @@ namespace utils {
 				return value == -1 ? NULL : Vertices[value];
 			}
 
-			inline uint8_t GetCCWVertexIndex(const uint8_t current) const {
+			inline Uint8 GetCCWVertexIndex(const Uint8 current) const {
 				// If degenerate, need to return the opposite vertex index instead
 				return (current + (IsDegenerate() ? 1 : 2)) % NumVertices;
 			}
 
-			inline int8_t GetCCWVertexIndex(Vertex const * const current) const {
+			inline Int8 GetCCWVertexIndex(Vertex const * const current) const {
 				auto value = FindVertex(current);
 				return value == -1 ? -1 : GetCCWVertexIndex(value);
 			}
@@ -187,8 +187,8 @@ namespace utils {
 				return value == -1 ? NULL : Vertices[value];
 			}
 
-			int8_t FindVertex(Vertex const * const vertex) const;
-			int8_t FindFace(Face const * const face) const;
+			Int8 FindVertex(Vertex const * const vertex) const;
+			Int8 FindFace(Face const * const face) const;
 			Face * GetAdjacentFaceCW(Vertex const * const sharedVertex);
 			Face * GetAdjacentFaceCCW(Vertex const * const sharedVertex);
 
@@ -244,10 +244,10 @@ namespace utils {
 			std::vector<Vertex *> HullVertices;
 			bool bIsCollinear;
 			
-			uint32_t MinIndex(const VertexValueExtractor & valueOf) const;
-			uint64_t GetSequence(
+			Uint32 MinIndex(const VertexValueExtractor & valueOf) const;
+			Uint64 GetSequence(
 				std::deque<Vertex *> & deque,
-				const uint64_t start, const uint64_t end,
+				const Uint64 start, const Uint64 end,
 				const bool isCw) const;
 		public:
 			ConvexHull() : bIsCollinear(false) {}
@@ -260,8 +260,8 @@ namespace utils {
 				return HullVertices.cend();
 			}
 
-			inline Vertex * operator [] (const uint64_t index) { return HullVertices[index]; }
-			inline Vertex * const operator [] (const uint64_t index) const {
+			inline Vertex * operator [] (const Uint64 index) { return HullVertices[index]; }
+			inline Vertex * const operator [] (const Uint64 index) const {
 				return HullVertices[index];
 			}
 
@@ -275,23 +275,23 @@ namespace utils {
 				return *this;
 			}
 
-			inline uint64_t Size() const { return HullVertices.size(); }
+			inline Uint64 Size() const { return HullVertices.size(); }
 
-			inline uint64_t GetSequenceCW(
+			inline Uint64 GetSequenceCW(
 				std::deque<Vertex *> & deque,
-				const uint64_t start, const uint64_t end
+				const Uint64 start, const Uint64 end
 			) const { return GetSequence(deque, start, end, true); }
 
-			inline uint64_t GetSequenceCCW(
+			inline Uint64 GetSequenceCCW(
 				std::deque<Vertex *> & deque,
-				const uint64_t start, const uint64_t end
+				const Uint64 start, const Uint64 end
 			) const { return GetSequence(deque, start, end, false); }
 
-			inline uint64_t NextIndex(const uint64_t current) const {
+			inline Uint64 NextIndex(const Uint64 current) const {
 				return (current + 1) % Size();
 			}
 
-			inline uint64_t PrevIndex(const uint64_t current) const {
+			inline Uint64 PrevIndex(const Uint64 current) const {
 				if (current < 1)
 					return Size() - 1;
 				return current - 1;
@@ -303,19 +303,19 @@ namespace utils {
 			 */
 			bool AddVertex(Vertex * const vert);
 			utils::Vector2<> Centroid() const;
-			int32_t FindVertexById(const uint64_t id) const;
+			Int32 FindVertexById(const Uint64 id) const;
 
-			uint32_t LeftVertexIndex() const;
-			uint32_t RightVertexIndex() const;
-			uint32_t ClosestVertexIndex(const utils::Vector2<> & compare) const;
+			Uint32 LeftVertexIndex() const;
+			Uint32 RightVertexIndex() const;
+			Uint32 ClosestVertexIndex(const utils::Vector2<> & compare) const;
 
-			uint64_t GetRange(const uint64_t start, const uint64_t end, const bool isCW) const;
+			Uint64 GetRange(const Uint64 start, const Uint64 end, const bool isCW) const;
 		};
 
 		/**
 		 * Returns 1: CW, 0: Colinear, -1: CCW
 		 */
-		inline int8_t IsCWWinding(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
+		inline Int8 IsCWWinding(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
 			return FindWinding(v1->GetPoint(), v2->GetPoint(), v3->GetPoint());
 		}
 	}
@@ -335,12 +335,12 @@ namespace utils {
 
 		// These hashmaps are used for fast lookup of vertices and faces by ID, they should
 		// be kept up-to-date with the vertex and face lists.
-		std::unordered_map<uint64_t, delaunay::Vertex *> IdVertexMap;
-		std::unordered_map<uint64_t, delaunay::Face *> IdFaceMap;
+		std::unordered_map<Uint64, delaunay::Vertex *> IdVertexMap;
+		std::unordered_map<Uint64, delaunay::Face *> IdFaceMap;
 		std::unordered_map<delaunay::GhostId, delaunay::Vertex *> ForeignIdVertexMap;
 
-		uint64_t CurrentFaceId;
-		uint64_t CurrentVertexId;
+		Uint64 CurrentFaceId;
+		Uint64 CurrentVertexId;
 
 		delaunay::DelaunayId Offset;
 		
@@ -350,11 +350,11 @@ namespace utils {
 		 * existing face needs to have which adjacency index updated to point to the new
 		 * face.
 		 */
-		std::pair<delaunay::Face *, int8_t> AdjustNewFaceAdjacencies(
-			delaunay::Face * const newFace, const uint8_t pivotIndex);
-		void AdjustRemovedFaceAdjacencies(delaunay::Face * const face, const uint8_t pivotIndex);
-		uint64_t GetNextFaceId();
-		uint64_t GetNextVertexId();
+		std::pair<delaunay::Face *, Int8> AdjustNewFaceAdjacencies(
+			delaunay::Face * const newFace, const Uint8 pivotIndex);
+		void AdjustRemovedFaceAdjacencies(delaunay::Face * const face, const Uint8 pivotIndex);
+		Uint64 GetNextFaceId();
+		Uint64 GetNextVertexId();
 
 		/**
 		 * Adds a pre-created vertex. The ID should be provide and be unique. The current
@@ -392,15 +392,15 @@ namespace utils {
 			Faces.clear();
 		}
 
-		inline uint64_t VertexCount() const { return Vertices.size(); }
-		inline uint64_t FaceCount() const { return Faces.size(); }
+		inline Uint64 VertexCount() const { return Vertices.size(); }
+		inline Uint64 FaceCount() const { return Faces.size(); }
 		inline delaunay::DelaunayId GraphOffset() const { return Offset; }
 
 		const std::vector<delaunay::Vertex const *> GetVertices() const;
 		const std::vector<delaunay::Face const *> GetFaces() const;
 		const std::vector<delaunay::Edge> GetUniqueEdges() const;
 
-		delaunay::Vertex * AddVertex(const Vector2<> & point, const uint64_t id);
+		delaunay::Vertex * AddVertex(const Vector2<> & point, const Uint64 id);
 		delaunay::Face * AddFace(
 			delaunay::Vertex * const v1, delaunay::Vertex * const v2);
 
@@ -422,7 +422,7 @@ namespace std {
 	template <>
 	struct hash<utils::delaunay::Edge> {
 		size_t operator()(const utils::delaunay::Edge & e) const {
-			int64_t seed = 0;
+			Int64 seed = 0;
 			std::hashCombine(seed, e.Start->VertexId());
 			std::hashCombine(seed, e.End->VertexId());
 			return (unsigned) seed;

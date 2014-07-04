@@ -3,11 +3,11 @@
 #include <Utilities/DataStructures.h>
 
 namespace terrain {
-	typedef utils::Vector3<int64_t> ChunkOffsetVector;
+	typedef utils::Vector3<Int64> ChunkOffsetVector;
 
 	struct TerrainGeneratorParameters {
-		uint32_t GridCellCount;       // Number of grid cells along a single edge of the cube
-		int64_t Seed;
+		Uint32 GridCellCount;       // Number of grid cells along a single edge of the cube
+		Int64 Seed;
 		double ChunkScale;			// Maps chunk grid to real world coordinates
 
 		const utils::Vector3<> ToRealCoordinates(const ChunkOffsetVector & offset) const {
@@ -19,23 +19,23 @@ namespace terrain {
 
 		const ChunkOffsetVector ToChunkCoordinates(const utils::Vector3<> & position) const {
 			return ChunkOffsetVector(
-				(int64_t) std::floor(position.X / ChunkScale),
-				(int64_t) std::floor(position.Y / ChunkScale),
-				(int64_t) std::floor(position.Z / ChunkScale));
+				(Int64) std::floor(position.X / ChunkScale),
+				(Int64) std::floor(position.Y / ChunkScale),
+				(Int64) std::floor(position.Z / ChunkScale));
 		}
 	};
 
 
-	typedef utils::Vector2<int64_t> BiomeRegionOffsetVector;   // Offset vector for biome regions
-	typedef utils::Vector2<uint16_t> BiomeRegionGridVector;    // Offset vector within a region
-	typedef std::pair<BiomeRegionOffsetVector, uint64_t> BiomeId;
+	typedef utils::Vector2<Int64> BiomeRegionOffsetVector;   // Offset vector for biome regions
+	typedef utils::Vector2<Uint16> BiomeRegionGridVector;    // Offset vector within a region
+	typedef std::pair<BiomeRegionOffsetVector, Uint64> BiomeId;
 
 	struct BiomeGeneratorParameters {
-		uint32_t GridCellCount;       // Number of grid cells along a single edge of the square
-		int64_t Seed;
-		uint16_t BufferSize;          // Number of buffer cells for Delaunay graph merging
-		uint16_t MinPointsPerCell;
-		uint16_t MaxPointsPerCell;
+		Uint32 GridCellCount;       // Number of grid cells along a single edge of the square
+		Int64 Seed;
+		Uint16 BufferSize;          // Number of buffer cells for Delaunay graph merging
+		Uint16 MinPointsPerCell;
+		Uint16 MaxPointsPerCell;
 		double BiomeScale;          // Maps biome grid to real world coordinates
 
 		inline const utils::Vector2<> ToRealCoordinates(
@@ -48,8 +48,8 @@ namespace terrain {
 			const utils::Vector2<> & position
 		) const {
 			return BiomeRegionOffsetVector(
-				(int64_t) std::floor(position.X / BiomeScale),
-				(int64_t) std::floor(position.Y / BiomeScale));
+				(Int64) std::floor(position.X / BiomeScale),
+				(Int64) std::floor(position.Y / BiomeScale));
 		}
 
 		inline const utils::Vector2<> GetInnerRegionPosition(
