@@ -16,17 +16,54 @@ class DelaunayDAC2DDebugger : public IDelaunayDAC2DDebug {
 private:
 	using EdgeSet = std::unordered_set<delaunay::Edge>;
 
+	bool Skipping;
+
 	Uint16 Width;
 	Uint16 Height;
 
 	SDL_Renderer * Renderer;
 	TTF_Font * FontRegular;
 
-	void DrawVertices(const std::vector<const delaunay::Vertex *> & vertices) {
+	void AddEdges(
+		EdgeSet & edges,
+		const delaunay::ConvexHull & hull,
+		const EdgeSet & compareEdges
+	) const {
+		auto size = hull.Size();
+		for (Uint64 i = 0, j = 1; i < size; i++, j++) {
+			if (j >= size) j -= size;
+			auto edge = delaunay::Edge(hull[i], hull[j]);
+			// The convex hull vertex exists in the list of non-deleted edges
+			if (compareEdges.find(edge) != compareEdges.end())
+				edges.insert(edge);
+		}
+	}
+
+public:
+	DelaunayDAC2DDebugger(
+		SDL_Renderer * renderer,
+		const Uint16 width, const Uint16 height,
+		TTF_Font * fontRegular
+	) : Width(width), Height(height), Skipping(false),
+		Renderer(renderer), FontRegular(fontRegular)
+	{}
+
+	/**
+	 * Drawing helpers
+	 */
+
+	void DrawVertex(const delaunay::Vertex * vertex, const Uint16 radius, const Colour & colour) {
+		RenderCircle(
+			Renderer,
+			std::round(vertex->GetPoint().X * Width),
+			std::round(vertex->GetPoint().Y * Height),
+			radius, colour);
+	}
+
+	void DrawVertices(const std::vector<const delaunay::Vertex *> & vertices, const Colour & colour) {
 		// Draw vertices
-		SDL_SetRenderDrawColor(Renderer, 9, 54, 95, SDL_ALPHA_OPAQUE);
 		for (auto & vertex : vertices)
-			SDL_RenderDrawPoint(Renderer, std::round(vertex->GetPoint().X * Width), std::round(vertex->GetPoint().Y * Height));
+			DrawVertex(vertex, 1, colour);
 	}
 
 	void DrawEdges(const EdgeSet & edges, const Colour & colour) {
@@ -50,29 +87,9 @@ private:
 		DrawEdges(edges, colour);
 	}
 
-	void AddEdges(
-		EdgeSet & edges,
-		const delaunay::ConvexHull & hull,
-		const EdgeSet & compareEdges
-	) const {
-		auto size = hull.Size();
-		for (Uint64 i = 0, j = 1; i < size; i++, j++) {
-			if (j >= size) j -= size;
-			auto edge = delaunay::Edge(hull[i], hull[j]);
-			// The convex hull vertex exists in the list of non-deleted edges
-			if (compareEdges.find(edge) != compareEdges.end())
-				edges.insert(edge);
-		}
-	}
-
-public:
-	DelaunayDAC2DDebugger(
-		SDL_Renderer * renderer,
-		const Uint16 width, const Uint16 height,
-		TTF_Font * fontRegular
-	) : Width(width), Height(height),
-		Renderer(renderer), FontRegular(fontRegular)
-	{}
+	/**
+	 * Algorithm event hooks
+	 */
 
 	virtual void MergeStep(
 		const DelaunayGraph & leftGraph,
@@ -84,48 +101,78 @@ public:
 		const DelaunayBuilderDAC2D::AddedFaceList & leftAddedFaces,
 		const DelaunayBuilderDAC2D::AddedFaceList & rightAddedFaces
 	) override {
-		ClearCanvas(Renderer);
+		if (!Skipping) {
+			ClearCanvas(Renderer);
 		
-		EdgeSet leftEdges, rightEdges, hullEdges;
+			EdgeSet leftEdges, rightEdges, hullEdges;
 
-		// Different graphs
-		if (leftGraph.GraphOffset() != rightGraph.GraphOffset()) {
 			// Different graphs
-			leftEdges = leftGraph.GetUniqueEdges();
-			rightEdges = rightGraph.GetUniqueEdges();
+			if (leftGraph.GraphOffset() != rightGraph.GraphOffset()) {
+				// Different graphs
+				leftEdges = leftGraph.GetUniqueEdges();
+				rightEdges = rightGraph.GetUniqueEdges();
 
-			DrawEdges(leftEdges, { 36, 120, 195 });
-			DrawEdges(rightEdges, { 36, 120, 195 });
+				DrawEdges(leftEdges, { 36, 120, 195 });
+				DrawEdges(rightEdges, { 36, 120, 195 });
 
-			DrawVertices(leftGraph.GetVertices());
-			DrawVertices(rightGraph.GetVertices());
-		} else {
-			// Same graphs, no need to draw both graphs
-			leftEdges = leftGraph.GetUniqueEdges();
-			rightEdges = leftEdges;
+				DrawVertices(leftGraph.GetVertices(), { 9, 54, 95 });
+				DrawVertices(rightGraph.GetVertices(), { 9, 54, 95 });
+			} else {
+				// Same graphs, no need to draw both graphs
+				leftEdges = leftGraph.GetUniqueEdges();
+				rightEdges = leftEdges;
 				
-			DrawEdges(leftGraph.GetUniqueEdges(), { 36, 120, 195 });
-			DrawVertices(leftGraph.GetVertices());
-		}
+				DrawEdges(leftGraph.GetUniqueEdges(), { 36, 120, 195 });
+				DrawVertices(leftGraph.GetVertices(), { 9, 54, 95 });
+			}
 
-		AddEdges(hullEdges, leftHull, leftEdges);
-		AddEdges(hullEdges, rightHull, rightEdges);
+			AddEdges(hullEdges, leftHull, leftEdges);
+			AddEdges(hullEdges, rightHull, rightEdges);
 
-		DrawEdges(hullEdges, { 232, 183, 49 });
+			DrawEdges(hullEdges, { 232, 183, 49 });
 
-		DrawAddedFaces(leftAddedFaces, { 24, 165, 37 });
-		DrawAddedFaces(rightAddedFaces, { 24, 165, 37 });
+			DrawAddedFaces(leftAddedFaces, { 24, 165, 37 });
+			DrawAddedFaces(rightAddedFaces, { 24, 165, 37 });
+
+			// Draw start and end points
+			// Lower tangent is orange
+			DrawVertex(leftHull[lowerTangent.first], 4, { 245, 144, 46 });
+			DrawVertex(rightHull[lowerTangent.second], 4, { 245, 144, 46 });
+			// Upper tangent is red
+			DrawVertex(leftHull[upperTangent.first], 4, { 212, 25, 0 });
+			DrawVertex(rightHull[upperTangent.second], 4, { 212, 25, 0 });
+
+			// Draw centroid
+			RenderFilledCircle(Renderer, leftHull.Centroid() * Vector2<>(Width, Height), 4, { 0, 131, 129 });
+			RenderFilledCircle(Renderer, rightHull.Centroid() * Vector2<>(Width, Height), 4, { 0, 131, 129 });
 		
-		SDL_RenderPresent(Renderer);
+			SDL_RenderPresent(Renderer);
 
-		// Wait for the enter key
-		SDL_Event sdlEvent;
-		bool done = false;
-		do {
-			while (SDL_PollEvent(&sdlEvent))
-				done = sdlEvent.type == SDL_KEYUP &&
-					sdlEvent.key.keysym.scancode == SDL_SCANCODE_RETURN;
-		} while (!done);
+			// Wait for the enter key, right ctrl skips to next merge step
+			SDL_Event sdlEvent;
+			bool done = false;
+			while (!done) {
+				while (SDL_PollEvent(&sdlEvent)) {
+					if (sdlEvent.type == SDL_QUIT)
+						exit(0);
+
+					if (sdlEvent.type == SDL_KEYUP) {
+						if (sdlEvent.key.keysym.scancode == SDL_SCANCODE_RETURN)
+							done = true;
+						if (sdlEvent.key.keysym.scancode == SDL_SCANCODE_RCTRL) {
+							Skipping = true;
+							done = true;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	virtual void StartMergeStep(
+		const DelaunayGraph & graph, const Uint32 subdivisionDepth
+	) override {
+		Skipping = false;
 	}
 };
 
@@ -160,7 +207,7 @@ public:
 				16 * 0x10        // Size of the biome region in real units along a single axis
 			},
 			MockBus,
-			BiomeRegionLoader::DelaunayBuilderPtr(new DelaunayBuilderDAC2D(2, Debugger))),
+			BiomeRegionLoader::DelaunayBuilderPtr(new DelaunayBuilderDAC2D(0, Debugger))),
 		FontRegular(fontRegular)
 	{}
 
@@ -171,21 +218,11 @@ public:
 		const auto & graph = region->DelaunayGraph;
 		const auto & edges = graph.GetUniqueEdges();
 		ClearCanvas(Renderer);
+
+		RenderText(Renderer, "Test text, whoa!", 100, 400, FontRegular, { 244, 60, 48 });
 		
 		// Draw edges
-		SDL_SetRenderDrawColor(Renderer, 36, 120, 195, SDL_ALPHA_OPAQUE);
-		for (auto & edge : edges)
-			SDL_RenderDrawLine(Renderer,
-				edge.Start->GetPoint().X * Width, edge.Start->GetPoint().Y * Height,
-				edge.End->GetPoint().X * Width, edge.End->GetPoint().Y * Height);
-
-
-		SDL_SetRenderDrawColor(Renderer, 133, 186, 233, SDL_ALPHA_OPAQUE);
-		auto text = TTF_RenderText_Blended(FontRegular, "This is a test text, whoa!", {0, 0, 0});
-		SDL_Rect rect = text->clip_rect;
-		rect.x = 100; rect.y = 100;
-		
-		SDL_RenderCopy(Renderer, SDL_CreateTextureFromSurface(Renderer, text), NULL, &rect);
+		Debugger->DrawEdges(edges, { 36, 120, 195 });
 		
 		SDL_RenderPresent(Renderer);
 	}

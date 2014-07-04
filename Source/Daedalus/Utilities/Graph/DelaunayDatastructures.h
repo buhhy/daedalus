@@ -407,6 +407,8 @@ namespace utils {
 		delaunay::Face * FindFace(
 			delaunay::Vertex const * const v1, delaunay::Vertex const * const v2);
 
+		const delaunay::Vertex * FindVertex(const Uint64 vid) const;
+
 		/**
 		 * Indices of vertices should be provided in CW winding.
 		 */

@@ -145,5 +145,8 @@ namespace utils {
 			const DelaunayBuilderDAC2D::Tangent & lowerTangent,
 			const DelaunayBuilderDAC2D::AddedFaceList & leftAddedFaces,
 			const DelaunayBuilderDAC2D::AddedFaceList & rightAddedFaces) = 0;
+
+		virtual void StartMergeStep(
+			const DelaunayGraph & graph, const Uint32 subdivisionDepth) = 0;
 	};
 }

@@ -228,6 +228,14 @@ namespace utils {
 			isLeftDone = leftVertexQueue.empty();
 			isRightDone = rightVertexQueue.empty();
 		} while ((takeLeft || takeRight) && (!isLeftDone || !isRightDone));
+		
+		// DEBUG POINT
+		if (Debugger) {
+			Debugger->MergeStep(
+				leftGraph, rightGraph, leftHull, rightHull,
+				upperTangent, lowerTangent,
+				leftAddedFaces, rightAddedFaces);
+		}
 
 		for (auto & f : leftAddedFaces)
 			leftGraph.AddFace(f[0], f[1], f[2]);
@@ -430,6 +438,9 @@ namespace utils {
 			auto lowerTangent = LowerTangent(leftHull, rightHull);
 
 			if (currentSubdivisionDepth >= SubdivisionDepthCap) {
+				// DEBUG POINT
+				if (Debugger)
+					Debugger->StartMergeStep(results, currentSubdivisionDepth);
 				MergeDelaunay(
 					results, results,
 					leftHull, rightHull,

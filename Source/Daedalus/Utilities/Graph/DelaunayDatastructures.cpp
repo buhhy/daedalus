@@ -219,10 +219,35 @@ namespace utils {
 		}
 
 		utils::Vector2<> ConvexHull::Centroid() const {
+			// Algorithm found here: http://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
+			const auto size = HullVertices.size();
+			
 			utils::Vector2<> sum(0, 0);
-			for (auto & v : HullVertices)
-				sum += v->GetPoint();
-			return sum / (double) HullVertices.size();
+			
+			if (size < 3) {
+				// If degenerate hull, then return average of the points
+				for (auto & v : HullVertices)
+					sum += v->GetPoint();
+				return sum / (double) HullVertices.size();
+			} else {
+				// Total area formed by parallelograms of all triangles
+				double totalArea = 0;
+
+				for (Uint64 i = 0, j = 1; i < size; i++, j++) {
+					if (j >= size) j -= size;
+					const auto & p0 = HullVertices[i]->GetPoint();
+					const auto & p1 = HullVertices[j]->GetPoint();
+					// Dot product to find parallelogram area of triangle
+					const double area = p0.X * p1.Y - p0.Y * p1.X;
+					totalArea += area;
+					sum.X += (p0.X + p1.X) * area;
+					sum.Y += (p0.Y + p1.Y) * area;
+				}
+
+				totalArea /= 2.0;
+
+				return sum / (6.0 * totalArea);
+			}
 		}
 	}
 
@@ -555,6 +580,12 @@ namespace utils {
 			assert(!"DelaunayGraph::FindFace: face does not loop around vertex correctly");
 
 		return foundFace;
+	}
+	
+	const delaunay::Vertex * DelaunayGraph::FindVertex(const Uint64 vid) const {
+		if (IdVertexMap.find(vid) == IdVertexMap.end())
+			return NULL;
+		return IdVertexMap.at(vid);
 	}
 
 	const std::vector<Vertex const *> DelaunayGraph::GetVertices() const {
