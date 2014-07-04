@@ -62,17 +62,31 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)\..\..\Libraries\Windows\SDL2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Libraries\Windows\SDL2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
+      <ShowProgress>NotSet</ShowProgress>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\DaedalusExperimental\Main.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Controllers\EventBus\EventBus.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Controllers\EventBus\EventListener.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Models\Terrain\BiomeRegionData.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Models\Terrain\BiomeRegionLoader.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra2.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra3.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Matrix4.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\Delaunay.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\DelaunayDatastructures.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\GraphDatastructures.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Noise\Perlin.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\DaedalusExperimental\BiomeRegionRenderer.h" />
     <ClInclude Include="..\..\Source\DaedalusExperimental\Engine.h" />
+    <ClInclude Include="..\..\Source\DaedalusExperimental\Mocks.h" />
+    <ClInclude Include="..\..\Source\DaedalusExperimental\SDLHelpers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

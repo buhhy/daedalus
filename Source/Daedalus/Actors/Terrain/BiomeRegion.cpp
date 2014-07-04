@@ -52,12 +52,13 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	float edgeWidth = 0.6;
 	double scale = BiomeGridScale;
 
-	uint32 size = RegionData->BiomeGridSize;
+	uint32 size = RegionData->GetBiomeGridSize();
 
 	TArray<FMeshTriangle> triangles;
 	FVector multiplyVector(scale, scale, scale);
 	FVector displacementVector;
-	displacementVector.Set(RegionData->BiomeOffset.X, RegionData->BiomeOffset.Y, 0);
+	displacementVector.Set(
+		RegionData->GetBiomeRegionOffset().X, RegionData->GetBiomeRegionOffset().Y, 0);
 	
 	// Draw grid lines
 	std::vector<utils::Triangle> gridTries;

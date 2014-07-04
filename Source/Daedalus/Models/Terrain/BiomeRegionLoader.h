@@ -25,15 +25,19 @@ namespace terrain {
 	public:
 		using VertexWithHullIndex = std::pair<utils::Vector2<>, uint32_t>;
 		using BiomeRegionDataPtr = std::shared_ptr<BiomeRegionData>;
+		using DelaunayBuilderPtr = std::shared_ptr<utils::DelaunayDivideAndConquerBuilder2D>;
 
 	private:
 		BiomeRegionCache LoadedBiomeRegionCache;
-
 		BiomeGeneratorParameters BiomeGenParams;
+		
+		DelaunayBuilderPtr DelaunayBuilder;
 		std::shared_ptr<events::EventBus> EventBus;
-
 		std::shared_ptr<const VertexWithHullIndex> GetCornerHullVertex(
 			const BiomeRegionData & data, const bool cornerX, const bool cornerY) const;
+
+
+
 		
 		bool IsBiomeRegionGenerated(const BiomeRegionOffsetVector & offset) const;
 		BiomeRegionDataPtr GetBiomeRegionFromCache(const BiomeRegionOffsetVector & offset);
@@ -60,7 +64,9 @@ namespace terrain {
 	public:
 		BiomeRegionLoader(
 			const BiomeGeneratorParameters & params,
-			std::shared_ptr<events::EventBus> eventBus);
+			std::shared_ptr<events::EventBus> eventBus,
+			DelaunayBuilderPtr builder =
+				DelaunayBuilderPtr(new utils::DelaunayDivideAndConquerBuilder2D()));
 		~BiomeRegionLoader();
 		
 

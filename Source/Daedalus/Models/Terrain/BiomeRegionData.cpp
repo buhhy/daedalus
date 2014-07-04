@@ -21,6 +21,19 @@ namespace terrain {
 		NeighboursMerged.Set(1, 1, true);
 	}
 
+	bool BiomeRegionData::IsMergedWithAllNeighbours() const {
+		bool done = true;
+		for (uint8_t x = 0; x < NeighboursMerged.GetWidth(); x++) {
+			for (uint8_t y = 0; y < NeighboursMerged.GetDepth(); y++) {
+				if (!NeighboursMerged.Get(x, y)) {
+					done = false;
+					break;
+				}
+			}
+		}
+		return done;
+	}
+
 	uint64_t BiomeRegionData::AddBiome(
 		const uint32_t x, const uint32_t y,
 		const BiomeCellVertex & position
@@ -62,11 +75,13 @@ namespace terrain {
 		return std::make_tuple(vid, gpos, min);
 	}
 
-	void BiomeRegionData::GenerateDelaunayGraph() {
+	void BiomeRegionData::GenerateDelaunayGraph(
+		const utils::DelaunayDivideAndConquerBuilder2D & builder
+	) {
 		std::vector<std::pair<BiomeCellVertex, uint64_t> > vertexList;
 		for (auto & pair : Biomes)
 			vertexList.push_back(std::make_pair(pair.second->GetLocalPosition(), pair.first));
-		utils::BuildDelaunay2D(DelaunayGraph, vertexList);
+		builder.BuildDelaunayGraph(DelaunayGraph, vertexList);
 		bIsGraphGenerated = true;
 	}
 

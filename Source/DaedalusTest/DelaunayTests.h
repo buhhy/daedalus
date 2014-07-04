@@ -49,6 +49,7 @@ typedef std::tuple<utils::Vector2<int64_t>, uint64_t, uint32_t> DelaunayTestPara
 
 class DelaunayGridGraph : public testing::TestWithParam<DelaunayTestParam> {
 protected:
+	DelaunayDivideAndConquerBuilder2D Builder;
 	DelaunayGraph * Graph;
 	std::vector<Vector2<>> Points;
 	std::vector<Vertex const *> Vertices;
@@ -94,7 +95,7 @@ protected:
 			}
 		}
 
-		utils::BuildDelaunay2D(*Graph, vertexList);
+		Builder.BuildDelaunayGraph(*Graph, vertexList);
 		Vertices = Graph->GetVertices();
 		Faces = Graph->GetFaces();
 	}
@@ -208,5 +209,34 @@ const DelaunayTestParam TestParams[] = {
 	DelaunayTestParam({-24, 3}, 12345678, 16),
 	DelaunayTestParam({-5, 5}, 12345678, 64)
 };
+
+
+// Test delaunay point set
+//void Test(DelaunayGraph & graph) {
+//	std::vector<Vector2<> > testPoints;
+//	std::vector<Vertex *> testVertices;
+//	testPoints.push_back({ 0.1, 0.2 });
+//	testPoints.push_back({ 0.2, 0.1 });
+//	testPoints.push_back({ 0.2, 0.3 });
+//	testPoints.push_back({ 0.2, 0.4 });
+//	testPoints.push_back({ 0.3, 0.2 });
+//	testPoints.push_back({ 0.4, 0.4 });
+//	testPoints.push_back({ 0.5, 0.3 });
+//	testPoints.push_back({ 0.6, 0.4 });
+//	testPoints.push_back({ 0.6, 0.2 });
+//	testPoints.push_back({ 0.6, 0.1 });
+
+//	
+//	/*testPoints.push_back({ 0.1, 0.1 });
+//	testPoints.push_back({ 0.1, 0.2 });
+//	testPoints.push_back({ 0.1, 0.3 });
+//	testPoints.push_back({ 0.2, 0.1 });
+//	testPoints.push_back({ 0.3, 0.1 });*/
+
+//	for (auto i = 0u; i < testPoints.size(); i++)
+//		testVertices.push_back(graph.AddVertex(testPoints[i], i));
+
+//	graph.ConvexHull = Divide(graph, testVertices, 0);
+//}
 
 //INSTANTIATE_TEST_CASE_P(DistributedPoints, DelaunayGridGraph, testing::ValuesIn(TestParams));

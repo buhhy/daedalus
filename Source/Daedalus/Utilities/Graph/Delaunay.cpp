@@ -8,9 +8,12 @@
 
 namespace utils {
 	using namespace delaunay;
-
-	typedef std::pair<uint64_t, uint64_t> Tangent;
-	typedef std::function<bool (Vertex * const p1, Vertex * const p2)> VertexComparator;
+	using InputPointList = DelaunayDivideAndConquerBuilder2D::InputPointList;
+	using GraphHullIndexArray = DelaunayDivideAndConquerBuilder2D::GraphHullIndexArray;
+	using Tangent = DelaunayDivideAndConquerBuilder2D::Tangent;
+	using VertexComparator = DelaunayDivideAndConquerBuilder2D::VertexComparator;
+	using NextIndexFunction = DelaunayDivideAndConquerBuilder2D::NextIndexFunction;
+	using FindWindingFunction = DelaunayDivideAndConquerBuilder2D::FindWindingFunction;
 
 	const VertexComparator HorizontalVertexComparator =
 		[] (Vertex * const v1, Vertex * const v2) {
@@ -26,14 +29,14 @@ namespace utils {
 			return std::abs(y) < FLOAT_ERROR ? p1.X < p2.X : y > 0;
 		};
 
-	void MergeDelaunay(
+	void DelaunayDivideAndConquerBuilder2D::MergeDelaunay(
 		DelaunayGraph & leftGraph,
 		DelaunayGraph & rightGraph,
 		const ConvexHull & leftHull,
 		const ConvexHull & rightHull,
 		const Tangent & upperTangent,
 		const Tangent & lowerTangent
-	) {
+	) const {
 		const bool isSame = &leftGraph == &rightGraph;
 		bool foundLeft, foundRight;
 		bool takeLeft, takeRight;
@@ -223,28 +226,13 @@ namespace utils {
 			rightGraph.AddFace(f[0], f[1], f[2]);
 	}
 
-	/**
-	 * Abstracts out the tangent finding algorithm since finding the top and bottom tangents
-	 * used much of the same code.
-	 * @param nextLeftIndex This function retrieves the next face index for the left hull, for
-	 *                      finding the top tangent, this means traversing the convex hull in
-	 *                      a CCW manner to find the top-right-most tangent vertex.
-	 * @param nextRightIndex This function is same as the above, but for the right hull, meaning
-	 *                       it should provide the opposite result to the next left index.
-	 * @param getWinding This function should get the triangle winding of the 3 provided
-	 *                   vertices: the next vertex on either side, the left vertex and the
-	 *                   right vertex. This function should return -1 when the next vertex is
-	 *                   on the inside of the tangent created by the left and right vertices,
-	 *                   0 for collinear points and 1 when the next vertex is outside of the
-	 *                   tangent line.
-	 */
-	Tangent FindTangent(
+	Tangent DelaunayDivideAndConquerBuilder2D::FindTangent(
 		const ConvexHull & leftHull,
 		const ConvexHull & rightHull,
-		const std::function<uint64_t (const ConvexHull &, uint64_t)> & nextLeftIndex,
-		const std::function<uint64_t (const ConvexHull &, uint64_t)> & nextRightIndex,
-		const std::function<int8_t (Vertex * const, Vertex * const, Vertex * const)> & getWinding
-	) {
+		const NextIndexFunction & nextLeftIndex,
+		const NextIndexFunction & nextRightIndex,
+		const FindWindingFunction & getWinding
+	) const {
 		// Find the index of the closest vertex in the left hull to the centroid of the right
 		// hull, and do the same, but inverse for the right hull. This is a good starting point
 		// because these 2 vertices are guaranteed to form a non-intersecting edge.
@@ -307,10 +295,10 @@ namespace utils {
 		return std::make_pair(leftIndex, rightIndex);
 	}
 
-	/**
-	 * Retrieves the upper tangent of the provided left and right hulls.
-	 */
-	Tangent UpperTangent(const ConvexHull & leftHull, const ConvexHull & rightHull) {
+	Tangent DelaunayDivideAndConquerBuilder2D::UpperTangent(
+		const ConvexHull & leftHull,
+		const ConvexHull & rightHull
+	) const {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
 		return FindTangent(
 			leftHull, rightHull,
@@ -325,10 +313,10 @@ namespace utils {
 			});
 	}
 
-	/**
-	 * Retrieves the lower tangent of the provided left and right hulls;
-	 */
-	Tangent LowerTangent(const ConvexHull & leftHull, const ConvexHull & rightHull) {
+	Tangent DelaunayDivideAndConquerBuilder2D::LowerTangent(
+		const ConvexHull & leftHull,
+		const ConvexHull & rightHull
+	) const {
 		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
 		return FindTangent(
 			leftHull, rightHull,
@@ -343,12 +331,12 @@ namespace utils {
 			});
 	}
 
-	ConvexHull MergeConvexHulls(
+	ConvexHull DelaunayDivideAndConquerBuilder2D::MergeConvexHulls(
 		const ConvexHull & leftHull,
 		const ConvexHull & rightHull,
 		const Tangent & upperTangent,
 		const Tangent & lowerTangent
-	) {
+	) const {
 		ConvexHull newConvexHull;
 
 		uint64_t count = (upperTangent.first - lowerTangent.first + leftHull.Size()) %
@@ -368,11 +356,11 @@ namespace utils {
 		return newConvexHull;
 	}
 
-	void DivideVertexList(
+	void DelaunayDivideAndConquerBuilder2D::DivideVertexList(
 		std::vector<Vertex *> & leftHalf, std::vector<Vertex *> & rightHalf,
 		std::vector<Vertex *> & vertices,
 		const VertexComparator & comparator
-	) {
+	) const {
 		std::sort(vertices.begin(), vertices.end(), comparator);
 		size_t half = vertices.size() / 2;
 		for (size_t i = 0; i < half; i++)
@@ -381,19 +369,11 @@ namespace utils {
 			rightHalf.push_back(vertices[i]);
 	}
 
-	/**
-	 * Returns a CW array of vertices representing the convex hull. The division step
-	 * alternates between horizontal and vertical divisions. when the subdivision depth is
-	 * even, horizontal divisions are used, when odd, vertical divisions are used. This form
-	 * of alternating subdivisions avoids the problem of small thin slices that may cause
-	 * rounding errors when handling angles.
-	 */
-	ConvexHull Divide(
+	ConvexHull DelaunayDivideAndConquerBuilder2D::Divide(
 		DelaunayGraph & results,
 		std::vector<Vertex *> & vertices,
-		const uint32_t minSubdivisionDepth,
-		const uint32_t subdivisionDepth = 0
-	) {
+		const uint32_t currentSubdivisionDepth = 0
+	) const {
 		// End condition when less than 4 vertices counted
 		uint64_t count = vertices.size();
 		if (count < 4) {
@@ -429,18 +409,18 @@ namespace utils {
 
 			return hull;
 		} else {
-			const bool isHorizontal = subdivisionDepth % 2 == 0;
+			const bool isHorizontal = currentSubdivisionDepth % 2 == 0;
 			std::vector<Vertex *> leftHalf, rightHalf;
 			DivideVertexList(leftHalf, rightHalf, vertices,
 				(isHorizontal ? HorizontalVertexComparator : VerticalVertexComparator));
 			auto leftHull = Divide(
-				results, leftHalf, minSubdivisionDepth, subdivisionDepth + 1);
+				results, leftHalf, currentSubdivisionDepth + 1);
 			auto rightHull = Divide(
-				results, rightHalf, minSubdivisionDepth, subdivisionDepth + 1);
+				results, rightHalf, currentSubdivisionDepth + 1);
 			auto upperTangent = UpperTangent(leftHull, rightHull);
 			auto lowerTangent = LowerTangent(leftHull, rightHull);
 
-			if (subdivisionDepth >= minSubdivisionDepth) {
+			if (currentSubdivisionDepth >= SubdivisionDepthCap) {
 				MergeDelaunay(
 					results, results,
 					leftHull, rightHull,
@@ -450,34 +430,14 @@ namespace utils {
 		}
 	}
 
-	//void Test(DelaunayGraph & graph) {
-	//	std::vector<Vector2<> > testPoints;
-	//	std::vector<Vertex *> testVertices;
-	//	testPoints.push_back({ 0.1, 0.2 });
-	//	testPoints.push_back({ 0.2, 0.1 });
-	//	testPoints.push_back({ 0.2, 0.3 });
-	//	testPoints.push_back({ 0.2, 0.4 });
-	//	testPoints.push_back({ 0.3, 0.2 });
-	//	testPoints.push_back({ 0.4, 0.4 });
-	//	testPoints.push_back({ 0.5, 0.3 });
-	//	testPoints.push_back({ 0.6, 0.4 });
-	//	testPoints.push_back({ 0.6, 0.2 });
-	//	testPoints.push_back({ 0.6, 0.1 });
+	/**
+	 * Public
+	 */
 
-	//	
-	//	/*testPoints.push_back({ 0.1, 0.1 });
-	//	testPoints.push_back({ 0.1, 0.2 });
-	//	testPoints.push_back({ 0.1, 0.3 });
-	//	testPoints.push_back({ 0.2, 0.1 });
-	//	testPoints.push_back({ 0.3, 0.1 });*/
-
-	//	for (auto i = 0u; i < testPoints.size(); i++)
-	//		testVertices.push_back(graph.AddVertex(testPoints[i], i));
-
-	//	graph.ConvexHull = Divide(graph, testVertices, 0);
-	//}
-
-	void BuildDelaunay2D(DelaunayGraph & graph, const InputVertexList & inputPoints) {
+	void DelaunayDivideAndConquerBuilder2D::BuildDelaunayGraph(
+		DelaunayGraph & graph,
+		const InputPointList & inputPoints
+	) const {
 		std::vector<Vertex *> copiedVertices;
 
 		for (auto i = 0u; i < inputPoints.size(); i++)
@@ -486,15 +446,15 @@ namespace utils {
 
 		// Run if at least 2 vertex
 		if (graph.VertexCount() > 1)
-			graph.ConvexHull = Divide(graph, copiedVertices, 0);
+			graph.ConvexHull = Divide(graph, copiedVertices);
 		//Test(graph);
 	}
 
-	void MergeDelaunayTileEdge(
+	void DelaunayDivideAndConquerBuilder2D::MergeDelaunayTileEdge(
 		DelaunayGraph & leftGraph, DelaunayGraph & rightGraph,
 		const uint32_t lowerTangentLeft, const uint32_t lowerTangentRight,
 		const uint32_t upperTangentLeft, const uint32_t upperTangentRight
-	) {
+	) const {
 		MergeDelaunay(
 			leftGraph, rightGraph,
 			leftGraph.ConvexHull, rightGraph.ConvexHull,
@@ -502,7 +462,7 @@ namespace utils {
 			Tangent(lowerTangentLeft, lowerTangentRight));
 	}
 
-	void MergeDelaunayTileCorner(std::array<std::pair<DelaunayGraph *, uint32_t>, 4> & graphs) {
+	void DelaunayDivideAndConquerBuilder2D::MergeDelaunayTileCorner(GraphHullIndexArray & graphs) const {
 		const uint8_t size = 4;
 		std::array<utils::Vector2<>, size> points;
 		std::array<Vertex *, size> vertices;

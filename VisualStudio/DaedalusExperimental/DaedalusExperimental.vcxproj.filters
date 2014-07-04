@@ -24,9 +24,48 @@
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Noise\Perlin.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Models\Terrain\BiomeRegionData.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Models\Terrain\BiomeRegionLoader.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\Delaunay.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\DelaunayDatastructures.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\GraphDatastructures.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Controllers\EventBus\EventBus.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Controllers\EventBus\EventListener.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra2.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra3.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Matrix4.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\DaedalusExperimental\Engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\DaedalusExperimental\BiomeRegionRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\DaedalusExperimental\Mocks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\DaedalusExperimental\SDLHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

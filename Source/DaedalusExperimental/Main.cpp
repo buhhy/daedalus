@@ -1,14 +1,18 @@
-#include <SDL2/SDL.h>
+#include "BiomeRegionRenderer.h"
+#include "SDLHelpers.h"
 
 #include <Utilities/DataStructures.h>
 #include <Utilities/Noise/Perlin.h>
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+
 #include <iostream>
 
-const uint16_t SizeX = 800, SizeY = 600;
+const uint16_t SizeX = 800, SizeY = 800;
 
 void DrawNoise(
-	SDL_Renderer * renderer, const utils::PerlinNoise * generator,
+	SDL_Renderer * renderer, const utils::PerlinNoise2D * generator,
 	const uint16_t sizeX, const uint16_t sizeY, const float scale
 ) {
 	double min = 2, max = -2;
@@ -27,30 +31,31 @@ void DrawNoise(
 }
 
 int main(int argc, char ** argv) {
-	if (SDL_Init(SDL_INIT_EVERYTHING)) {
-		std::cerr << "SDL_Init Error: " << SDL_GetError() << std::endl;
-		return 1;
-	}
+	if (SDL_Init(SDL_INIT_EVERYTHING))
+		Quit("SDL_Init Error: ");
+	
+	// Initialize SDL2_TTF library
+	if (TTF_Init())
+		Quit("TTF_Init Error: ", true);
 
 	SDL_Window * window = SDL_CreateWindow("Daedalus Experimental", 100, 100, SizeX, SizeY, SDL_WINDOW_SHOWN);
-	if (window == NULL) {
-		std::cerr << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
-		SDL_Quit();
-		return 1;
-	}
+	if (window == NULL)
+		Quit("SDL_CreateWindow Error: ", true, true);
 
 	SDL_Renderer * renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-	if (renderer == NULL) {
-		SDL_DestroyWindow(window);
-		std::cerr << "SDL_CreateRenderer Error: " << SDL_GetError() << std::endl;
-		SDL_Quit();
-		return 1;
-	}
+	if (renderer == NULL)
+		Quit("SDL_CreateRenderer Error: ", true, true, window);
+	
+	TTF_Font * fontRegular = TTF_OpenFont("lato.ttf", 48);
+	if (fontRegular == NULL)
+		Quit("TTF_OpenFont() Error: ", true, true, window);
+
+	BiomeRegionRenderer regionRenderer(SizeX, SizeY, fontRegular);
 
 	bool running = true;
 	bool updated = false;
 	SDL_Event sdlEvent;
-	auto generator = new utils::PerlinNoise();
+	auto generator = new utils::PerlinNoise2D(0);
 
 	while (running) {
 		while (SDL_PollEvent(&sdlEvent)) {
@@ -61,7 +66,8 @@ int main(int argc, char ** argv) {
 		if (!updated) {
 			SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 			SDL_RenderClear(renderer);
-			DrawNoise(renderer, generator, SizeX, SizeY, 0.005f);
+			regionRenderer.DrawBiomeRegion(renderer, { -28, 3});
+			//DrawNoise(renderer, generator, SizeX, SizeY, 0.005f);
 			SDL_RenderPresent(renderer);
 			updated = true;
 		}

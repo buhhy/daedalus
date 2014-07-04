@@ -88,9 +88,13 @@ namespace terrain {
 		bool bIsGraphGenerated;
 		bool bIsBiomeDataGenerated;
 
-		uint64_t CurrentVertexId;
-		BiomeDataMap Biomes;
-		BiomeCellField BiomeCells;
+		uint64_t CurrentVertexId;          // Temporary variable that tracks the available IDs
+		BiomeDataMap Biomes;               // Individual biomes mapped by an unique ID
+		BiomeCellField BiomeCells;         // Subdivision of the region into cells that contain
+		                                   // a number of individual biomes
+
+		uint32_t BiomeGridSize;                     // Size of the biome in grid cells
+		BiomeRegionOffsetVector BiomeOffset;        // Biome offset from (0,0)
 
 		inline uint64_t GetNextId() { return CurrentVertexId++; }
 		inline const BiomeId BuildId(uint64_t localId) {
@@ -103,9 +107,6 @@ namespace terrain {
 		// Indicates whether the 8 neighboring regions have been generated yet, (0, 0) is
 		// bottom left, (2, 2) is top right.
 		utils::Tensor2D<bool> NeighboursMerged;
-
-		uint32_t BiomeGridSize;                     // Size of the biome in grid cells
-		BiomeRegionOffsetVector BiomeOffset;        // Biome offset from (0,0)
 
 		BiomeRegionData(
 			const uint16_t buffer,
@@ -123,29 +124,22 @@ namespace terrain {
 			return Biomes.at(localBiomeId).get();
 		}
 
-		inline BiomeCellField & GetBiomeCells() { return BiomeCells; }
-		inline const BiomeCellField & GetBiomeCells() const { return BiomeCells; }
-
-		inline bool AllNeighboursLoaded() const {
-			bool done = true;
-			for (uint8_t x = 0; x < NeighboursMerged.GetWidth(); x++) {
-				for (uint8_t y = 0; y < NeighboursMerged.GetDepth(); y++) {
-					if (!NeighboursMerged.Get(x, y)) {
-						done = false;
-						break;
-					}
-				}
-			}
-			return done;
+		inline const BiomeRegionOffsetVector & GetBiomeRegionOffset() const {
+			return BiomeOffset;
 		}
+		inline const uint32_t & GetBiomeGridSize() const { return BiomeGridSize; }
+		inline const BiomeCellField & GetBiomeCells() const { return BiomeCells; }
+		inline BiomeCellField & GetBiomeCells() { return BiomeCells; }
 
 		inline bool IsGraphGenerated() const { return bIsGraphGenerated; }
 		inline bool IsBiomeDataGenerated() const { return bIsBiomeDataGenerated; }
 
 
-		uint64_t AddBiome(const uint32_t x, const uint32_t y, const BiomeCellVertex & position);
 
-		void GenerateDelaunayGraph();
+		uint64_t AddBiome(const uint32_t x, const uint32_t y, const BiomeCellVertex & position);
+		bool IsMergedWithAllNeighbours() const;
+
+		void GenerateDelaunayGraph(const utils::DelaunayDivideAndConquerBuilder2D & builder);
 		void GenerateBiomeData();
 
 		std::tuple<uint64_t, BiomeRegionGridVector, double> FindNearestPoint(
