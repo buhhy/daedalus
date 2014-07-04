@@ -569,9 +569,8 @@ namespace utils {
 		return ret;
 	}
 
-	const std::vector<Edge> DelaunayGraph::GetUniqueEdges() const {
+	const std::unordered_set<Edge> DelaunayGraph::GetUniqueEdges() const {
 		std::unordered_set<Edge> edgeSet;
-		std::vector<Edge> ret;
 
 		for (auto it : Faces) {
 			edgeSet.insert({ it->Vertices[0], it->Vertices[1] });
@@ -581,8 +580,6 @@ namespace utils {
 			}
 		}
 
-		for (auto it : edgeSet) ret.push_back(it);
-
-		return ret;
+		return edgeSet;
 	}
 }

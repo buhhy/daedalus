@@ -14,44 +14,55 @@ using namespace terrain;
 
 class DelaunayDAC2DDebugger : public IDelaunayDAC2DDebug {
 private:
+	using EdgeSet = std::unordered_set<delaunay::Edge>;
+
 	Uint16 Width;
 	Uint16 Height;
 
 	SDL_Renderer * Renderer;
 	TTF_Font * FontRegular;
 
-	void DrawGraph(
-		const DelaunayGraph & graph,
-		const std::unordered_set<Uint64> & hullVertices
-	) {
-		const auto & vertices = graph.GetVertices();
-		const auto & edges = graph.GetUniqueEdges();
-		
+	void DrawVertices(const std::vector<const delaunay::Vertex *> & vertices) {
 		// Draw vertices
 		SDL_SetRenderDrawColor(Renderer, 9, 54, 95, SDL_ALPHA_OPAQUE);
 		for (auto & vertex : vertices)
 			SDL_RenderDrawPoint(Renderer, std::round(vertex->GetPoint().X * Width), std::round(vertex->GetPoint().Y * Height));
-		
-		// Draw edges
+	}
+
+	void DrawEdges(const EdgeSet & edges, const Colour & colour) {
+		SDL_SetRenderDrawColor(Renderer, colour.X, colour.Y, colour.Z, SDL_ALPHA_OPAQUE);
 		for (auto & edge : edges) {
-			// Hull edges should be a different color
-			if (hullVertices.find(edge.Start->VertexId()) != hullVertices.end() &&
-					hullVertices.find(edge.End->VertexId()) != hullVertices.end()) {
-				SDL_SetRenderDrawColor(Renderer, 232, 183, 49, SDL_ALPHA_OPAQUE);
-			} else {
-				SDL_SetRenderDrawColor(Renderer, 36, 120, 195, SDL_ALPHA_OPAQUE);
-			}
 			SDL_RenderDrawLine(Renderer,
 				edge.Start->GetPoint().X * Width, edge.Start->GetPoint().Y * Height,
 				edge.End->GetPoint().X * Width, edge.End->GetPoint().Y * Height);
 		}
-		
-		// Draw faces
 	}
 
-	void AddVertexIds(std::unordered_set<Uint64> & ids, const delaunay::ConvexHull & hull) const {
-		for (auto & vertex = hull.CBegin(); vertex != hull.CEnd(); ++vertex)
-			ids.insert((*vertex)->VertexId());
+	void DrawAddedFaces(
+		const DelaunayBuilderDAC2D::AddedFaceList & added,
+		const Colour & colour
+	) {
+		EdgeSet edges;
+		for (auto & entry : added) {
+			for (Uint8 i = 0; i < entry.size(); i++)
+				edges.insert(delaunay::Edge(entry[i], entry[(i + 1) % entry.size()]));
+		}
+		DrawEdges(edges, colour);
+	}
+
+	void AddEdges(
+		EdgeSet & edges,
+		const delaunay::ConvexHull & hull,
+		const EdgeSet & compareEdges
+	) const {
+		auto size = hull.Size();
+		for (Uint64 i = 0, j = 1; i < size; i++, j++) {
+			if (j >= size) j -= size;
+			auto edge = delaunay::Edge(hull[i], hull[j]);
+			// The convex hull vertex exists in the list of non-deleted edges
+			if (compareEdges.find(edge) != compareEdges.end())
+				edges.insert(edge);
+		}
 	}
 
 public:
@@ -74,24 +85,36 @@ public:
 		const DelaunayBuilderDAC2D::AddedFaceList & rightAddedFaces
 	) override {
 		ClearCanvas(Renderer);
+		
+		EdgeSet leftEdges, rightEdges, hullEdges;
 
 		// Different graphs
 		if (leftGraph.GraphOffset() != rightGraph.GraphOffset()) {
 			// Different graphs
-			std::unordered_set<Uint64> leftHullVertices, rightHullVertices;
-			AddVertexIds(leftHullVertices, leftHull);
-			AddVertexIds(rightHullVertices, rightHull);
+			leftEdges = leftGraph.GetUniqueEdges();
+			rightEdges = rightGraph.GetUniqueEdges();
 
-			DrawGraph(leftGraph, leftHullVertices);
-			DrawGraph(rightGraph, rightHullVertices);
+			DrawEdges(leftEdges, { 36, 120, 195 });
+			DrawEdges(rightEdges, { 36, 120, 195 });
+
+			DrawVertices(leftGraph.GetVertices());
+			DrawVertices(rightGraph.GetVertices());
 		} else {
 			// Same graphs, no need to draw both graphs
-			std::unordered_set<Uint64> hullVertices;
-			AddVertexIds(hullVertices, leftHull);
-			AddVertexIds(hullVertices, rightHull);
+			leftEdges = leftGraph.GetUniqueEdges();
+			rightEdges = leftEdges;
 				
-			DrawGraph(leftGraph, hullVertices);
+			DrawEdges(leftGraph.GetUniqueEdges(), { 36, 120, 195 });
+			DrawVertices(leftGraph.GetVertices());
 		}
+
+		AddEdges(hullEdges, leftHull, leftEdges);
+		AddEdges(hullEdges, rightHull, rightEdges);
+
+		DrawEdges(hullEdges, { 232, 183, 49 });
+
+		DrawAddedFaces(leftAddedFaces, { 24, 165, 37 });
+		DrawAddedFaces(rightAddedFaces, { 24, 165, 37 });
 		
 		SDL_RenderPresent(Renderer);
 
@@ -100,7 +123,7 @@ public:
 		bool done = false;
 		do {
 			while (SDL_PollEvent(&sdlEvent))
-				done = sdlEvent.type = SDL_KEYDOWN &&
+				done = sdlEvent.type == SDL_KEYUP &&
 					sdlEvent.key.keysym.scancode == SDL_SCANCODE_RETURN;
 		} while (!done);
 	}

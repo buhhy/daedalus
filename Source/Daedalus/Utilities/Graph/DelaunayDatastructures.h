@@ -398,7 +398,7 @@ namespace utils {
 
 		const std::vector<delaunay::Vertex const *> GetVertices() const;
 		const std::vector<delaunay::Face const *> GetFaces() const;
-		const std::vector<delaunay::Edge> GetUniqueEdges() const;
+		const std::unordered_set<delaunay::Edge> GetUniqueEdges() const;
 
 		delaunay::Vertex * AddVertex(const Vector2<> & point, const Uint64 id);
 		delaunay::Face * AddFace(

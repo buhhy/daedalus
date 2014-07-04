@@ -38,6 +38,9 @@ namespace utils {
 		Circle2D() : Circle2D({ 0, 0 }, 0) {}
 	};
 
+	// TODO: make actual colour class
+	using Colour = Vector3<Uint8>;
+
 	struct Triangle {
 		Vector3<> Point1, Point2, Point3;
 
