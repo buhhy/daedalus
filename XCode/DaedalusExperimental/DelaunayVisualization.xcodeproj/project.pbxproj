@@ -11,6 +11,7 @@
 		661343A319689A8F00ABD269 /* BiomeRegionLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EE5519629B28006C471E /* BiomeRegionLoader.cpp */; };
 		661343A419689AA100ABD269 /* BiomeRegionData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EE5319629B28006C471E /* BiomeRegionData.cpp */; };
 		661343A91968A4A000ABD269 /* SDL2_ttf.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 661343A0196899EF00ABD269 /* SDL2_ttf.framework */; };
+		661343AC1968A80900ABD269 /* SDL2_ttf.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 661343A0196899EF00ABD269 /* SDL2_ttf.framework */; };
 		6644625E19625E9200812B22 /* DaedalusExperimental.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6644625D19625E9200812B22 /* DaedalusExperimental.1 */; };
 		6669EE2A19629A61006C471E /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6669EE2919629A61006C471E /* SDL2.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		6669EE2D19629AFC006C471E /* Main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EE2C19629AFC006C471E /* Main.cpp */; };
@@ -27,9 +28,28 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		6644625619625E9200812B22 /* CopyFiles */ = {
+		661343AB1968A7FD00ABD269 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				661343AC1968A80900ABD269 /* SDL2_ttf.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		661343AD1968A83700ABD269 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6644625619625E9200812B22 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
 			dstPath = usr/share/man/man1;
 			dstSubfolderSpec = 0;
 			files = (
@@ -41,6 +61,7 @@
 
 /* Begin PBXFileReference section */
 		661343A0196899EF00ABD269 /* SDL2_ttf.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_ttf.framework; path = ../../Libraries/OSX/SDL2_ttf.framework; sourceTree = "<group>"; };
+		661343B01968A9E100ABD269 /* lato.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = lato.ttf; path = ../../Libraries/Fonts/lato.ttf; sourceTree = "<group>"; };
 		6644625819625E9200812B22 /* DelaunayVisualization */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = DelaunayVisualization; sourceTree = BUILT_PRODUCTS_DIR; };
 		6644625D19625E9200812B22 /* DaedalusExperimental.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = DaedalusExperimental.1; sourceTree = "<group>"; };
 		6669EE2919629A61006C471E /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../Libraries/OSX/SDL2.framework; sourceTree = "<group>"; };
@@ -132,6 +153,7 @@
 		6644624F19625E9200812B22 = {
 			isa = PBXGroup;
 			children = (
+				661343B01968A9E100ABD269 /* lato.ttf */,
 				661343A0196899EF00ABD269 /* SDL2_ttf.framework */,
 				6669EE2E19629B28006C471E /* Daedalus */,
 				6669EE2919629A61006C471E /* SDL2.framework */,
@@ -364,6 +386,8 @@
 				6644625419625E9200812B22 /* Sources */,
 				6644625519625E9200812B22 /* Frameworks */,
 				6644625619625E9200812B22 /* CopyFiles */,
+				661343AB1968A7FD00ABD269 /* CopyFiles */,
+				661343AD1968A83700ABD269 /* CopyFiles */,
 			);
 			buildRules = (
 			);
