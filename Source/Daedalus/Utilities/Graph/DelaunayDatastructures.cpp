@@ -132,36 +132,6 @@ namespace utils {
 				if (HullVertices[i]->VertexId() == id) return i;
 			return -1;
 		}
-		
-		Uint32 ConvexHull::LeftVertexIndex() const {
-			return MinIndex([] (Vertex * const v) { return v->GetPoint().X; });
-		}
-		
-		Uint32 ConvexHull::RightVertexIndex() const {
-			return MinIndex([] (Vertex * const v) { return -v->GetPoint().X; });
-		}
-		
-		
-		Uint32 ConvexHull::ClosestVertexIndex(const utils::Vector2<> & compare) const {
-			return MinIndex([&] (Vertex * const v) {
-				return (v->GetPoint() - compare).Length2();
-			});
-		}
-
-		Uint32 ConvexHull::MinIndex(const ConvexHull::VertexValueExtractor & valueOf) const {
-			if (HullVertices.empty())
-				return 0;
-			Uint32 minIndex = 0;
-			double threshold = valueOf(HullVertices[0]);
-			for (Uint32 i = 1u; i < HullVertices.size(); i++) {
-				auto value = valueOf(HullVertices[i]);
-				if (value < threshold) {
-					minIndex = i;
-					threshold = value;
-				}
-			}
-			return minIndex;
-		}
 
 		Uint64 ConvexHull::GetSequence(
 			std::deque<Vertex *> & deque,
@@ -290,9 +260,9 @@ namespace utils {
 						nextDist = (vnext->GetPoint() - compare->GetPoint()).Length2();
 
 					if (prevDist < nextDist && prevDist < curDist)
-						index = prevDist;
+						index = prevIndex;
 					else if (nextDist < prevDist && nextDist < curDist)
-						index = nextDist;
+						index = nextIndex;
 					else
 						done = true;
 				} else {

@@ -21,13 +21,6 @@ namespace utils {
 		using VertexComparator =
 			std::function<bool (delaunay::Vertex * const p1, delaunay::Vertex * const p2)>;
 
-		using NextIndexFunction =
-			std::function<Uint64 (const delaunay::ConvexHull &, Uint64)>;
-
-		using FindWindingFunction =
-			std::function<Int8 (
-				delaunay::Vertex * const, delaunay::Vertex * const, delaunay::Vertex * const)>;
-
 	private:
 		Uint32 SubdivisionDepthCap;
 		std::shared_ptr<IDelaunayDAC2DDebug> Debugger;
@@ -58,24 +51,7 @@ namespace utils {
 		 *                   right vertices, 0 for collinear points and 1 when the next
 		 *                   vertex is outside of the tangent line.
 		 */
-		delaunay::Tangent FindTangent(
-			const delaunay::ConvexHull & leftHull,
-			const delaunay::ConvexHull & rightHull,
-			const NextIndexFunction & nextLeftIndex,
-			const NextIndexFunction & nextRightIndex,
-			const FindWindingFunction & getWinding) const;
-
-		/**
-		 * Retrieves the upper tangent of the provided left and right hulls.
-		 */
-		delaunay::Tangent UpperTangent(
-			const delaunay::ConvexHull & leftHull,
-			const delaunay::ConvexHull & rightHull) const;
-
-		/**
-		 * Retrieves the lower tangent of the provided left and right hulls;
-		 */
-		delaunay::Tangent LowerTangent(
+		delaunay::Tangent FindRLTangent(
 			const delaunay::ConvexHull & leftHull,
 			const delaunay::ConvexHull & rightHull) const;
 

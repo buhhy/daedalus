@@ -11,8 +11,6 @@ namespace utils {
 	using InputPointList = DelaunayBuilderDAC2D::InputPointList;
 	using GraphHullIndexArray = DelaunayBuilderDAC2D::GraphHullIndexArray;
 	using VertexComparator = DelaunayBuilderDAC2D::VertexComparator;
-	using NextIndexFunction = DelaunayBuilderDAC2D::NextIndexFunction;
-	using FindWindingFunction = DelaunayBuilderDAC2D::FindWindingFunction;
 	using AddedFaceList = DelaunayBuilderDAC2D::AddedFaceList;
 
 	const VertexComparator HorizontalVertexComparator =
@@ -27,26 +25,6 @@ namespace utils {
 			const auto & p1 = v1->GetPoint(), & p2 = v2->GetPoint();
 			auto y = p2.Y - p1.Y;
 			return std::abs(y) < FLOAT_ERROR ? p1.X < p2.X : y > 0;
-		};
-
-	const NextIndexFunction GetNextHullIndex =
-		[] (const ConvexHull & hull, const Uint64 index) {
-			return hull.NextIndex(index);
-		};
-
-	const NextIndexFunction GetPrevHullIndex =
-		[] (const ConvexHull & hull, const Uint64 index) {
-			return hull.PrevIndex(index);
-		};
-
-	const FindWindingFunction IsCCWWindingFunction =
-		[] (Vertex * const nextVert, Vertex * const leftVert, Vertex * const rightVert) {
-			return IsCWWinding(leftVert, rightVert, nextVert);
-		};
-
-	const FindWindingFunction IsCWWindingFunction =
-		[] (Vertex * const nextVert, Vertex * const leftVert, Vertex * const rightVert) {
-			return IsCWWinding(nextVert, rightVert, leftVert);
 		};
 
 
@@ -263,12 +241,9 @@ namespace utils {
 			rightGraph.AddFace(f[0], f[1], f[2]);
 	}
 
-	Tangent DelaunayBuilderDAC2D::FindTangent(
+	Tangent DelaunayBuilderDAC2D::FindRLTangent(
 		const ConvexHull & leftHull,
-		const ConvexHull & rightHull,
-		const NextIndexFunction & nextLeftIndex,
-		const NextIndexFunction & nextRightIndex,
-		const FindWindingFunction & getWinding
+		const ConvexHull & rightHull
 	) const {
 		// Find the index of the closest vertex in the left hull to the centroid of the right
 		// hull, and do the same, but inverse for the right hull. This is a good starting point
@@ -276,8 +251,8 @@ namespace utils {
 		// Finds the RL tangent (right tangent of left hull to left tangent of right hull)
 		Uint64 leftIndex = leftHull.RightTangent(rightHull[0]);
 		Uint64 rightIndex = rightHull.LeftTangent(leftHull[leftIndex]);
-		Uint64 nextLeft = nextLeftIndex(leftHull, leftIndex);
-		Uint64 nextRight = nextRightIndex(rightHull, rightIndex);
+		Uint64 nextLeft = leftHull.PrevIndex(leftIndex);
+		Uint64 nextRight = rightHull.NextIndex(rightIndex);
 		
 		bool done = true;
 
@@ -286,8 +261,8 @@ namespace utils {
 			
 			// Loop until the next left vertex is below the tangent
 			while (true) {
-				Int8 winding = getWinding(
-					leftHull[nextLeft], leftHull[leftIndex], rightHull[rightIndex]);
+				Int8 winding = IsCWWinding(
+					leftHull[nextLeft], rightHull[rightIndex], leftHull[leftIndex]);
 
 				// If the next left is below the tangent, then we've reached the apex
 				if (winding < 0) {
@@ -302,14 +277,14 @@ namespace utils {
 					if (newDist >= oldDist)
 						break;
 				}
-				nextLeft = nextLeftIndex(leftHull, nextLeft);
-				leftIndex = nextLeftIndex(leftHull, leftIndex);
+				nextLeft = leftHull.PrevIndex(nextLeft);
+				leftIndex = leftHull.PrevIndex(leftIndex);
 			}
 			
 			// Loop until the next right vertex is below the tangent
 			while (true) {
-				Int8 winding = getWinding(
-					rightHull[nextRight], leftHull[leftIndex], rightHull[rightIndex]);
+				Int8 winding = IsCWWinding(
+					rightHull[nextRight], rightHull[rightIndex], leftHull[leftIndex]);
 
 				// If the next right is below the tangent, then we've reached the apex
 				if (winding < 0) {
@@ -324,33 +299,13 @@ namespace utils {
 					if (newDist >= oldDist)
 						break;
 				}
-				nextRight = nextRightIndex(rightHull, nextRight);
-				rightIndex = nextRightIndex(rightHull, rightIndex);
+				nextRight = rightHull.NextIndex(nextRight);
+				rightIndex = rightHull.NextIndex(rightIndex);
 				done = false;
 			}
 		} while (!done);
 
 		return { leftIndex, rightIndex };
-	}
-
-	Tangent DelaunayBuilderDAC2D::UpperTangent(
-		const ConvexHull & leftHull,
-		const ConvexHull & rightHull
-	) const {
-		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
-		return FindTangent(
-			leftHull, rightHull,
-			GetPrevHullIndex, GetNextHullIndex, IsCWWindingFunction);
-	}
-
-	Tangent DelaunayBuilderDAC2D::LowerTangent(
-		const ConvexHull & leftHull,
-		const ConvexHull & rightHull
-	) const {
-		// Find the index of the highest X in leftHull and index of the lowest X in rightHull
-		return FindTangent(
-			rightHull, leftHull,
-			GetPrevHullIndex, GetNextHullIndex, IsCWWindingFunction).Flip();
 	}
 
 	ConvexHull DelaunayBuilderDAC2D::MergeConvexHulls(
@@ -439,8 +394,8 @@ namespace utils {
 				results, leftHalf, currentSubdivisionDepth + 1);
 			auto rightHull = Divide(
 				results, rightHalf, currentSubdivisionDepth + 1);
-			auto upperTangent = UpperTangent(leftHull, rightHull);
-			auto lowerTangent = LowerTangent(leftHull, rightHull);
+			auto upperTangent = FindRLTangent(leftHull, rightHull);
+			auto lowerTangent = FindRLTangent(rightHull, leftHull).Flip();
 
 			if (currentSubdivisionDepth >= SubdivisionDepthCap) {
 				// DEBUG POINT

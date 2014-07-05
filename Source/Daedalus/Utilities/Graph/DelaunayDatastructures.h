@@ -255,11 +255,12 @@ namespace utils {
 			std::vector<Vertex *> HullVertices;
 			bool bIsCollinear;
 			
-			Uint32 MinIndex(const VertexValueExtractor & valueOf) const;
 			Uint64 GetSequence(
 				std::deque<Vertex *> & deque,
 				const Uint64 start, const Uint64 end,
 				const bool isCw) const;
+
+			Uint64 GetRange(const Uint64 start, const Uint64 end, const bool isCW) const;
 			
 			/**
 			 * Finds the required tangent, algorithm here:
@@ -326,14 +327,6 @@ namespace utils {
 			bool AddVertex(Vertex * const vert);
 			utils::Vector2<> Centroid() const;
 			Int32 FindVertexById(const Uint64 id) const;
-
-			// TODO: remove
-			Uint32 LeftVertexIndex() const;
-			Uint32 RightVertexIndex() const;
-			Uint32 ClosestVertexIndex(const utils::Vector2<> & compare) const;
-			// End remove
-
-			Uint64 GetRange(const Uint64 start, const Uint64 end, const bool isCW) const;
 
 			/**
 			 * Finds the right tangent.
