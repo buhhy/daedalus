@@ -255,7 +255,7 @@ const DelaunayTestParam SingleTests[] = {
 
 // THIS WILL CAUSE DEATH IF THE RANGE IS TOO HIGH!
 const DelaunayMultiTestParam MultiTests[] = {
-	DelaunayMultiTestParam(DelaunayTestParam({-79, 6}, 12345678, 16), 100)
+	DelaunayMultiTestParam(DelaunayTestParam({-79, 6}, 12345678, 16), 5)
 };
 
 

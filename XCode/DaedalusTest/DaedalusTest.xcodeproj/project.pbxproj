@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		661343C21968ABB600ABD269 /* gtest.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6669EF091962A0E7006C471E /* gtest.framework */; };
 		6669EE9D19629FA8006C471E /* DaedalusTest.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6669EE9C19629FA8006C471E /* DaedalusTest.1 */; };
 		6669EEA81962A09B006C471E /* Main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEA51962A09B006C471E /* Main.cpp */; };
 		6669EEFD1962A0CD006C471E /* Algebra2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6669EEDD1962A0BB006C471E /* Algebra2.cpp */; };
@@ -23,6 +24,16 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		661343C11968ABAD00ABD269 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				661343C21968ABB600ABD269 /* gtest.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6669EE9519629FA8006C471E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -361,6 +372,7 @@
 				6669EE9319629FA8006C471E /* Sources */,
 				6669EE9419629FA8006C471E /* Frameworks */,
 				6669EE9519629FA8006C471E /* CopyFiles */,
+				661343C11968ABAD00ABD269 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -533,6 +545,7 @@
 				6669EEA219629FA8006C471E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
