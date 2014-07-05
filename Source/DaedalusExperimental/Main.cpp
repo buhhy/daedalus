@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-const Uint16 SizeX = 800, SizeY = 800;
+const Uint16 SizeX = 1000, SizeY = 900;
 
 void DrawNoise(
 	SDL_Renderer * renderer, const utils::PerlinNoise2D * generator,
@@ -38,19 +38,21 @@ int main(int argc, char ** argv) {
 	if (TTF_Init())
 		Quit("TTF_Init Error: ", true);
 
-	SDL_Window * window = SDL_CreateWindow("Daedalus Experimental", 100, 100, SizeX, SizeY, SDL_WINDOW_SHOWN);
+	SDL_Window * window =
+		SDL_CreateWindow("Daedalus Experimental", 100, 100, SizeX, SizeY, SDL_WINDOW_SHOWN);
 	if (window == NULL)
 		Quit("SDL_CreateWindow Error: ", true, true);
 
-	SDL_Renderer * renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	SDL_Renderer * renderer =
+		SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	if (renderer == NULL)
 		Quit("SDL_CreateRenderer Error: ", true, true, window);
 	
-	TTF_Font * fontRegular = TTF_OpenFont("lato.ttf", 48);
-	if (fontRegular == NULL)
+	FontPack fonts("lato.ttf");
+	if (!fonts.Loaded())
 		Quit("TTF_OpenFont() Error: ", true, true, window);
 
-	BiomeRegionRenderer regionRenderer(renderer, SizeX, SizeY, fontRegular);
+	BiomeRegionRenderer regionRenderer(renderer, 800, 800, fonts);
 
 	bool running = true;
 	bool updated = false;
@@ -65,7 +67,7 @@ int main(int argc, char ** argv) {
 
 		if (!updated) {
 			ClearCanvas(renderer);
-			regionRenderer.DrawBiomeRegion({ -79, 6});
+			regionRenderer.DrawBiomeRegion({ -26, -63 });
 			//DrawNoise(renderer, generator, SizeX, SizeY, 0.005f);
 			updated = true;
 		}

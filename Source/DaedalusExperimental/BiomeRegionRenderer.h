@@ -8,6 +8,7 @@
 #include <SDL2/SDL_ttf.h>
 
 #include <unordered_set>
+#include <sstream>
 
 using namespace utils;
 using namespace terrain;
@@ -20,9 +21,10 @@ private:
 
 	Uint16 Width;
 	Uint16 Height;
+	
+	FontPack & Fonts;
 
 	SDL_Renderer * Renderer;
-	TTF_Font * FontRegular;
 
 	void AddEdges(
 		EdgeSet & edges,
@@ -39,13 +41,18 @@ private:
 		}
 	}
 
+	Vector2<> GetVertexPosition(const delaunay::Vertex * vert) const {
+		const auto & p = vert->GetPoint();
+		return { p.X * Width, (1 - p.Y) * Height };
+	}
+
 public:
 	DelaunayDAC2DDebugger(
 		SDL_Renderer * renderer,
 		const Uint16 width, const Uint16 height,
-		TTF_Font * fontRegular
+		FontPack & fonts
 	) : Width(width), Height(height), Skipping(false),
-		Renderer(renderer), FontRegular(fontRegular)
+		Renderer(renderer), Fonts(fonts)
 	{}
 
 	/**
@@ -53,11 +60,7 @@ public:
 	 */
 
 	void DrawVertex(const delaunay::Vertex * vertex, const Uint16 radius, const Colour & colour) {
-		RenderCircle(
-			Renderer,
-			std::round(vertex->GetPoint().X * Width),
-			std::round(vertex->GetPoint().Y * Height),
-			radius, colour);
+		RenderCircle(Renderer, GetVertexPosition(vertex), radius, colour);
 	}
 
 	void DrawVertices(const std::vector<const delaunay::Vertex *> & vertices, const Colour & colour) {
@@ -68,11 +71,8 @@ public:
 
 	void DrawEdges(const EdgeSet & edges, const Colour & colour) {
 		SDL_SetRenderDrawColor(Renderer, colour.X, colour.Y, colour.Z, SDL_ALPHA_OPAQUE);
-		for (auto & edge : edges) {
-			SDL_RenderDrawLine(Renderer,
-				edge.Start->GetPoint().X * Width, edge.Start->GetPoint().Y * Height,
-				edge.End->GetPoint().X * Width, edge.End->GetPoint().Y * Height);
-		}
+		for (auto & edge : edges)
+			RenderLine(Renderer, GetVertexPosition(edge.Start), GetVertexPosition(edge.End));
 	}
 
 	void DrawAddedFaces(
@@ -85,6 +85,20 @@ public:
 				edges.insert(delaunay::Edge(entry[i], entry[(i + 1) % entry.size()]));
 		}
 		DrawEdges(edges, colour);
+	}
+
+	void DrawHullVertexNumbers(const delaunay::ConvexHull & hull, const Colour & colour) {
+		Vector2<> offset(6, 4);
+		std::stringstream stream;
+
+		for (Uint64 i = 0; i < hull.Size(); i++) {
+			stream.str("");
+			stream << i;
+			RenderText(
+				Renderer, stream.str().c_str(),
+				GetVertexPosition(hull[i]) + offset,
+				Fonts.S10, colour);
+		}
 	}
 
 	/**
@@ -143,8 +157,12 @@ public:
 			DrawVertex(rightHull[upperTangent.RightId], 4, { 212, 25, 0 });
 
 			// Draw centroid
-			RenderFilledCircle(Renderer, leftHull.Centroid() * Vector2<>(Width, Height), 4, { 0, 131, 129 });
-			RenderFilledCircle(Renderer, rightHull.Centroid() * Vector2<>(Width, Height), 4, { 0, 131, 129 });
+			//RenderFilledCircle(Renderer, leftHull.Centroid() * Vector2<>(Width, Height), 4, { 0, 131, 129 });
+			//RenderFilledCircle(Renderer, rightHull.Centroid() * Vector2<>(Width, Height), 4, { 0, 131, 129 });
+
+			// Draw convex hull points
+			DrawHullVertexNumbers(leftHull, { 0, 0, 0 });
+			DrawHullVertexNumbers(rightHull, { 0, 0, 0 });
 		
 			SDL_RenderPresent(Renderer);
 
@@ -184,18 +202,19 @@ private:
 	std::shared_ptr<DelaunayDAC2DDebugger> Debugger;
 	std::shared_ptr<events::EventBus> MockBus;
 	BiomeRegionLoader RegionLoader;
+	
+	FontPack & Fonts;
 
 	SDL_Renderer * Renderer;
-	TTF_Font * FontRegular;
 
 public:
 	BiomeRegionRenderer(
 		SDL_Renderer * renderer,
 		const Uint16 width, const Uint16 height,
-		TTF_Font * fontRegular
+		FontPack & fonts
 	) : Seed(12345678), Width(width), Height(height),
 		Renderer(renderer),
-		Debugger(new DelaunayDAC2DDebugger(renderer, width, height, fontRegular)),
+		Debugger(new DelaunayDAC2DDebugger(renderer, width, height, fonts)),
 		MockBus(new events::EventBus()),
 		RegionLoader(
 			{
@@ -209,7 +228,7 @@ public:
 			MockBus,
 			BiomeRegionLoader::DelaunayBuilderPtr(new DelaunayBuilderDAC2D(0, Debugger)),
 			0),
-		FontRegular(fontRegular)
+		Fonts(fonts)
 	{}
 
 	void DrawBiomeRegion(
@@ -220,7 +239,7 @@ public:
 		const auto & edges = graph.GetUniqueEdges();
 		ClearCanvas(Renderer);
 
-		RenderText(Renderer, "Test text, whoa!", 100, 400, FontRegular, { 244, 60, 48 });
+		RenderText(Renderer, "Test text, whoa!", 100, 400, Fonts.S48, { 244, 60, 48 });
 		
 		// Draw edges
 		Debugger->DrawEdges(edges, { 36, 120, 195 });

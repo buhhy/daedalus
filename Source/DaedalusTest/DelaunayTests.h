@@ -10,15 +10,20 @@
 #include <vector>
 #include <random>
 
+using std::cout;
+using std::endl;
+using std::vector;
 using namespace utils::delaunay;
 using namespace utils;
+
+using DelaunayGraphPtr = std::shared_ptr<DelaunayGraph>;
 
 class HexagonGraph : public testing::Test {
 protected:
 	DelaunayGraph * Graph;
-	std::vector<Vector2<>> Points;
-	std::vector<Vertex *> Vertices;
-	std::vector<Face *> Faces;
+	vector<Vector2<>> Points;
+	vector<Vertex *> Vertices;
+	vector<Face *> Faces;
 
 	virtual void SetUp() override {
 		// Inserts a hexagon, point 0 at the center, points 1-5 forming the ring
@@ -45,28 +50,25 @@ protected:
 	}
 };
 
-typedef std::tuple<utils::Vector2<int64_t>, uint64_t, uint32_t> DelaunayTestParam;
+typedef std::tuple<utils::Vector2<int64_t>, Uint64, Uint32> DelaunayTestParam;
+typedef std::pair<DelaunayTestParam, Uint8> DelaunayMultiTestParam;
 
-class DelaunayGridGraph : public testing::TestWithParam<DelaunayTestParam> {
+class DelaunayGridGraph {
 protected:
 	DelaunayBuilderDAC2D Builder;
-	DelaunayGraph * Graph;
-	std::vector<Vector2<>> Points;
-	std::vector<Vertex const *> Vertices;
-	std::vector<Face const *> Faces;
 
-	virtual void SetUp() override {
-		const auto & param = GetParam();
-		// Use a Mersenne Twister random number generator to create deterministic random numbers
-		uint64_t seed = std::get<1>(param);
-		utils::Vector2<int64_t> graphId(std::get<0>(param));
+	DelaunayGraphPtr ConstructGraph(
+		const utils::Vector2<Int64> graphId, const Uint64 seed, const Uint32 gridCellCount
+	) const {
+		cout << "Generated Delaunay graph with params: " <<
+			graphId << ", " << seed << ", " << gridCellCount << endl;
+		DelaunayGraphPtr Graph = DelaunayGraphPtr(new DelaunayGraph(graphId));
+
 		uint8_t minCellPoints = 1;
 		uint8_t maxCellPoints = 1;
-		uint32_t gridCellCount = std::get<2>(param);
-
-		Graph = new DelaunayGraph(graphId);
-
-		uint32_t mtSeed = (uint32_t) utils::HashFromVector(seed, graphId);
+		
+		// Use a Mersenne Twister random number generator to create deterministic random numbers
+		Uint32 mtSeed = (Uint32) utils::HashFromVector(seed, graphId);
 		auto randNumPoints = std::bind(
 			std::uniform_int_distribution<int>(minCellPoints, maxCellPoints), std::mt19937(mtSeed));
 		auto randPosition = std::bind(
@@ -76,7 +78,7 @@ protected:
 		utils::Vector2<> point;
 		utils::Vector2<> offset;
 
-		std::vector<std::pair<utils::Vector2<>, uint64_t> > vertexList;
+		vector<std::pair<utils::Vector2<>, Uint64> > vertexList;
 		
 		// Create uniform random point distribution, and insert vertices into aggregate list
 		for (auto y = 0u; y < gridCellCount; y++) {
@@ -87,7 +89,6 @@ protected:
 					// Set point X, Y to random point within cell
 					point.Reset(randPosition(), randPosition());
 					point = (point + offset) / (double) gridCellCount;
-					Points.push_back(point);
 					vertexList.push_back({ point, vertexList.size() });
 
 					//std::cout << "point (" << point.X << ", " << point.Y << ")" << std::endl;
@@ -96,12 +97,41 @@ protected:
 		}
 
 		Builder.BuildDelaunayGraph(*Graph, vertexList);
-		Vertices = Graph->GetVertices();
-		Faces = Graph->GetFaces();
+		return Graph;
 	}
+};
 
-	virtual void TearDown() override {
-		delete Graph;
+class DelaunayGridGraphSingleTest : public DelaunayGridGraph, public testing::TestWithParam<DelaunayTestParam> {
+protected:
+	DelaunayGraphPtr GenGraph;
+
+	virtual void SetUp() override {
+		const auto & param = GetParam();
+		
+		GenGraph = ConstructGraph(std::get<0>(param), std::get<1>(param), std::get<2>(param));
+	}
+};
+
+class DelaunayGridGraphMultiTest : public DelaunayGridGraph, public testing::TestWithParam<DelaunayMultiTestParam> {
+protected:
+	vector<DelaunayGraphPtr> GenGraphs;
+
+	virtual void SetUp() override {
+		const auto & param = GetParam();
+		const auto & dparam = param.first;
+		const auto & rootPos = std::get<0>(dparam);
+		const auto & range = std::get<1>(param);
+		
+		const Uint16 rowCount = range * 2 + 1;
+		DelaunayTestParam * tests = new DelaunayTestParam[rowCount * rowCount];
+		for (Int16 y = 0; y < rowCount; y++) {
+			for (Int16 x = 0; x < rowCount; x++) {
+				GenGraphs.push_back(
+					ConstructGraph(
+						{ x - range + rootPos.X, y - range + rootPos.Y },
+						std::get<1>(dparam), std::get<2>(dparam)));
+			}
+		}
 	}
 };
 
@@ -194,14 +224,25 @@ TEST_F(HexagonGraph, DeletesFaces) {
  * Delaunay triangulation algorithm tests
  */
 
-TEST_P(DelaunayGridGraph, GeneratesValidTriangulation) {
-	for (uint16_t i = 0; i < Vertices.size(); i++) {
-		TestCWTraversal(Vertices[i], false);
-		TestCCWTraversal(Vertices[i], false);
+TEST_P(DelaunayGridGraphSingleTest, GeneratesValidTriangulation) {
+	auto vertices = GenGraph->GetVertices();
+	for (uint16_t i = 0; i < vertices.size(); i++) {
+		TestCWTraversal(vertices[i], false);
+		TestCCWTraversal(vertices[i], false);
 	}
 }
 
-const DelaunayTestParam TestParams[] = {
+TEST_P(DelaunayGridGraphMultiTest, GeneratesValidTriangulation) {
+	for (auto & genGraph : GenGraphs) {
+		auto vertices = genGraph->GetVertices();
+		for (uint16_t i = 0; i < vertices.size(); i++) {
+			TestCWTraversal(vertices[i], false);
+			TestCCWTraversal(vertices[i], false);
+		}
+	}
+}
+
+const DelaunayTestParam SingleTests[] = {
 	DelaunayTestParam({4, 24}, 12345678, 16),
 	DelaunayTestParam({4, 4}, 12345678, 16),
 	DelaunayTestParam({3, 4}, 12345678, 16),
@@ -212,11 +253,16 @@ const DelaunayTestParam TestParams[] = {
 	DelaunayTestParam({-5, 5}, 12345678, 64)
 };
 
+// THIS WILL CAUSE DEATH IF THE RANGE IS TOO HIGH!
+const DelaunayMultiTestParam MultiTests[] = {
+	DelaunayMultiTestParam(DelaunayTestParam({-79, 6}, 12345678, 16), 100)
+};
+
 
 // Test delaunay point set
 //void Test(DelaunayGraph & graph) {
-//	std::vector<Vector2<> > testPoints;
-//	std::vector<Vertex *> testVertices;
+//	vector<Vector2<> > testPoints;
+//	vector<Vertex *> testVertices;
 //	testPoints.push_back({ 0.1, 0.2 });
 //	testPoints.push_back({ 0.2, 0.1 });
 //	testPoints.push_back({ 0.2, 0.3 });
@@ -241,4 +287,5 @@ const DelaunayTestParam TestParams[] = {
 //	graph.ConvexHull = Divide(graph, testVertices, 0);
 //}
 
-INSTANTIATE_TEST_CASE_P(DistributedPoints, DelaunayGridGraph, testing::ValuesIn(TestParams));
+INSTANTIATE_TEST_CASE_P(DistributedPoints, DelaunayGridGraphSingleTest, testing::ValuesIn(SingleTests));
+INSTANTIATE_TEST_CASE_P(DeathTest, DelaunayGridGraphMultiTest, testing::ValuesIn(MultiTests));

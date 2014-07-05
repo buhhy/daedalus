@@ -224,56 +224,84 @@ namespace utils {
 			if (Size() == 1)
 				return 0;
 
-			Uint64 index = 0;
-			Uint64 prevIndex = isRight ? Size() - 1 : 1;
-			Uint64 nextIndex = isRight ? 1 : Size() - 1;
+			auto windingFn = isRight ? &IsCWWinding : &IsCCWWinding;
 
+			Uint64 index = 0;
+			Uint64 prevIndex = Size() - 1;
+			Uint64 nextIndex = 1;
+			
+			bool dirIsCW = true;
 			bool done = false;
+			
+			const auto * vcur = (*this)[index];
+			const auto * vnext = (*this)[nextIndex];
+			const auto * vprev = (*this)[prevIndex];
+			
+			Int8 prevWinding = windingFn(compare, vcur, vprev);
+			Int8 nextWinding = windingFn(compare, vcur, vnext);
+
+			// If the both next and prev vertices are left of the current point, then
+			// we're already at the apex
+			if (nextWinding < 0 && prevWinding < 0) {
+				return index;
+			} else if (prevWinding == 1 || nextWinding == 1) {
+				if (prevWinding != 1) {
+					dirIsCW = true;
+				} else if (nextWinding != 1) {
+					dirIsCW = false;
+				} else {
+					// Conflict, take the path which is closer to the current point
+					const auto & cp = compare->GetPoint();
+					double curDist = (vcur->GetPoint() - cp).Length2();
+					double prevDist = (vprev->GetPoint() - cp).Length2();
+					double nextDist = (vnext->GetPoint() - cp).Length2();
+
+					dirIsCW = nextDist <= prevDist;
+				}
+			} else {
+				// In the case of collinear left, next left, and right points, select
+				// the point with the shortest distance.
+				double curDist = (vcur->GetPoint() - compare->GetPoint()).Length2();
+				double prevDist = curDist + 1;
+				double nextDist = curDist + 1;
+
+				if (prevWinding == 0)
+					prevDist = (vprev->GetPoint() - compare->GetPoint()).Length2();
+				if (nextWinding == 0)
+					nextDist = (vnext->GetPoint() - compare->GetPoint()).Length2();
+
+				dirIsCW = nextDist <= prevDist && nextDist < curDist;
+			}
+
+			auto nextIndexFn = dirIsCW ? &ConvexHull::NextIndex : &ConvexHull::PrevIndex;
+			index = dirIsCW ? nextIndex : prevIndex;
+			nextIndex = (*this.*nextIndexFn)(index);
 			
 			// Loop until no adjacent vertices are on the right side of the tangent
 			do {
 				done = false;
 
-				const auto & vcur = (*this)[index];
-				const auto & vnext = (*this)[nextIndex];
-				const auto & vprev = (*this)[prevIndex];
+				vcur = (*this)[index];
+				vnext = (*this)[nextIndex];
 			
-				Int8 prevWinding = isRight ?
-					IsCWWinding(compare, vcur, vprev) : IsCWWinding(compare, vprev, vcur);
 				Int8 nextWinding = isRight ?
 					IsCWWinding(compare, vcur, vnext) : IsCWWinding(compare, vnext, vcur);
 
-				// If the both next and prev vertices are left of the current point, then
-				// we've reached the apex.
-				if (nextWinding < 0 && prevWinding < 0) {
+				// If the winding is CCW, then we've reached the apex
+				if (nextWinding < 0) {
 					done = true;
-				} else if (prevWinding == 0 || nextWinding == 0) {
+				} else if (nextWinding == 0) {
 					// In the case of collinear left, next left, and right points, select
 					// the point with the shortest distance.
 					double curDist = (vcur->GetPoint() - compare->GetPoint()).Length2();
-					double prevDist = curDist + 1;
-					double nextDist = curDist + 1;
-
-					if (prevWinding == 0)
-						prevDist = (vprev->GetPoint() - compare->GetPoint()).Length2();
-					if (nextWinding == 0)
-						nextDist = (vnext->GetPoint() - compare->GetPoint()).Length2();
-
-					if (prevDist < nextDist && prevDist < curDist)
-						index = prevIndex;
-					else if (nextDist < prevDist && nextDist < curDist)
-						index = nextIndex;
-					else
-						done = true;
-				} else {
-					if (nextWinding == 1)
-						index = nextIndex;
-					else
-						index = prevIndex;
+					double nextDist = (vnext->GetPoint() - compare->GetPoint()).Length2();
+					done = nextDist >= curDist;
 				}
 
-				prevIndex = isRight ? this->PrevIndex(index) : this->NextIndex(index);
-				nextIndex = isRight ? this->NextIndex(index) : this->PrevIndex(index);
+				if (!done) {
+					index = nextIndex;
+					nextIndex = (*this.*nextIndexFn)(index);
+				}
 			} while (!done);
 
 			return index;

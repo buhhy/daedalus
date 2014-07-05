@@ -351,6 +351,15 @@ namespace utils {
 		) {
 			return FindWinding(v1->GetPoint(), v2->GetPoint(), v3->GetPoint());
 		}
+
+		/**
+		 * Returns 1: CCW, 0: Colinear, -1: CW
+		 */
+		inline Int8 IsCCWWinding(
+			const Vertex * const v1, const Vertex * const v2, const Vertex * const v3
+		) {
+			return -IsCWWinding(v1, v2, v3);
+		}
 	}
 
 
