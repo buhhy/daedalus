@@ -57,7 +57,7 @@ namespace terrain {
 		void SetRainfall(const float rainfall) { Rainfall = rainfall; }
 	};
 
-	typedef std::unordered_map<Uint64, std::shared_ptr<BiomeData> > BiomeDataMap;
+	typedef std::unordered_map<Uint64, std::shared_ptr<BiomeData>> BiomeDataMap;
 
 	/**
 	 * Each biome cell contains a list of 2D points that will be used in a Delaunay
@@ -116,12 +116,12 @@ namespace terrain {
 		~BiomeRegionData() {}
 
 
-		inline BiomeData * GetBiomeAt(const Uint64 localBiomeId) {
-			return Biomes.at(localBiomeId).get();
+		inline std::weak_ptr<BiomeData> GetBiomeAt(const Uint64 localBiomeId) {
+			return Biomes.at(localBiomeId);
 		}
 
-		inline const BiomeData * GetBiomeAt(const Uint64 localBiomeId) const {
-			return Biomes.at(localBiomeId).get();
+		inline std::weak_ptr<const BiomeData> GetBiomeAt(const Uint64 localBiomeId) const {
+			return Biomes.at(localBiomeId);
 		}
 
 		inline const BiomeRegionOffsetVector & GetBiomeRegionOffset() const {

@@ -9,11 +9,6 @@
 #include <memory>
 
 namespace terrain {
-	typedef std::unordered_map<
-		terrain::BiomeRegionOffsetVector,
-		std::shared_ptr<BiomeRegionData>
-	> BiomeRegionCache;
-
 	/**
 	 * This class will load data related to a particular biome region. Biome regions will
 	 * contain multiple biomes linked through a delaunay triangulation. After the generation
@@ -26,6 +21,9 @@ namespace terrain {
 		using VertexWithHullIndex = std::pair<utils::Vector2<>, Uint32>;
 		using BiomeRegionDataPtr = std::shared_ptr<BiomeRegionData>;
 		using DelaunayBuilderPtr = std::shared_ptr<utils::DelaunayBuilderDAC2D>;
+		using UpdatedRegionSet = std::unordered_set<BiomeRegionOffsetVector>;
+		using BiomeRegionCache =
+			std::unordered_map<terrain::BiomeRegionOffsetVector, BiomeRegionDataPtr>;
 
 	private:
 		BiomeRegionCache LoadedBiomeRegionCache;
@@ -48,9 +46,12 @@ namespace terrain {
 		BiomeRegionDataPtr GenerateBiomeRegion(
 			const BiomeRegionOffsetVector & offset);
 		BiomeRegionDataPtr GenerateBiomeRegionArea(
-			const BiomeRegionOffsetVector & offset, const Uint8 radius);
+			UpdatedRegionSet & updatedRegions,
+			const BiomeRegionOffsetVector & offset,
+			const Uint8 radius);
 
 		BiomeRegionDataPtr GenerateBiomeDataForRegion(
+			UpdatedRegionSet & updatedRegions,
 			BiomeRegionDataPtr biomeRegion);
 
 		bool MergeRegionEdge(BiomeRegionData & r1, BiomeRegionData & r2);
@@ -59,7 +60,8 @@ namespace terrain {
 			BiomeRegionData & tr,
 			BiomeRegionData & bl,
 			BiomeRegionData & br);
-		std::unordered_set<BiomeRegionOffsetVector> MergeRegion(
+		void MergeRegion(
+			UpdatedRegionSet & updatedRegions,
 			BiomeRegionDataPtr targetRegion);
 
 	public:

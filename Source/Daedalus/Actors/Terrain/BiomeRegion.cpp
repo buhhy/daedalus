@@ -50,6 +50,7 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	float gridLineWidth = 0.25;
 	float pointSize = 0.9;
 	float edgeWidth = 0.6;
+	float heightMultiplier = 10;
 	double scale = BiomeGridScale;
 
 	uint32 size = RegionData->GetBiomeGridSize();
@@ -86,7 +87,8 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	std::vector<utils::Triangle> pointTries;
 	auto verts = graph.GetVertices();
 	for (auto v : verts) {
-		tempVector31.Reset(v->GetPoint() * scale, 0);
+		auto biome = RegionData->GetBiomeAt(v->VertexId());
+		tempVector31.Reset(v->GetPoint() * scale, biome.lock()->GetElevation() * heightMultiplier);
 		utils::CreatePoint(pointTries, tempVector31, pointSize);
 	}
 	for (auto it : pointTries) triangles.Add(FMeshTriangle(it, vertexColor));
@@ -108,8 +110,10 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	std::vector<utils::Triangle> edgeTries;
 	auto edges = graph.GetUniqueEdges();
 	for (auto e : edges) {
-		tempVector31.Reset(e.Start->GetPoint() * scale, 0);
-		tempVector32.Reset(e.End->GetPoint() * scale, 0);
+		auto biome1 = RegionData->GetBiomeAt(e.Start->VertexId());
+		auto biome2 = RegionData->GetBiomeAt(e.End->VertexId());
+		tempVector31.Reset(e.Start->GetPoint() * scale, biome1.lock()->GetElevation() * heightMultiplier);
+		tempVector32.Reset(e.End->GetPoint() * scale, biome2.lock()->GetElevation() * heightMultiplier);
 		utils::CreateLine(edgeTries, tempVector31, tempVector32, edgeWidth);
 	}
 	for (auto it : edgeTries) triangles.Add(FMeshTriangle(it, edgeColor));
@@ -119,9 +123,12 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	auto faces = graph.GetFaces();
 	for (auto f : faces) {
 		if (!f->IsDegenerate()) {
-			tempVector31.Reset(f->Vertices[0]->GetPoint() * scale, 0);
-			tempVector32.Reset(f->Vertices[1]->GetPoint() * scale, 0);
-			tempVector33.Reset(f->Vertices[2]->GetPoint() * scale, 0);
+			auto biome1 = RegionData->GetBiomeAt(f->Vertices[0]->VertexId());
+			auto biome2 = RegionData->GetBiomeAt(f->Vertices[1]->VertexId());
+			auto biome3 = RegionData->GetBiomeAt(f->Vertices[2]->VertexId());
+			tempVector31.Reset(f->Vertices[0]->GetPoint() * scale, biome1.lock()->GetElevation() * heightMultiplier);
+			tempVector32.Reset(f->Vertices[1]->GetPoint() * scale, biome2.lock()->GetElevation() * heightMultiplier);
+			tempVector33.Reset(f->Vertices[2]->GetPoint() * scale, biome3.lock()->GetElevation() * heightMultiplier);
 			faceTries.push_back(utils::Triangle(tempVector31, tempVector32, tempVector33));
 		}
 	}
