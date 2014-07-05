@@ -50,7 +50,7 @@ namespace terrain {
 		BiomeRegionDataPtr GenerateBiomeRegionArea(
 			const BiomeRegionOffsetVector & offset, const Uint8 radius);
 
-		BiomeRegionDataPtr BiomeRegionLoader::GenerateBiomeDataForRegion(
+		BiomeRegionDataPtr GenerateBiomeDataForRegion(
 			BiomeRegionDataPtr biomeRegion);
 
 		bool MergeRegionEdge(BiomeRegionData & r1, BiomeRegionData & r2);

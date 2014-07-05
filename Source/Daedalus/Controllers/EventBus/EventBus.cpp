@@ -40,8 +40,6 @@ namespace events {
 		EventListener * const listener
 	) {
 		if (Listeners.count(type) > 0) {
-			bool found = false;
-
 			auto & listeners = Listeners.at(type);
 
 			std::remove_if(
@@ -51,7 +49,7 @@ namespace events {
 		}
 	}
 
-	Uint32 EventBus::Count(const events::EventType type) const {
+	Uint64 EventBus::Count(const events::EventType type) const {
 		if (Listeners.count(type) > 0)
 			return Listeners.at(type)->size();
 		return 0;

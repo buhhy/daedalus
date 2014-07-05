@@ -252,7 +252,6 @@ namespace utils {
 				} else {
 					// Conflict, take the path which is closer to the current point
 					const auto & cp = compare->GetPoint();
-					double curDist = (vcur->GetPoint() - cp).Length2();
 					double prevDist = (vprev->GetPoint() - cp).Length2();
 					double nextDist = (vnext->GetPoint() - cp).Length2();
 

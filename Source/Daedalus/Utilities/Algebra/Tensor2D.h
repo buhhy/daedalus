@@ -31,17 +31,22 @@ namespace utils {
 
 	template <typename T>
 	class Tensor2D : public Tensor2DBase<T> {
+	private:
+		using Tensor2DBase<T>::Data;
+		using Tensor2DBase<T>::Width;
+		using Tensor2DBase<T>::Depth;
+
 	public:
-		Tensor2D() :Tensor2DBase(0, 0) {}
-		Tensor2D(const Vector2<size_t> & size) : Tensor2DBase(size.X, size.Y) {}
+		Tensor2D() : Tensor2DBase<T>(0, 0) {}
+		Tensor2D(const Vector2<size_t> & size) : Tensor2DBase<T>(size.X, size.Y) {}
 		Tensor2D(const Vector2<size_t> & size, const T & value) :
-			Tensor2DBase(size.X, size.Y, value)
+			Tensor2DBase<T>(size.X, size.Y, value)
 		{}
 		Tensor2D(const size_t width, const size_t depth) :
-			Tensor2DBase(width, depth)
+			Tensor2DBase<T>(width, depth)
 		{}
 		Tensor2D(const size_t width, const size_t depth, const T & value) :
-			Tensor2DBase(width, depth, value)
+			Tensor2DBase<T>(width, depth, value)
 		{}
 
 		const T & Get(const size_t x, const size_t y) const {
@@ -66,6 +71,11 @@ namespace utils {
 	// Specialization for Tensor2D<bool> because vector<bool> has a special implementation
 	template <>
 	class Tensor2D<bool> : public Tensor2DBase<bool> {
+	private:
+		using Tensor2DBase<bool>::Data;
+		using Tensor2DBase<bool>::Width;
+		using Tensor2DBase<bool>::Depth;
+
 	public:
 		Tensor2D() :Tensor2DBase(0, 0) {}
 		Tensor2D(const Vector2<size_t> & size) : Tensor2DBase(size.X, size.Y) {}
@@ -95,20 +105,25 @@ namespace utils {
 
 	template <typename T>
 	class TensorResizable2D : public Tensor2D<T> {
+	private:
+		using Tensor2D<T>::Data;
+		using Tensor2D<T>::Width;
+		using Tensor2D<T>::Depth;
+
 	public:
-		TensorResizable2D() :Tensor2D(0, 0) {}
-		TensorResizable2D(const Vector2<size_t> & size) : Tensor2D(size.X, size.Y) {}
+		TensorResizable2D() :Tensor2D<T>(0, 0) {}
+		TensorResizable2D(const Vector2<size_t> & size) : Tensor2D<T>(size.X, size.Y) {}
 		TensorResizable2D(const Vector2<size_t> & size, const T & value) :
-			Tensor2D(size.X, size.Y, value)
+			Tensor2D<T>(size.X, size.Y, value)
 		{}
 		TensorResizable2D(const size_t width, const size_t depth) :
-			Tensor2D(width, depth)
+			Tensor2D<T>(width, depth)
 		{}
 		TensorResizable2D(const size_t width, const size_t depth, const T & value) :
-			Tensor2D(width, depth, value)
+			Tensor2D<T>(width, depth, value)
 		{}
 
-		Tensor2D & Reset(size_t Width, size_t Depth, const T & value) {
+		TensorResizable2D & Reset(size_t Width, size_t Depth, const T & value) {
 			this->Width = Width;
 			this->Depth = Depth;
 			Data.resize(Width * Depth, value);
@@ -122,7 +137,7 @@ namespace utils {
 	template <typename T, size_t S>
 	class TensorFixed2D : public Tensor2D<T> {
 	public:
-		TensorFixed2D() : Tensor2D(S) {}
-		TensorFixed2D(const T & value) : Tensor2D(S, S, value) {}
+		TensorFixed2D() : Tensor2D<T>(S) {}
+		TensorFixed2D(const T & value) : Tensor2D<T>(S, S, value) {}
 	};
 }

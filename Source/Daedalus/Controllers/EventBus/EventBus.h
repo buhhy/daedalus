@@ -39,7 +39,7 @@ namespace events {
 			const events::EventType type,
 			EventListener * const listener);
 
-		Uint32 Count(const events::EventType type) const;
+		Uint64 Count(const events::EventType type) const;
 
 		/**
 		 * Broadcast the event along with its event data to all listening interfaces.

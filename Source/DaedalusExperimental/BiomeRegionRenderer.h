@@ -5,7 +5,7 @@
 #include <Utilities/Algebra/Algebra2.h>
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL2_ttf/SDL_ttf.h>
 
 #include <unordered_set>
 #include <sstream>
@@ -196,7 +196,7 @@ public:
 
 class BiomeRegionRenderer {
 private:
-	Uint64 Seed;
+	Int64 Seed;
 	Uint16 Width;
 	Uint16 Height;
 	std::shared_ptr<DelaunayDAC2DDebugger> Debugger;

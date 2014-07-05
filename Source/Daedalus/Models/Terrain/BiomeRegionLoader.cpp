@@ -71,7 +71,7 @@ namespace terrain {
 		std::shared_ptr<const VertexWithHullIndex> lowerLimit1 = NULL;
 		std::shared_ptr<const VertexWithHullIndex> lowerLimit2 = NULL;
 
-		if (direction.X == -1 && direction.Y == 0 || direction.X == 0 && direction.Y == -1) {
+		if ((direction.X == -1 && direction.Y == 0) || (direction.X == 0 && direction.Y == -1)) {
 			std::swap(region1, region2);
 			direction.X = direction.X * -1;
 			direction.Y = direction.Y * -1;
@@ -92,7 +92,7 @@ namespace terrain {
 		}
 
 		// Logging output
-		UE_LOG(LogTemp, Warning, TEXT("Merging edges: (%ld %ld) - (%ld %ld)"),
+		UE_LOG(LogTemp, Warning, TEXT("Merging edges: (%lld %lld) - (%lld %lld)"),
 			region1->GetBiomeRegionOffset().X, region1->GetBiomeRegionOffset().Y,
 			region2->GetBiomeRegionOffset().X, region2->GetBiomeRegionOffset().Y)
 		
@@ -139,7 +139,7 @@ namespace terrain {
 		bl.NeighboursMerged.Set(2, 2, true);
 		br.NeighboursMerged.Set(0, 2, true);
 
-		UE_LOG(LogTemp, Warning, TEXT("Merging corners: (%ld %ld) - (%ld %ld) - (%ld %ld) - (%ld %ld)"),
+		UE_LOG(LogTemp, Warning, TEXT("Merging corners: (%lld %lld) - (%lld %lld) - (%lld %lld) - (%lld %lld)"),
 			tl.GetBiomeRegionOffset().X, tl.GetBiomeRegionOffset().Y,
 			tr.GetBiomeRegionOffset().X, tr.GetBiomeRegionOffset().Y,
 			bl.GetBiomeRegionOffset().X, bl.GetBiomeRegionOffset().Y,
@@ -269,7 +269,7 @@ namespace terrain {
 					// Set point X, Y to random point within cell
 					point.Reset(randPosition(), randPosition());
 					point = (point + offset) / (double) BiomeGenParams.GridCellCount;
-					auto id = dataRef->AddBiome(x, y, point);
+					dataRef->AddBiome(x, y, point);
 				}
 			}
 		}
