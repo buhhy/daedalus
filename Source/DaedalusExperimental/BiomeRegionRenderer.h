@@ -239,7 +239,7 @@ public:
 		const auto & edges = graph.GetUniqueEdges();
 		ClearCanvas(Renderer);
 
-		RenderText(Renderer, "Test text, whoa!", 100, 400, Fonts.S48, { 244, 60, 48 });
+		RenderText(Renderer, "Done!", 100, Height / 2, Fonts.S48, { 244, 60, 48 });
 		
 		// Draw edges
 		Debugger->DrawEdges(edges, { 36, 120, 195 });

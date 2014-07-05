@@ -39,7 +39,7 @@ int main(int argc, char ** argv) {
 		Quit("TTF_Init Error: ", true);
 
 	SDL_Window * window =
-		SDL_CreateWindow("Daedalus Experimental", 100, 100, SizeX, SizeY, SDL_WINDOW_SHOWN);
+		SDL_CreateWindow("Delaunay Visualization", 100, 100, SizeX, SizeY, SDL_WINDOW_SHOWN);
 	if (window == NULL)
 		Quit("SDL_CreateWindow Error: ", true, true);
 
