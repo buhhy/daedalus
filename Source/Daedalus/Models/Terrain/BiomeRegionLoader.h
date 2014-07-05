@@ -32,6 +32,7 @@ namespace terrain {
 		BiomeGeneratorParameters BiomeGenParams;
 		
 		DelaunayBuilderPtr DelaunayBuilder;
+		Uint8 FetchRadius;
 		std::shared_ptr<events::EventBus> EventBus;
 		std::shared_ptr<const VertexWithHullIndex> GetCornerHullVertex(
 			const BiomeRegionData & data, const bool cornerX, const bool cornerY) const;
@@ -66,7 +67,8 @@ namespace terrain {
 			const BiomeGeneratorParameters & params,
 			std::shared_ptr<events::EventBus> eventBus,
 			DelaunayBuilderPtr builder =
-				DelaunayBuilderPtr(new utils::DelaunayBuilderDAC2D()));
+				DelaunayBuilderPtr(new utils::DelaunayBuilderDAC2D()),
+			Uint8 fetchRadius = 1);
 		~BiomeRegionLoader();
 		
 

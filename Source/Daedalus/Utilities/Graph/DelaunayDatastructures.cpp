@@ -249,6 +249,65 @@ namespace utils {
 				return sum / (6.0 * totalArea);
 			}
 		}
+
+		Uint64 ConvexHull::FindTangent(const Vertex * compare, const bool isRight) const {
+			if (Size() == 1)
+				return 0;
+
+			Uint64 index = 0;
+			Uint64 prevIndex = isRight ? Size() - 1 : 1;
+			Uint64 nextIndex = isRight ? 1 : Size() - 1;
+
+			bool done = false;
+			
+			// Loop until no adjacent vertices are on the right side of the tangent
+			do {
+				done = false;
+
+				const auto & vcur = (*this)[index];
+				const auto & vnext = (*this)[nextIndex];
+				const auto & vprev = (*this)[prevIndex];
+			
+				Int8 prevWinding = isRight ?
+					IsCWWinding(compare, vcur, vprev) : IsCWWinding(compare, vprev, vcur);
+				Int8 nextWinding = isRight ?
+					IsCWWinding(compare, vcur, vnext) : IsCWWinding(compare, vnext, vcur);
+
+				// If the both next and prev vertices are left of the current point, then
+				// we've reached the apex.
+				if (nextWinding < 0 && prevWinding < 0) {
+					done = true;
+				} else if (prevWinding == 0 || nextWinding == 0) {
+					// In the case of collinear left, next left, and right points, select
+					// the point with the shortest distance.
+					double curDist = (vcur->GetPoint() - compare->GetPoint()).Length2();
+					double prevDist = curDist + 1;
+					double nextDist = curDist + 1;
+
+					if (prevWinding == 0)
+						prevDist = (vprev->GetPoint() - compare->GetPoint()).Length2();
+					if (nextWinding == 0)
+						nextDist = (vnext->GetPoint() - compare->GetPoint()).Length2();
+
+					if (prevDist < nextDist && prevDist < curDist)
+						index = prevDist;
+					else if (nextDist < prevDist && nextDist < curDist)
+						index = nextDist;
+					else
+						done = true;
+				} else {
+					if (nextWinding == 1)
+						index = nextIndex;
+					else
+						index = prevIndex;
+				}
+
+				prevIndex = isRight ? this->PrevIndex(index) : this->NextIndex(index);
+				nextIndex = isRight ? this->NextIndex(index) : this->PrevIndex(index);
+			} while (!done);
+
+			return index;
+		}
 	}
 
 	using namespace delaunay;

@@ -16,8 +16,9 @@ namespace terrain {
 	BiomeRegionLoader::BiomeRegionLoader(
 		const BiomeGeneratorParameters & params,
 		std::shared_ptr<events::EventBus> eventBus,
-		DelaunayBuilderPtr builder
-	) : BiomeGenParams(params), EventBus(eventBus), DelaunayBuilder(builder)
+		DelaunayBuilderPtr builder,
+		Uint8 fetchRadius
+	) : BiomeGenParams(params), EventBus(eventBus), DelaunayBuilder(builder), FetchRadius(fetchRadius)
 	{}
 
 	BiomeRegionLoader::~BiomeRegionLoader() {
@@ -351,6 +352,7 @@ namespace terrain {
 				}
 			}
 
+			biomeRegion->GenerateBiomeData();
 			std::vector<BiomeRegionOffsetVector> updatedVec;
 			updatedVec.push_back(biomeRegion->GetBiomeRegionOffset());
 			EventBus->BroadcastEvent(
@@ -365,14 +367,17 @@ namespace terrain {
 		const BiomeRegionOffsetVector & offset
 	) {
 		//UE_LOG(LogTemp, Error, TEXT("Loading chunk at offset: %d %d %d"), offset.X, offset.Y, offset.Z);
-		if (LoadedBiomeRegionCache.count(offset) > 0) {
-			return LoadedBiomeRegionCache.at(offset);
-		} else {
-			if (IsBiomeRegionGenerated(offset))
-				return LoadBiomeRegionFromDisk(offset);
-			else
-				return GenerateBiomeRegionArea(offset, 0);
+		auto loaded = GetBiomeRegionFromCache(offset);
+		if (!loaded || !loaded->IsMergedWithAllNeighbours()) {
+			// Biome region has not been generated yet or its neighbours haven't been
+			// generated yet.
+			loaded = GenerateBiomeRegionArea(offset, FetchRadius);
 		}
+
+		if (!loaded->IsBiomeDataGenerated())
+			GenerateBiomeDataForRegion(loaded);
+
+		return loaded;
 	}
 
 	const BiomeId BiomeRegionLoader::FindNearestBiomeId(const utils::Vector2<> point) {

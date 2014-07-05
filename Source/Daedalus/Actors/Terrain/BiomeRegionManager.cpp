@@ -68,10 +68,13 @@ void ABiomeRegionManager::ReloadRegionAt(const terrain::BiomeRegionOffsetVector 
 	LocalCache.insert({ offset, newRegion });
 }
 
-void ABiomeRegionManager::DeleteRegionAt(const terrain::BiomeRegionOffsetVector & offset) {
+bool ABiomeRegionManager::DeleteRegionAt(const terrain::BiomeRegionOffsetVector & offset) {
 	if (LocalCache.count(offset) > 0) {
 		LocalCache.at(offset)->Destroy();
 		LocalCache.erase(offset);
+		return true;
+	} else {
+		return false;
 	}
 }
 
@@ -92,8 +95,8 @@ void ABiomeRegionManager::HandleEvent(
 	} else if (type == events::E_BiomeRegionUpdate) {
 		auto castedData = std::static_pointer_cast<events::EBiomeRegionUpdate>(data);
 		for (auto offset : castedData->UpdatedOffsets) {
-			DeleteRegionAt(offset);
-			ReloadRegionAt(offset);
+			if (DeleteRegionAt(offset))
+				ReloadRegionAt(offset);
 		}
 	}
 }

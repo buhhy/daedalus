@@ -40,6 +40,17 @@ namespace utils {
 
 		typedef std::unordered_map<Uint64, Face * const> IdFaceMap;
 
+		struct Tangent {
+			Uint64 LeftId, RightId;
+
+			Tangent & Flip() {
+				Uint64 temp = LeftId;
+				LeftId = RightId;
+				RightId = temp;
+				return *this;
+			}
+		};
+
 
 
 		/**
@@ -249,6 +260,17 @@ namespace utils {
 				std::deque<Vertex *> & deque,
 				const Uint64 start, const Uint64 end,
 				const bool isCw) const;
+			
+			/**
+			 * Finds the required tangent, algorithm here:
+			 * http://geomalgorithms.com/a15-_tangents.html#RLtangent_PolyPolyC%28%29
+			 * R Tangent
+			 * .
+			 * o ----------------------- x
+			 * .
+			 * L Tangent
+			 */
+			Uint64 FindTangent(const Vertex * compare, const bool isRight) const;
 		public:
 			ConvexHull() : bIsCollinear(false) {}
 			ConvexHull(std::vector<Vertex *> hullVertices) : HullVertices(hullVertices) {}
@@ -305,17 +327,35 @@ namespace utils {
 			utils::Vector2<> Centroid() const;
 			Int32 FindVertexById(const Uint64 id) const;
 
+			// TODO: remove
 			Uint32 LeftVertexIndex() const;
 			Uint32 RightVertexIndex() const;
 			Uint32 ClosestVertexIndex(const utils::Vector2<> & compare) const;
+			// End remove
 
 			Uint64 GetRange(const Uint64 start, const Uint64 end, const bool isCW) const;
+
+			/**
+			 * Finds the right tangent.
+			 */
+			inline Uint64 RightTangent(const Vertex * compare) const {
+				return FindTangent(compare, true);
+			}
+			
+			/**
+			 * Finds the left tangent.
+			 */
+			inline Uint64 LeftTangent(const Vertex * compare) const {
+				return FindTangent(compare, false);
+			}
 		};
 
 		/**
 		 * Returns 1: CW, 0: Colinear, -1: CCW
 		 */
-		inline Int8 IsCWWinding(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
+		inline Int8 IsCWWinding(
+			const Vertex * const v1, const Vertex * const v2, const Vertex * const v3
+		) {
 			return FindWinding(v1->GetPoint(), v2->GetPoint(), v3->GetPoint());
 		}
 	}

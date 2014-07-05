@@ -29,7 +29,7 @@ private:
 	ADDGameState * GetGameState();
 	void UpdateBiomesAt(const utils::Vector3<> & playerPosition);
 	void ReloadRegionAt(const terrain::BiomeRegionOffsetVector & offset);
-	void DeleteRegionAt(const terrain::BiomeRegionOffsetVector & offset);
+	bool DeleteRegionAt(const terrain::BiomeRegionOffsetVector & offset);
 
 public:
 	virtual void HandleEvent(

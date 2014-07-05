@@ -207,6 +207,8 @@ const DelaunayTestParam TestParams[] = {
 	DelaunayTestParam({3, 4}, 12345678, 16),
 	DelaunayTestParam({-25, 3}, 12345678, 16),
 	DelaunayTestParam({-24, 3}, 12345678, 16),
+	DelaunayTestParam({-28, 3}, 12345678, 16),
+	DelaunayTestParam({-79, 6}, 12345678, 16),
 	DelaunayTestParam({-5, 5}, 12345678, 64)
 };
 
@@ -239,4 +241,4 @@ const DelaunayTestParam TestParams[] = {
 //	graph.ConvexHull = Divide(graph, testVertices, 0);
 //}
 
-//INSTANTIATE_TEST_CASE_P(DistributedPoints, DelaunayGridGraph, testing::ValuesIn(TestParams));
+INSTANTIATE_TEST_CASE_P(DistributedPoints, DelaunayGridGraph, testing::ValuesIn(TestParams));

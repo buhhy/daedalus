@@ -16,7 +16,6 @@ namespace utils {
 	public:
 		using InputPointList = std::vector<std::pair<utils::Vector2<>, Uint64>>;
 		using GraphHullIndexArray = std::array<std::pair<DelaunayGraph *, Uint32>, 4>;
-		using Tangent = std::pair<Uint64, Uint64>;
 		using AddedFaceList = std::vector<std::array<delaunay::Vertex *, 3>>;
 
 		using VertexComparator =
@@ -38,8 +37,8 @@ namespace utils {
 			DelaunayGraph & rightGraph,
 			const delaunay::ConvexHull & leftHull,
 			const delaunay::ConvexHull & rightHull,
-			const Tangent & upperTangent,
-			const Tangent & lowerTangent) const;
+			const delaunay::Tangent & upperTangent,
+			const delaunay::Tangent & lowerTangent) const;
 
 		/**
 		 * Abstracts out the tangent finding algorithm since finding the top and bottom
@@ -59,7 +58,7 @@ namespace utils {
 		 *                   right vertices, 0 for collinear points and 1 when the next
 		 *                   vertex is outside of the tangent line.
 		 */
-		Tangent FindTangent(
+		delaunay::Tangent FindTangent(
 			const delaunay::ConvexHull & leftHull,
 			const delaunay::ConvexHull & rightHull,
 			const NextIndexFunction & nextLeftIndex,
@@ -69,22 +68,22 @@ namespace utils {
 		/**
 		 * Retrieves the upper tangent of the provided left and right hulls.
 		 */
-		Tangent UpperTangent(
+		delaunay::Tangent UpperTangent(
 			const delaunay::ConvexHull & leftHull,
 			const delaunay::ConvexHull & rightHull) const;
 
 		/**
 		 * Retrieves the lower tangent of the provided left and right hulls;
 		 */
-		Tangent LowerTangent(
+		delaunay::Tangent LowerTangent(
 			const delaunay::ConvexHull & leftHull,
 			const delaunay::ConvexHull & rightHull) const;
 
 		delaunay::ConvexHull MergeConvexHulls(
 			const delaunay::ConvexHull & leftHull,
 			const delaunay::ConvexHull & rightHull,
-			const Tangent & upperTangent,
-			const Tangent & lowerTangent) const;
+			const delaunay::Tangent & upperTangent,
+			const delaunay::Tangent & lowerTangent) const;
 
 		/**
 		 * Divides a list of vertices into 2 halfs - a left half and a right half, using the
@@ -141,8 +140,8 @@ namespace utils {
 			const DelaunayGraph & rightGraph,
 			const delaunay::ConvexHull & leftHull,
 			const delaunay::ConvexHull & rightHull,
-			const DelaunayBuilderDAC2D::Tangent & upperTangent,
-			const DelaunayBuilderDAC2D::Tangent & lowerTangent,
+			const delaunay::Tangent & upperTangent,
+			const delaunay::Tangent & lowerTangent,
 			const DelaunayBuilderDAC2D::AddedFaceList & leftAddedFaces,
 			const DelaunayBuilderDAC2D::AddedFaceList & rightAddedFaces) = 0;
 

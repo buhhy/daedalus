@@ -65,7 +65,7 @@ int main(int argc, char ** argv) {
 
 		if (!updated) {
 			ClearCanvas(renderer);
-			regionRenderer.DrawBiomeRegion({ -28, 3});
+			regionRenderer.DrawBiomeRegion({ -79, 6});
 			//DrawNoise(renderer, generator, SizeX, SizeY, 0.005f);
 			updated = true;
 		}

@@ -96,8 +96,8 @@ public:
 		const DelaunayGraph & rightGraph,
 		const delaunay::ConvexHull & leftHull,
 		const delaunay::ConvexHull & rightHull,
-		const DelaunayBuilderDAC2D::Tangent & upperTangent,
-		const DelaunayBuilderDAC2D::Tangent & lowerTangent,
+		const delaunay::Tangent & upperTangent,
+		const delaunay::Tangent & lowerTangent,
 		const DelaunayBuilderDAC2D::AddedFaceList & leftAddedFaces,
 		const DelaunayBuilderDAC2D::AddedFaceList & rightAddedFaces
 	) override {
@@ -136,11 +136,11 @@ public:
 
 			// Draw start and end points
 			// Lower tangent is orange
-			DrawVertex(leftHull[lowerTangent.first], 4, { 245, 144, 46 });
-			DrawVertex(rightHull[lowerTangent.second], 4, { 245, 144, 46 });
+			DrawVertex(leftHull[lowerTangent.LeftId], 4, { 245, 144, 46 });
+			DrawVertex(rightHull[lowerTangent.RightId], 4, { 245, 144, 46 });
 			// Upper tangent is red
-			DrawVertex(leftHull[upperTangent.first], 4, { 212, 25, 0 });
-			DrawVertex(rightHull[upperTangent.second], 4, { 212, 25, 0 });
+			DrawVertex(leftHull[upperTangent.LeftId], 4, { 212, 25, 0 });
+			DrawVertex(rightHull[upperTangent.RightId], 4, { 212, 25, 0 });
 
 			// Draw centroid
 			RenderFilledCircle(Renderer, leftHull.Centroid() * Vector2<>(Width, Height), 4, { 0, 131, 129 });
@@ -207,7 +207,8 @@ public:
 				16 * 0x10        // Size of the biome region in real units along a single axis
 			},
 			MockBus,
-			BiomeRegionLoader::DelaunayBuilderPtr(new DelaunayBuilderDAC2D(0, Debugger))),
+			BiomeRegionLoader::DelaunayBuilderPtr(new DelaunayBuilderDAC2D(0, Debugger)),
+			0),
 		FontRegular(fontRegular)
 	{}
 
