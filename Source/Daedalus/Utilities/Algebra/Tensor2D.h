@@ -50,19 +50,19 @@ namespace utils {
 		{}
 
 		const T & Get(const size_t x, const size_t y) const {
-			const T & temp = Data.at(x * Width + y); return temp;
+			return this->Data.at(x * this->Width + y);
 		}
 
 		T & Get(const size_t x, const size_t y) {
-			return Data.at(x * Width + y);
+			return this->Data.at(x * this->Width + y);
 		}
 
 		void Set(const size_t x, const size_t y, const T & value) {
-			Data[x * Width + y] = value;
+			this->Data[x * this->Width + y] = value;
 		}
 
 		void Fill(const T & value) {
-			Data.assign(Width * Depth, value);
+			this->Data.assign(this->Width * this->Depth, value);
 		}
 	};
 
@@ -71,11 +71,6 @@ namespace utils {
 	// Specialization for Tensor2D<bool> because vector<bool> has a special implementation
 	template <>
 	class Tensor2D<bool> : public Tensor2DBase<bool> {
-	private:
-		using Tensor2DBase<bool>::Data;
-		using Tensor2DBase<bool>::Width;
-		using Tensor2DBase<bool>::Depth;
-
 	public:
 		Tensor2D() :Tensor2DBase(0, 0) {}
 		Tensor2D(const Vector2<size_t> & size) : Tensor2DBase(size.X, size.Y) {}
@@ -89,15 +84,20 @@ namespace utils {
 			Tensor2DBase(width, depth, value)
 		{}
 
-		bool Get(const size_t x, const size_t y) const { return Data.at(x * Width + y); }
-		bool Get(const size_t x, const size_t y) { return Data.at(x * Width + y); }
+		bool Get(const size_t x, const size_t y) const {
+			return this->Data.at(x * this->Width + y);
+		}
+
+		bool Get(const size_t x, const size_t y) {
+			return this->Data.at(x * this->Width + y);
+		}
 
 		void Set(const size_t x, const size_t y, const bool value) {
-			Data[x * Width + y] = value;
+			this->Data[x * this->Width + y] = value;
 		}
 
 		void Fill(const bool value) {
-			Data.assign(Width * Depth, value);
+			this->Data.assign(this->Width * this->Depth, value);
 		}
 	};
 
@@ -105,11 +105,6 @@ namespace utils {
 
 	template <typename T>
 	class TensorResizable2D : public Tensor2D<T> {
-	private:
-		using Tensor2D<T>::Data;
-		using Tensor2D<T>::Width;
-		using Tensor2D<T>::Depth;
-
 	public:
 		TensorResizable2D() :Tensor2D<T>(0, 0) {}
 		TensorResizable2D(const Vector2<size_t> & size) : Tensor2D<T>(size.X, size.Y) {}
@@ -126,7 +121,7 @@ namespace utils {
 		TensorResizable2D & Reset(size_t Width, size_t Depth, const T & value) {
 			this->Width = Width;
 			this->Depth = Depth;
-			Data.resize(Width * Depth, value);
+			this->Data.resize(this->Width * this->Depth, value);
 
 			return *this;
 		}

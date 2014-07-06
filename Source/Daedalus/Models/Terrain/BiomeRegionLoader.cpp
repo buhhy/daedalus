@@ -50,7 +50,7 @@ namespace terrain {
 				if (value != -1) {
 					found = true;
 					vertex = new VertexWithHullIndex(
-						data.GetBiomeAt(pointIds[i]).lock()->GetLocalPosition(), value);
+						data.GetBiomeAt(pointIds[i])->GetLocalPosition(), value);
 				}
 			}
 			if (accumX * accumX > accumY * accumY)
@@ -329,12 +329,12 @@ namespace terrain {
 				for (size_t y = 0; y < biomeCells.GetDepth(); y++) {
 					for (auto & id : biomeCells.Get(x, y).PointIds) {
 						auto biome = biomeRegion->GetBiomeAt(id);
-						auto position = biome.lock()->GetLocalPosition();
+						auto position = biome->GetLocalPosition();
 						auto height = generator.GenerateFractal(
-							(position.X * biomeRegion->GetBiomeRegionOffset().X) * 0.017,
-							(position.Y * biomeRegion->GetBiomeRegionOffset().Y) * 0.017,
+							(position.X + biomeRegion->GetBiomeRegionOffset().X) * 0.017,
+							(position.Y + biomeRegion->GetBiomeRegionOffset().Y) * 0.017,
 							6, 0.5);
-						biome.lock()->SetElevation(height);
+						biome->SetElevation(height);
 					}
 				}
 			}

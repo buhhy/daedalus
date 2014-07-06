@@ -12,7 +12,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9C2C8CCC-F513-4720-B42A-B9008391C8D1}</ProjectGuid>
-    <RootNamespace>DaedalusExperimental</RootNamespace>
+    <RootNamespace>DelaunayVisualization</RootNamespace>
     <ProjectName>DelaunayVisualization</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -58,7 +58,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\Source\DaedalusExperimental;$(ProjectDir)\..\..\Source\Daedalus;$(ProjectDir)\..\..\Libraries\Windows\SDL2\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\Source\DelaunayVisualization;$(ProjectDir)\..\..\Source\Daedalus;$(ProjectDir)\..\..\Libraries\Windows\SDL2\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -70,7 +70,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Source\DaedalusExperimental\Main.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Controllers\EventBus\EventBus.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Controllers\EventBus\EventListener.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Models\Terrain\BiomeRegionData.cpp" />
@@ -82,12 +81,35 @@
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\DelaunayDatastructures.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\GraphDatastructures.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Noise\Perlin.cpp" />
+    <ClCompile Include="..\..\Source\DelaunayVisualization\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Source\DaedalusExperimental\BiomeRegionRenderer.h" />
-    <ClInclude Include="..\..\Source\DaedalusExperimental\Engine.h" />
-    <ClInclude Include="..\..\Source\DaedalusExperimental\Mocks.h" />
-    <ClInclude Include="..\..\Source\DaedalusExperimental\SDLHelpers.h" />
+    <ClInclude Include="..\..\Source\DelaunayVisualization\BiomeRegionRenderer.h" />
+    <ClInclude Include="..\..\Source\DelaunayVisualization\Engine.h" />
+    <ClInclude Include="..\..\Source\DelaunayVisualization\Mocks.h" />
+    <ClInclude Include="..\..\Source\DelaunayVisualization\SDLHelpers.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\Libraries\Fonts\lato.ttf">
+      <DeploymentContent>true</DeploymentContent>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Libraries\Windows\DLL\libfreetype-6.dll">
+      <DeploymentContent>true</DeploymentContent>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Libraries\Windows\DLL\SDL2.dll">
+      <DeploymentContent>true</DeploymentContent>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Libraries\Windows\DLL\SDL2_ttf.dll">
+      <DeploymentContent>true</DeploymentContent>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Libraries\Windows\DLL\zlib1.dll">
+      <DeploymentContent>true</DeploymentContent>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

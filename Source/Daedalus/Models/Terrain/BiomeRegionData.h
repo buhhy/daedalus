@@ -116,11 +116,11 @@ namespace terrain {
 		~BiomeRegionData() {}
 
 
-		inline std::weak_ptr<BiomeData> GetBiomeAt(const Uint64 localBiomeId) {
+		inline std::shared_ptr<BiomeData> GetBiomeAt(const Uint64 localBiomeId) {
 			return Biomes.at(localBiomeId);
 		}
 
-		inline std::weak_ptr<const BiomeData> GetBiomeAt(const Uint64 localBiomeId) const {
+		inline std::shared_ptr<const BiomeData> GetBiomeAt(const Uint64 localBiomeId) const {
 			return Biomes.at(localBiomeId);
 		}
 
