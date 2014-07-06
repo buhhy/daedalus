@@ -19,7 +19,7 @@ void DrawNoise(
 	for (Uint16 x = 1; x <= sizeX; x++) {
 		for (Uint16 y = 1; y <= sizeY; y++) {
 			//double noise = (generator->Generate(x*0.12, y*0.12) * 1.3 + 1) * 0.5;
-			double noise = generator->GenerateFractal(x * 0.005, y * 0.005, 6u, 0.5) * 0.5;
+			double noise = generator->GenerateFractal(x * scale, y * scale, 6u, 0.5) * 0.5;
 			if (noise < min) min = noise;
 			if (noise > max) max = noise;
 			Uint8 r = noise * 255, g = noise * 255, b = noise * 255;
@@ -27,6 +27,7 @@ void DrawNoise(
 			SDL_RenderDrawPoint(renderer, x, y);
 		}
 	}
+	SDL_RenderPresent(renderer);
 	std::cout << min << " " << max << std::endl;
 }
 
@@ -67,8 +68,8 @@ int main(int argc, char ** argv) {
 
 		if (!updated) {
 			ClearCanvas(renderer);
-			regionRenderer.DrawBiomeRegion({ -26, -63 });
-			//DrawNoise(renderer, generator, SizeX, SizeY, 0.005f);
+			//regionRenderer.DrawBiomeRegion({ -26, -63 });
+			DrawNoise(renderer, generator, SizeX, SizeY, 0.0005f);
 			updated = true;
 		}
 	}

@@ -331,8 +331,8 @@ namespace terrain {
 						auto biome = biomeRegion->GetBiomeAt(id);
 						auto position = biome->GetLocalPosition();
 						auto height = generator.GenerateFractal(
-							(position.X + biomeRegion->GetBiomeRegionOffset().X) * 0.017,
-							(position.Y + biomeRegion->GetBiomeRegionOffset().Y) * 0.017,
+							(position.X + biomeRegion->GetBiomeRegionOffset().X) * 0.7,
+							(position.Y + biomeRegion->GetBiomeRegionOffset().Y) * 0.7,
 							6, 0.5);
 						biome->SetElevation(height);
 					}

@@ -50,7 +50,7 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	float gridLineWidth = 0.25;
 	float pointSize = 0.9;
 	float edgeWidth = 0.6;
-	float heightMultiplier = 1500;
+	float heightMultiplier = 250;
 	double scale = BiomeGridScale;
 
 	uint32 size = RegionData->GetBiomeGridSize();
