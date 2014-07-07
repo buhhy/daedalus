@@ -64,6 +64,10 @@ int main(int argc, char ** argv) {
 		while (SDL_PollEvent(&sdlEvent)) {
 			if (sdlEvent.type == SDL_QUIT)
 				running = false;
+			if(sdlEvent.type == SDL_MOUSEBUTTONDOWN) {
+				if(sdlEvent.button.button == SDL_BUTTON_LEFT)
+					regionRenderer.HandleClickEvent(sdlEvent.button.x, sdlEvent.button.y);
+			}
 		}
 
 		if (!updated) {

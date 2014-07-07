@@ -270,7 +270,7 @@ public:
 		}),
 		RegionLoader(
 			GenParams, MockBus,
-			BiomeRegionLoader::DelaunayBuilderPtr(new DelaunayBuilderDAC2D(0, Debugger)),
+			BiomeRegionLoader::DelaunayBuilderPtr(new DelaunayBuilderDAC2D(0, NULL)),
 			1)
 	{}
 
@@ -280,34 +280,44 @@ public:
 		auto region = RegionLoader.GetBiomeRegionAt({ 0, 0 });
 		const auto & graph = region->DelaunayGraph;
 		const auto & edges = graph.GetUniqueEdges();
+		const auto & points = graph.GetVertices();
 
 		Renderer.Clear();
+
+		// Nearest biome test
+		for (Uint32 y = 0; y < Renderer.Height; y++) {
+			for (Uint32 x = 0; x < Renderer.Width; x++) {
+				double dx = GenParams.BiomeScale * x / Renderer.Width;
+				double dy = GenParams.BiomeScale * y / Renderer.Height;
+				auto id = RegionLoader.FindNearestBiomeId({ dx, dy });
+				auto data = RegionLoader.GetBiomeAt(id);
+				Uint8 colour = (data->GetElevation() / 2.0) * 255;
+				SDL_SetRenderDrawColor(Renderer.Renderer, colour, colour, colour, SDL_ALPHA_OPAQUE);
+				SDL_RenderDrawPoint(Renderer.Renderer, x, Renderer.Height - y);
+			}
+
+			if (y % 3 == 0)
+				Renderer.Present();
+		}
 
 		RenderText(Renderer.Renderer, "Done!",
 			Renderer.GetPointPosition({ 1.0, 0.5 }), Renderer.Fonts.S48, { 244, 60, 48 });
 		
 		// Draw edges
-		Renderer.DrawEdges(edges, { 36, 120, 195 });
+		//Renderer.DrawEdges(edges);
+		Renderer.DrawVertices(points, { 0, 0, 0 });
+		Renderer.Present();
+	}
 
-		// Nearest biome test
-		//for (Uint32 y = 40; y < 50; y++) {
-		//	for (Uint32 x = 0; x < Renderer.Width; x++) {
-		//		double dx = GenParams.BiomeScale * x / Renderer.Width;
-		//		double dy = GenParams.BiomeScale * y / Renderer.Height;
-		//		auto id = RegionLoader.FindNearestBiomeId({ dx, dy });
-		//		auto data = RegionLoader.GetBiomeAt(id);
-		//		Uint8 colour = ((Uint8) data->GetElevation() / 2.0) * 255;
-		//		//SDL_SetRenderDrawColor(Renderer.Renderer, colour, colour, colour, SDL_ALPHA_OPAQUE);
-		//		//SDL_RenderDrawPoint(Renderer.Renderer, x, y);
-		//	}
-		//}
-		//auto testp = Vector2D<>(25, 25);
-		//auto relp = GenParams.GetInnerRegionPosition(testp, { 0, 0 });
-		//Renderer.DrawPoint(relp, 4, { 35, 35, 35 }, true);
-		//auto id = RegionLoader.FindNearestBiomeId(testp);
-		//auto data = RegionLoader.GetBiomeAt(id);
-		//Renderer.DrawPoint(data->GetLocalPosition(), 8, { 200, 0, 0 });
-
+	void HandleClickEvent(const double x, const double y) {
+		double lx = x / Renderer.Width;
+		double ly = 1 - y / Renderer.Height;
+		double dx = GenParams.BiomeScale * lx;
+		double dy = GenParams.BiomeScale * ly;
+		Renderer.DrawPoint({ lx, ly }, 4, { 35, 35, 35 }, true);
+		auto id = RegionLoader.FindNearestBiomeId({ dx, dy });
+		auto data = RegionLoader.GetBiomeAt(id);
+		Renderer.DrawPoint(data->GetLocalPosition(), 8, { 200, 0, 0 });
 		Renderer.Present();
 	}
 };

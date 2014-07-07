@@ -23,7 +23,7 @@ void Run() {
 		GenParams,MockBus, BiomeRegionLoader::DelaunayBuilderPtr(Builder), 1);
 	RegionLoader.GetBiomeRegionAt({ 0, 0 });
 
-	Uint32 width = 150, height = 150;
+	Uint32 width = 800, height = 800;
 	
 	for (Uint32 y = 0; y < height; y++) {
 		for (Uint32 x = 0; x < width; x++) {

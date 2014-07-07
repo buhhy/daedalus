@@ -104,12 +104,13 @@ namespace utils {
 
 namespace std {
 	template <typename T>
-	struct hash<utils::Vector3D<T> > {
+	struct hash<utils::Vector3D<T>> {
+		hash<T> hasher;
 		size_t operator()(const utils::Vector3D<T> & v) const {
 			Int64 seed = 0;
-			std::hashCombine(seed, v.X);
-			std::hashCombine(seed, v.Y);
-			std::hashCombine(seed, v.Z);
+			std::hashCombine(seed, v.X, hasher);
+			std::hashCombine(seed, v.Y, hasher);
+			std::hashCombine(seed, v.Z, hasher);
 			return (unsigned) seed;
 		}
 	};

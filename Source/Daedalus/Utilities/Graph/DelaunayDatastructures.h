@@ -21,10 +21,12 @@ namespace utils {
 namespace std {
 	template <>
 	struct hash<utils::delaunay::GhostId> {
+		hash<utils::Vector2D<Int64>> vhasher;
+		hash<Uint64> hasher;
 		size_t operator()(const utils::delaunay::GhostId & g) const {
 			Int64 seed = 0;
-			std::hashCombine(seed, hash<utils::Vector2D<Int64>>()(g.first));
-			std::hashCombine(seed, g.second);
+			std::hashCombine(seed, vhasher(g.first), hasher);
+			std::hashCombine(seed, g.second, hasher);
 			return (unsigned) seed;
 		}
 	};
@@ -470,10 +472,11 @@ namespace utils {
 namespace std {
 	template <>
 	struct hash<utils::delaunay::Edge> {
+		hash<Uint64> hasher;
 		size_t operator()(const utils::delaunay::Edge & e) const {
 			Int64 seed = 0;
-			std::hashCombine(seed, e.Start->VertexId());
-			std::hashCombine(seed, e.End->VertexId());
+			std::hashCombine(seed, e.Start->VertexId(), hasher);
+			std::hashCombine(seed, e.End->VertexId(), hasher);
 			return (unsigned) seed;
 		}
 	};

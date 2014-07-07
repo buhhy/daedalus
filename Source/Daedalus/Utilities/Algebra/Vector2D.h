@@ -65,10 +65,11 @@ namespace utils {
 namespace std {
 	template <typename T>
 	struct hash<utils::Vector2D<T> > {
+		hash<T> hasher;
 		size_t operator()(const utils::Vector2D<T> & v) const {
 			Int64 seed = 0;
-			std::hashCombine(seed, v.X);
-			std::hashCombine(seed, v.Y);
+			std::hashCombine(seed, v.X, hasher);
+			std::hashCombine(seed, v.Y, hasher);
 			return (unsigned) seed;
 		}
 	};
