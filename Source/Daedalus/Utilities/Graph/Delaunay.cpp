@@ -235,6 +235,18 @@ namespace utils {
 				leftAddedFaces, rightAddedFaces);
 		}
 
+		// Add ghost vertices to both graphs if not the same graph
+		if (!isSame) {
+			for (auto & f : leftAddedFaces) {
+				for (auto & v : f)
+					leftGraph.AddGhostVertex(v);
+			}
+			for (auto & f : rightAddedFaces) {
+				for (auto & v : f)
+					rightGraph.AddGhostVertex(v);
+			}
+		}
+
 		for (auto & f : leftAddedFaces)
 			leftGraph.AddFace(f[0], f[1], f[2]);
 		for (auto & f : rightAddedFaces)
@@ -472,6 +484,8 @@ namespace utils {
 		// Add these 2 filler faces to every size
 		for (Uint8 i = 0; i < size; i++) {
 			auto & graph = graphs[i].first;
+			for (Uint8 j = 0; j < size; j++)
+				graph->AddGhostVertex(vertices[j]);
 			graph->AddFace(vertices[p1], vertices[p2], vertices[p3]);
 			graph->AddFace(vertices[p4], vertices[p3], vertices[p2]);
 		}

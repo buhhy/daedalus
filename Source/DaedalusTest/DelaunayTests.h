@@ -21,7 +21,7 @@ using DelaunayGraphPtr = std::shared_ptr<DelaunayGraph>;
 class HexagonGraph : public testing::Test {
 protected:
 	DelaunayGraph * Graph;
-	vector<Vector2<>> Points;
+	vector<Vector2D<>> Points;
 	vector<Vertex *> Vertices;
 	vector<Face *> Faces;
 
@@ -50,7 +50,7 @@ protected:
 	}
 };
 
-typedef std::tuple<utils::Vector2<int64_t>, Uint64, Uint32> DelaunayTestParam;
+typedef std::tuple<utils::Vector2D<int64_t>, Uint64, Uint32> DelaunayTestParam;
 typedef std::pair<DelaunayTestParam, Uint8> DelaunayMultiTestParam;
 
 class DelaunayGridGraph {
@@ -58,7 +58,7 @@ protected:
 	DelaunayBuilderDAC2D Builder;
 
 	DelaunayGraphPtr ConstructGraph(
-		const utils::Vector2<Int64> graphId, const Uint64 seed, const Uint32 gridCellCount
+		const utils::Vector2D<Int64> graphId, const Uint64 seed, const Uint32 gridCellCount
 	) const {
 		cout << "Generated Delaunay graph with params: " <<
 			graphId << ", " << seed << ", " << gridCellCount << endl;
@@ -75,10 +75,10 @@ protected:
 			std::uniform_real_distribution<double>(0.1, 0.9), std::mt19937(mtSeed));
 
 		uint8_t numPoints = 0;
-		utils::Vector2<> point;
-		utils::Vector2<> offset;
+		utils::Vector2D<> point;
+		utils::Vector2D<> offset;
 
-		vector<std::pair<utils::Vector2<>, Uint64> > vertexList;
+		vector<std::pair<utils::Vector2D<>, Uint64> > vertexList;
 		
 		// Create uniform random point distribution, and insert vertices into aggregate list
 		for (auto y = 0u; y < gridCellCount; y++) {
@@ -261,7 +261,7 @@ const DelaunayMultiTestParam MultiTests[] = {
 
 // Test delaunay point set
 //void Test(DelaunayGraph & graph) {
-//	vector<Vector2<> > testPoints;
+//	vector<Vector2D<> > testPoints;
 //	vector<Vertex *> testVertices;
 //	testPoints.push_back({ 0.1, 0.2 });
 //	testPoints.push_back({ 0.2, 0.1 });

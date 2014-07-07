@@ -15,6 +15,7 @@ namespace utils {
 		T Y;
 
 		Vector2D() {}
+		Vector2D(const T & v) : X(v), Y(v) {}
 		Vector2D(const T & x, const T & y) : X(x), Y(y) {}
 		Vector2D(const Vector2D<T> & copy) : Vector2D(copy.X, copy.Y) {}
 

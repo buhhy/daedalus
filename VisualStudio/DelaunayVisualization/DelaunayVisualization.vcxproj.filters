@@ -42,15 +42,6 @@
     <ClCompile Include="..\..\Source\Daedalus\Controllers\EventBus\EventListener.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra2.cpp">
-      <Filter>Dependencies</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra3.cpp">
-      <Filter>Dependencies</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Matrix4.cpp">
-      <Filter>Dependencies</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Source\DelaunayVisualization\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -59,6 +50,18 @@
     </ClCompile>
     <ClCompile Include="..\..\Source\DelaunayVisualization\SDLHelpers.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra2D.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra3D.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\DataStructures2D.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Matrix4D.cpp">
+      <Filter>Dependencies</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

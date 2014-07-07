@@ -405,13 +405,6 @@ namespace utils {
 		delaunay::Vertex * AddVertexToCache(delaunay::Vertex * const vertex);
 
 		/**
-		 * Adds the provided vertex as a ghost vertex into the current graph. This means
-		 * duplicating the other vertex with this graph as the new owner.
-		 * @param vertex Vertex to add, foreign vertices will be duplicated.
-		 */
-		delaunay::Vertex * AddGhostVertex(delaunay::Vertex * const vertex);
-
-		/**
 		 * Adds a pre-created floating face. The ID should be provide and be unique. The current
 		 * face ID will be updated to avoid duplicate IDs. Unlike the other methods for adding
 		 * faces, this method will not update adjacencies and is more meant for initialization.
@@ -443,6 +436,18 @@ namespace utils {
 		const std::unordered_set<delaunay::Edge> GetUniqueEdges() const;
 
 		delaunay::Vertex * AddVertex(const Vector2D<> & point, const Uint64 id);
+
+		/**
+		 * Adds the provided vertex as a ghost vertex into the current graph. This means
+		 * duplicating the other vertex with this graph as the new owner.
+		 * @param vertex Vertex to add, foreign vertices will be duplicated.
+		 */
+		delaunay::Vertex * AddGhostVertex(delaunay::Vertex * const vertex);
+		/**
+		 * Retrieves the local copy of the given vertex, if it exists.
+		 */
+		delaunay::Vertex * FindGhostVertex(delaunay::Vertex * const vertex);
+
 		delaunay::Face * AddFace(
 			delaunay::Vertex * const v1, delaunay::Vertex * const v2);
 

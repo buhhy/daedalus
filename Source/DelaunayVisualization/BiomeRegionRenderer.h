@@ -2,7 +2,7 @@
 
 #include "SDLHelpers.h"
 #include <Models/Terrain/BiomeRegionLoader.h>
-#include <Utilities/Algebra/Algebra2.h>
+#include <Utilities/Algebra/Algebra2D.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2_ttf/SDL_ttf.h>
@@ -32,11 +32,11 @@ public:
 
 	SDL_Renderer * Renderer;
 
-	Vector2<> GetPointPosition(const Vector2<> p) const {
+	Vector2D<> GetPointPosition(const Vector2D<> p) const {
 		return { p.X * Width, (1 - p.Y) * Height };
 	}
 
-	Vector2<> GetVertexPosition(const delaunay::Vertex * vert) const {
+	Vector2D<> GetVertexPosition(const delaunay::Vertex * vert) const {
 		return GetPointPosition(vert->GetPoint());
 	}
 
@@ -70,7 +70,7 @@ public:
 	void Present() { SDL_RenderPresent(Renderer); }
 
 	void DrawPoint(
-		const Vector2<> point, const Uint16 radius,
+		const Vector2D<> point, const Uint16 radius,
 		const Colour & colour, const bool filled = false
 	) {
 		if (filled)
@@ -118,7 +118,7 @@ public:
 		const delaunay::ConvexHull & hull,
 		const Colour & colour = HullIndexColour
 	) {
-		Vector2<> offset(6, 4);
+		Vector2D<> offset(6, 4);
 		std::stringstream stream;
 
 		for (Uint64 i = 0; i < hull.Size(); i++) {
@@ -201,8 +201,8 @@ public:
 			Renderer.DrawVertex(rightHull[upperTangent.RightId], 4, DelaunayRenderer::TangentEndColour);
 
 			// Draw centroid
-			//RenderFilledCircle(Renderer, leftHull.Centroid() * Vector2<>(Width, Height), 4, { 0, 131, 129 });
-			//RenderFilledCircle(Renderer, rightHull.Centroid() * Vector2<>(Width, Height), 4, { 0, 131, 129 });
+			//RenderFilledCircle(Renderer, leftHull.Centroid() * Vector2D<>(Width, Height), 4, { 0, 131, 129 });
+			//RenderFilledCircle(Renderer, rightHull.Centroid() * Vector2D<>(Width, Height), 4, { 0, 131, 129 });
 
 			// Draw convex hull points
 			Renderer.DrawHullVertexNumbers(leftHull);
@@ -245,7 +245,7 @@ public:
 class BiomeRegionRenderer {
 private:
 	Int64 Seed;
-
+	
 	std::shared_ptr<DelaunayDAC2DDebugger> Debugger;
 	std::shared_ptr<events::EventBus> MockBus;
 	BiomeGeneratorParameters GenParams;
@@ -269,15 +269,15 @@ public:
 			16 * 0x10        // Size of the biome region in real units along a single axis
 		}),
 		RegionLoader(
-			GenParams,MockBus,
+			GenParams, MockBus,
 			BiomeRegionLoader::DelaunayBuilderPtr(new DelaunayBuilderDAC2D(0, Debugger)),
-			0)
+			1)
 	{}
 
 	void DrawBiomeRegion(
 		const BiomeRegionOffsetVector & offset
 	) {
-		auto region = RegionLoader.GetBiomeRegionAt(offset);
+		auto region = RegionLoader.GetBiomeRegionAt({ 0, 0 });
 		const auto & graph = region->DelaunayGraph;
 		const auto & edges = graph.GetUniqueEdges();
 
@@ -290,12 +290,23 @@ public:
 		Renderer.DrawEdges(edges, { 36, 120, 195 });
 
 		// Nearest biome test
-		auto testp = Vector2<>(25, 25);
-		auto relp = GenParams.GetInnerRegionPosition(testp, { 0, 0 });
-		Renderer.DrawPoint(relp, 4, { 35, 35, 35 }, true);
-		auto id = RegionLoader.FindNearestBiomeId(testp);
-		auto data = RegionLoader.GetBiomeAt(id);
-		Renderer.DrawPoint(data->GetLocalPosition(), 8, { 200, 0, 0 });
+		//for (Uint32 y = 40; y < 50; y++) {
+		//	for (Uint32 x = 0; x < Renderer.Width; x++) {
+		//		double dx = GenParams.BiomeScale * x / Renderer.Width;
+		//		double dy = GenParams.BiomeScale * y / Renderer.Height;
+		//		auto id = RegionLoader.FindNearestBiomeId({ dx, dy });
+		//		auto data = RegionLoader.GetBiomeAt(id);
+		//		Uint8 colour = ((Uint8) data->GetElevation() / 2.0) * 255;
+		//		//SDL_SetRenderDrawColor(Renderer.Renderer, colour, colour, colour, SDL_ALPHA_OPAQUE);
+		//		//SDL_RenderDrawPoint(Renderer.Renderer, x, y);
+		//	}
+		//}
+		//auto testp = Vector2D<>(25, 25);
+		//auto relp = GenParams.GetInnerRegionPosition(testp, { 0, 0 });
+		//Renderer.DrawPoint(relp, 4, { 35, 35, 35 }, true);
+		//auto id = RegionLoader.FindNearestBiomeId(testp);
+		//auto data = RegionLoader.GetBiomeAt(id);
+		//Renderer.DrawPoint(data->GetLocalPosition(), 8, { 200, 0, 0 });
 
 		Renderer.Present();
 	}

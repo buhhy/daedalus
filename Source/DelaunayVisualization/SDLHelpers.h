@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-using utils::Vector2;
+using utils::Vector2D;
 using utils::Colour;
 
 struct FontPack {
@@ -53,20 +53,20 @@ void RenderFilledCircle(
 
 inline void RenderLine(
 	SDL_Renderer * renderer,
-	const Vector2<> & start, const Vector2<> & end
+	const Vector2D<> & start, const Vector2D<> & end
 ) {
 	SDL_RenderDrawLine(renderer, start.X, start.Y, end.X, end.Y);
 }
 
 inline void RenderCircle(
-	SDL_Renderer * renderer, const Vector2<> & position,
+	SDL_Renderer * renderer, const Vector2D<> & position,
 	const Uint16 radius, const Colour & colour
 ) {
 	RenderCircle(renderer, std::round(position.X), std::round(position.Y), radius, colour);
 }
 
 inline void RenderFilledCircle(
-	SDL_Renderer * renderer, const Vector2<> & position,
+	SDL_Renderer * renderer, const Vector2D<> & position,
 	const Uint16 radius, const Colour & colour
 ) {
 	RenderFilledCircle(renderer, std::round(position.X), std::round(position.Y), radius, colour);
@@ -74,7 +74,7 @@ inline void RenderFilledCircle(
 
 inline void RenderText(
 	SDL_Renderer * renderer, const char * text,
-	const Vector2<> & position,
+	const Vector2D<> & position,
 	TTF_Font * font, const Colour & colour
 ) {
 	RenderText(renderer, text, position.X, position.Y, font, colour);

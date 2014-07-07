@@ -14,24 +14,25 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Dependencies">
-      <UniqueIdentifier>{a8af2e57-01f7-45ef-aa4b-3996f55b8939}</UniqueIdentifier>
+      <UniqueIdentifier>{918210bc-7304-4f60-898e-ea799ec7f74c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Source\DaedalusTest\Algebra2DTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\DaedalusTest\Algebra3DTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\DaedalusTest\DelaunayTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\DaedalusTest\Engine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
+    <ClCompile Include="..\..\Source\DelaunayProfiling\Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Controllers\EventBus\EventBus.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Controllers\EventBus\EventListener.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Models\Terrain\BiomeRegionData.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Models\Terrain\BiomeRegionLoader.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\Delaunay.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
@@ -39,15 +40,6 @@
       <Filter>Dependencies</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\GraphDatastructures.cpp">
-      <Filter>Dependencies</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\Daedalus\Utilities\Mesh\DebugMeshHelpers.cpp">
-      <Filter>Dependencies</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\Daedalus\Utilities\Mesh\MarchingCubes.cpp">
-      <Filter>Dependencies</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\Daedalus\Utilities\Noise\Midpoint.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Noise\Perlin.cpp">
@@ -59,11 +51,16 @@
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra3D.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\DaedalusTest\Main.cpp">
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\DataStructures2D.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Matrix4D.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Source\DelaunayProfiling\Engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

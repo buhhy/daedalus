@@ -134,6 +134,12 @@ namespace terrain {
 		for (Uint8 i = 0; i < size; i++)
 			input[i] = std::make_pair(&data[i]->DelaunayGraph, vertices[i]->second);
 
+		UE_LOG(LogTemp, Warning, TEXT("Merging corners: (%lld %lld) - (%lld %lld) - (%lld %lld) - (%lld %lld)"),
+			tl.GetBiomeRegionOffset().X, tl.GetBiomeRegionOffset().Y,
+			tr.GetBiomeRegionOffset().X, tr.GetBiomeRegionOffset().Y,
+			bl.GetBiomeRegionOffset().X, bl.GetBiomeRegionOffset().Y,
+			br.GetBiomeRegionOffset().X, br.GetBiomeRegionOffset().Y)
+
 		DelaunayBuilder->MergeDelaunayTileCorner(input);
 		
 		// Set the neighbor flags
@@ -141,12 +147,6 @@ namespace terrain {
 		tr.NeighboursMerged.Set(0, 0, true);
 		bl.NeighboursMerged.Set(2, 2, true);
 		br.NeighboursMerged.Set(0, 2, true);
-
-		UE_LOG(LogTemp, Warning, TEXT("Merging corners: (%lld %lld) - (%lld %lld) - (%lld %lld) - (%lld %lld)"),
-			tl.GetBiomeRegionOffset().X, tl.GetBiomeRegionOffset().Y,
-			tr.GetBiomeRegionOffset().X, tr.GetBiomeRegionOffset().Y,
-			bl.GetBiomeRegionOffset().X, bl.GetBiomeRegionOffset().Y,
-			br.GetBiomeRegionOffset().X, br.GetBiomeRegionOffset().Y)
 
 		return false;
 	}
@@ -340,6 +340,7 @@ namespace terrain {
 				}
 			}
 
+			biomeRegion->GenerateBiomeData();
 			updatedRegions.insert(biomeRegion->GetBiomeRegionOffset());
 		}
 		return biomeRegion;
@@ -403,13 +404,15 @@ namespace terrain {
 			for (Int8 y = startY; y <= endY; y++) {
 				if (x != 0 || y != 0) {
 					auto newOffsetVector = BiomeRegionOffsetVector(offset.X + x, offset.Y + y);
-					auto compare = GetBiomeRegionAt(newOffsetVector)
-						->FindNearestPoint({ position.X + x, position.Y + y });
-					auto dist = std::get<2>(compare);
-					if (min > dist) {
-						min = dist;
-						vid = std::get<0>(compare);
-						foundGlobalOffset.Reset(newOffsetVector);
+					if (IsBiomeRegionGenerated(newOffsetVector)) {
+						auto compare = GetBiomeRegionAt(newOffsetVector)
+							->FindNearestPoint({ position.X + x, position.Y + y });
+						auto dist = std::get<2>(compare);
+						if (min > dist) {
+							min = dist;
+							vid = std::get<0>(compare);
+							foundGlobalOffset.Reset(newOffsetVector);
+						}
 					}
 				}
 			}

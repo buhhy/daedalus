@@ -16,7 +16,9 @@ namespace utils {
 		T X, Y, Z;
 
 		Vector3D() {}
-		Vector3D(const T x, const T y, const T z) : X(x), Y(y), Z(z) {}
+		Vector3D(const T & v) : X(v), Y(v), Z(v) {}
+		Vector3D(const T & x, const T & y, const T & z) : X(x), Y(y), Z(z) {}
+		Vector3D(const Vector2D<T> & vec) : Vector3D(vec.X, vec.Y, 0) {}
 		Vector3D(const Vector2D<T> & vec, const T z) : Vector3D(vec.X, vec.Y, z) {}
 
 		/**
@@ -58,6 +60,45 @@ namespace utils {
 		}
 
 		inline Vector2D<T> Truncate() const { return Vector2D<T>(X, Y); }
+
+		template <typename T1>
+		inline Vector3D<T1> Cast() const {
+			return Vector3D<T1>((T1) this->X, (T1) this->Y, (T1) this->Z);
+		}
+
+		inline Vector3D<T> & operator += (const Vector3D<T> & rhs) {
+			X += rhs.X; Y += rhs.Y; Z += rhs.Z;
+			return *this;
+		}
+		inline Vector3D<T> & operator -= (const Vector3D<T> & rhs) {
+			X -= rhs.X; Y -= rhs.Y; Z -= rhs.Z;
+			return *this;
+		}
+		inline Vector3D<T> & operator *= (const Vector3D<T> & rhs) {
+			X *= rhs.X; Y *= rhs.Y; Z *= rhs.Z;
+			return *this;
+		}
+		inline Vector3D<T> & operator /= (const Vector3D<T> & rhs) {
+			X /= rhs.X; Y /= rhs.Y; Z /= rhs.Z;
+			return *this;
+		}
+
+		inline Vector3D<T> & operator += (const T & rhs) {
+			X += rhs; Y += rhs; Z += rhs;
+			return *this;
+		}
+		inline Vector3D<T> & operator -= (const T & rhs) {
+			X -= rhs; Y -= rhs; Z -= rhs;
+			return *this;
+		}
+		inline Vector3D<T> & operator *= (const T & rhs) {
+			X *= rhs; Y *= rhs; Z *= rhs;
+			return *this;
+		}
+		inline Vector3D<T> & operator /= (const T & rhs) {
+			X /= rhs; Y /= rhs; Z /= rhs;
+			return *this;
+		}
 	};
 }
 

@@ -73,11 +73,11 @@ namespace terrain {
 			ystart = 0;
 			offmap.Y = -1;
 		}
-		if (xend - BiomeGridSize - 1 > -utils::FLOAT_ERROR) {
+		if (xend - BiomeGridSize > -utils::FLOAT_ERROR) {
 			xend = BiomeGridSize - 1;
 			offmap.X = 1;
 		}
-		if (yend - BiomeGridSize - 1 > -utils::FLOAT_ERROR) {
+		if (yend - BiomeGridSize > -utils::FLOAT_ERROR) {
 			yend = BiomeGridSize - 1;
 			offmap.Y = 1;
 		}

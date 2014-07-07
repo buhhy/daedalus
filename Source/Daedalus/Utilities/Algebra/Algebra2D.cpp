@@ -29,9 +29,9 @@ namespace utils {
 	}
 
 	Int8 FindWinding(const Vector2D<> & p1, const Vector2D<> & pivot, const Vector2D<> & p3) {
-		double result = (p1 - pivot).Determinant(p3 - pivot);
-		if (result < -FLOAT_ERROR) return -1;       // Obtuse
-		if (result > FLOAT_ERROR) return 1;         // Acute
+		double res = (p1.X - pivot.X) * (p3.Y - pivot.Y) - (p1.Y - pivot.Y) * (p3.X - pivot.X);
+		if (res < -FLOAT_ERROR) return -1;       // Obtuse
+		if (res > FLOAT_ERROR) return 1;         // Acute
 		else return 0;                              // Colinear
 	}
 

@@ -525,6 +525,18 @@ namespace utils {
 		}
 	}
 
+	delaunay::Vertex * DelaunayGraph::FindGhostVertex(delaunay::Vertex * const vertex) {
+		if (vertex->ParentGraphOffset() == Offset || vertex->IsForeign()) {
+			assert(IdVertexMap.find(vertex->VertexId()) != IdVertexMap.end());
+			return vertex;
+		} else {
+			auto id = GhostId(vertex->ParentGraphOffset(), vertex->VertexId());
+			auto found = ForeignIdVertexMap.find(id);
+			assert(found != ForeignIdVertexMap.end());
+			return found->second;
+		}
+	}
+
 	Vertex * DelaunayGraph::AddVertex(const Vector2D<> & point, const Uint64 id) {
 		return AddVertexToCache(new Vertex(Offset, point, id));
 	}
@@ -553,14 +565,14 @@ namespace utils {
 	}
 
 	Face * DelaunayGraph::AddFace(Vertex * const v1, Vertex * const v2, Vertex * const v3) {
+		Vertex * inV1 = FindGhostVertex(v1);
+		Vertex * inV2 = FindGhostVertex(v2);
+		Vertex * inV3 = FindGhostVertex(v3);
+
 		// Ensure we aren't adding a triangle to vertices that are already surrounded. This
 		// would indicate an overlapping triangle.
-		if (v1->IsSurrounded() || v2->IsSurrounded() || v3->IsSurrounded())
+		if (inV1->IsSurrounded() || inV2->IsSurrounded() || inV3->IsSurrounded())
 			assert(!"DelaunayGraph::AddFace: attempting to add a triangle to a surrounded vertex");
-
-		Vertex * inV1 = AddGhostVertex(v1);
-		Vertex * inV2 = AddGhostVertex(v2);
-		Vertex * inV3 = AddGhostVertex(v3);
 
 		// Insert face with clockwise vertex winding order
 		auto winding = IsCWWinding(inV1, inV2, inV3);
