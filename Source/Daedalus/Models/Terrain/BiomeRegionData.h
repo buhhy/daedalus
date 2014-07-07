@@ -57,7 +57,7 @@ namespace terrain {
 		void SetRainfall(const float rainfall) { Rainfall = rainfall; }
 	};
 
-	typedef std::unordered_map<Uint64, std::shared_ptr<BiomeData>> BiomeDataMap;
+	typedef std::unordered_map<Uint64, std::unique_ptr<BiomeData>> BiomeDataMap;
 
 	/**
 	 * Each biome cell contains a list of 2D points that will be used in a Delaunay
@@ -75,7 +75,8 @@ namespace terrain {
 		inline void AddPoint(const Uint64 id) { PointIds.push_back(id); }
 	};
 
-	typedef utils::Tensor2D<BiomeCellData> BiomeCellField;
+	using BiomeCellField = utils::Tensor2D<BiomeCellData>;
+	using BiomeDataPtr = BiomeData *;
 
 	/**
 	 * Biomes are generated on a 2D plane separate from the terrain generation. Biome shapes
@@ -120,12 +121,12 @@ namespace terrain {
 		~BiomeRegionData() {}
 
 
-		inline std::shared_ptr<BiomeData> GetBiomeAt(const Uint64 localBiomeId) {
-			return Biomes.at(localBiomeId);
+		inline BiomeDataPtr GetBiomeAt(const Uint64 localBiomeId) {
+			return Biomes.at(localBiomeId).get();
 		}
 
-		inline std::shared_ptr<const BiomeData> GetBiomeAt(const Uint64 localBiomeId) const {
-			return Biomes.at(localBiomeId);
+		inline const BiomeDataPtr GetBiomeAt(const Uint64 localBiomeId) const {
+			return Biomes.at(localBiomeId).get();
 		}
 
 		inline const BiomeRegionOffsetVector & GetBiomeRegionOffset() const {
@@ -148,4 +149,6 @@ namespace terrain {
 
 		NearestBiomeResult FindNearestPoint(utils::Vector2D<> offset) const;
 	};
+
+	using BiomeRegionDataPtr = BiomeRegionData *;
 }

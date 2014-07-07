@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Utilities/Algebra/Algebra.h>
 #include <Utilities/Algebra/Algebra2D.h>
 
 #include <array>
@@ -22,11 +23,11 @@ namespace std {
 	template <>
 	struct hash<utils::delaunay::GhostId> {
 		hash<utils::Vector2D<Int64>> vhasher;
-		hash<Uint64> hasher;
+		hash<size_t> hasher;
 		size_t operator()(const utils::delaunay::GhostId & g) const {
 			Int64 seed = 0;
 			std::hashCombine(seed, vhasher(g.first), hasher);
-			std::hashCombine(seed, g.second, hasher);
+			std::hashCombine(seed, (size_t) g.second, hasher);
 			return (unsigned) seed;
 		}
 	};
@@ -374,9 +375,6 @@ namespace utils {
 	 */
 	class DelaunayGraph {
 	private:
-		std::unordered_set<delaunay::Vertex *> Vertices;
-		std::unordered_set<delaunay::Face *> Faces;
-
 		// These hashmaps are used for fast lookup of vertices and faces by ID, they should
 		// be kept up-to-date with the vertex and face lists.
 		std::unordered_map<Uint64, delaunay::Vertex *> IdVertexMap;
@@ -423,14 +421,13 @@ namespace utils {
 		DelaunayGraph(const DelaunayGraph & copy);
 
 		~DelaunayGraph() {
-			for (auto it : Vertices) delete it;
-			for (auto it : Faces) delete it;
-			Vertices.clear();
-			Faces.clear();
+			for (auto & it : IdVertexMap) delete it.second;
+			for (auto & it : IdFaceMap) delete it.second;
 		}
 
-		inline Uint64 VertexCount() const { return Vertices.size(); }
-		inline Uint64 FaceCount() const { return Faces.size(); }
+		inline Uint64 VertexCount() const { return IdVertexMap.size(); }
+		inline Uint64 GhostVertexCount() const { return ForeignIdVertexMap.size(); }
+		inline Uint64 FaceCount() const { return IdFaceMap.size(); }
 		inline delaunay::DelaunayId GraphOffset() const { return Offset; }
 
 		const std::vector<delaunay::Vertex const *> GetVertices() const;

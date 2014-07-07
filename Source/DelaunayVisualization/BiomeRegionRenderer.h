@@ -296,8 +296,8 @@ public:
 				SDL_RenderDrawPoint(Renderer.Renderer, x, Renderer.Height - y);
 			}
 
-			if (y % 3 == 0)
-				Renderer.Present();
+//			if (y % 50 == 0)
+//				Renderer.Present();
 		}
 
 		RenderText(Renderer.Renderer, "Done!",

@@ -44,7 +44,7 @@ namespace terrain {
 	) {
 		auto id = GetNextId();
 		Biomes.insert(std::make_pair(
-			id, std::shared_ptr<BiomeData>(new BiomeData(BuildId(id), position))));
+			id, std::unique_ptr<BiomeData>(new BiomeData(BuildId(id), position))));
 		BiomeCells.Get(x, y).AddPoint(id);
 		return id;
 	}

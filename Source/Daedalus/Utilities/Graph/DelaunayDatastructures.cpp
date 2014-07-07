@@ -86,7 +86,7 @@ namespace utils {
 					"Face::GetAdjacentFaceCW: next face does not contain pivot index");
 			}
 
-			assert(curFace->GetAdjacentFaceCCW(sharedVertex) == this &&
+			assert(curFace->GetAdjacentFaceCCW(sharedVertex)->FaceId() == this->FaceId() &&
 				"Face::GetAdjacentFaceCW: face does not loop around vertex correctly");
 
 			return curFace;
@@ -320,36 +320,36 @@ namespace utils {
 		CurrentVertexId(copy.CurrentVertexId),
 		Offset(copy.Offset)
 	{
-		// Add all vertices and faces in the copy graph
-		for (auto it : copy.Vertices)
-			AddVertexToCache(new delaunay::Vertex(*it));
-		// TODO: this doesn't deep copy right now
-		for (auto it : copy.Faces)
-			AddFaceToCache(new delaunay::Face(*it));
-
-		// Set adjacencies for all faces and vertices
-		// TODO: this is not working properly yet
-		//for (auto it : copy.Vertices) {
-		//	IdVertexMap.at(it->VertexId())->GetIncidentFace() =
-		//		IdFaceMap.at(it->GetIncidentFace()->FaceId());
-		//}
-
-		for (auto it : copy.Faces) {
-			auto & face = IdFaceMap.at(it->FaceId());
-			for (Uint8 i = 0; i < face->VertexCount(); i++)
-				face->AdjacentFaces[i] = IdFaceMap.at(it->AdjacentFaces[i]->FaceId());
-		}
-
-		// Set the convex hull
-		std::vector<delaunay::Vertex *> newHullVerts;
-		std::transform(
-			ConvexHull.CBegin(),
-			ConvexHull.CEnd(),
-			newHullVerts.begin(),
-			[&] (delaunay::Vertex * const vert) {
-				return IdVertexMap.at(vert->VertexId());
-			});
-		ConvexHull = newHullVerts;
+//		// Add all vertices and faces in the copy graph
+//		for (auto it : copy.Vertices)
+//			AddVertexToCache(new delaunay::Vertex(*it));
+//		// TODO: this doesn't deep copy right now
+//		for (auto it : copy.Faces)
+//			AddFaceToCache(new delaunay::Face(*it));
+//
+//		// Set adjacencies for all faces and vertices
+//		// TODO: this is not working properly yet
+//		//for (auto it : copy.Vertices) {
+//		//	IdVertexMap.at(it->VertexId())->GetIncidentFace() =
+//		//		IdFaceMap.at(it->GetIncidentFace()->FaceId());
+//		//}
+//
+//		for (auto it : copy.Faces) {
+//			auto & face = IdFaceMap.at(it->FaceId());
+//			for (Uint8 i = 0; i < face->VertexCount(); i++)
+//				face->AdjacentFaces[i] = IdFaceMap.at(it->AdjacentFaces[i]->FaceId());
+//		}
+//
+//		// Set the convex hull
+//		std::vector<delaunay::Vertex *> newHullVerts;
+//		std::transform(
+//			ConvexHull.CBegin(),
+//			ConvexHull.CEnd(),
+//			newHullVerts.begin(),
+//			[&] (delaunay::Vertex * const vert) {
+//				return IdVertexMap.at(vert->VertexId());
+//			});
+//		ConvexHull = newHullVerts;
 	}
 	
 	std::pair<Face *, Int8> DelaunayGraph::AdjustNewFaceAdjacencies(
@@ -471,7 +471,6 @@ namespace utils {
 
 	Vertex * DelaunayGraph::AddVertexToCache(Vertex * const vertex) {
 		auto id = vertex->VertexId();
-		Vertices.insert(vertex);
 		IdVertexMap.insert({ id, vertex });
 		if (vertex->IsForeign())
 			ForeignIdVertexMap.insert({
@@ -483,7 +482,6 @@ namespace utils {
 
 	Face * DelaunayGraph::AddFaceToCache(Face * const face) {
 		auto id = face->FaceId();
-		Faces.insert(face);
 		IdFaceMap.insert({ id, face });
 		if (id >= CurrentFaceId)
 			CurrentFaceId = id + 1;
@@ -493,7 +491,6 @@ namespace utils {
 	bool DelaunayGraph::RemoveFaceFromCache(delaunay::Face * const face) {
 		if (IdFaceMap.count(face->FaceId()) == 0)
 			return false;
-		Faces.erase(face);
 		IdFaceMap.erase(face->FaceId());
 		return true;
 	}
@@ -618,7 +615,7 @@ namespace utils {
 	}
 
 	bool DelaunayGraph::RemoveFace(Face * const face) {
-		if (Faces.count(face) == 0)
+		if (IdFaceMap.find(face->FaceId()) == IdFaceMap.end())
 			return false;
 		for (Uint8 i = 0; i < face->VertexCount(); i++)
 			AdjustRemovedFaceAdjacencies(face, i);
@@ -658,24 +655,25 @@ namespace utils {
 
 	const std::vector<Vertex const *> DelaunayGraph::GetVertices() const {
 		std::vector<Vertex const *> ret;
-		for (auto it : Vertices) ret.push_back(it);
+		for (auto & it : IdVertexMap) ret.push_back(it.second);
 		return ret;
 	}
 
 	const std::vector<Face const *> DelaunayGraph::GetFaces() const {
 		std::vector<Face const *> ret;
-		for (auto it : Faces) ret.push_back(it);
+		for (auto & it : IdFaceMap) ret.push_back(it.second);
 		return ret;
 	}
 
 	const std::unordered_set<Edge> DelaunayGraph::GetUniqueEdges() const {
 		std::unordered_set<Edge> edgeSet;
 
-		for (auto it : Faces) {
-			edgeSet.insert({ it->Vertices[0], it->Vertices[1] });
-			if (!it->IsDegenerate()) {
-				edgeSet.insert({ it->Vertices[0], it->Vertices[2] });
-				edgeSet.insert({ it->Vertices[1], it->Vertices[2] });
+		for (auto & it : IdFaceMap) {
+			const auto face = it.second;
+			edgeSet.insert({ face->Vertices[0], face->Vertices[1] });
+			if (!face->IsDegenerate()) {
+				edgeSet.insert({ face->Vertices[0], face->Vertices[2] });
+				edgeSet.insert({ face->Vertices[1], face->Vertices[2] });
 			}
 		}
 

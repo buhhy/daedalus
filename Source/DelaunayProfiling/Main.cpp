@@ -12,7 +12,7 @@ void Run() {
 	std::shared_ptr<DelaunayBuilderDAC2D> Builder(new DelaunayBuilderDAC2D(0, NULL));
 	std::shared_ptr<events::EventBus> MockBus(new events::EventBus());
 	BiomeGeneratorParameters GenParams = {
-		16,              // Number of grid cells along a single axis
+		64,              // Number of grid cells along a single axis
 		Seed,            // Seed
 		4,               // Number of buffer cells in grid
 		1,               // Minimum bound of number of points

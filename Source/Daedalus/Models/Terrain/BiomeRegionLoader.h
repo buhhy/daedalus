@@ -19,8 +19,6 @@ namespace terrain {
 	class BiomeRegionLoader {
 	public:
 		using VertexWithHullIndex = std::pair<utils::Vector2D<>, Uint32>;
-		using BiomeRegionDataPtr = std::shared_ptr<BiomeRegionData>;
-		using BiomeDataPtr = std::shared_ptr<BiomeData>;
 		using DelaunayBuilderPtr = std::shared_ptr<utils::DelaunayBuilderDAC2D>;
 		using UpdatedRegionSet = std::unordered_set<BiomeRegionOffsetVector>;
 		using BiomeRegionCache =

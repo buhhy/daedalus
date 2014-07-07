@@ -10,8 +10,6 @@
 
 namespace terrain {
 	using VertexWithHullIndex = BiomeRegionLoader::VertexWithHullIndex;
-	using BiomeRegionDataPtr = BiomeRegionLoader::BiomeRegionDataPtr;
-	using BiomeDataPtr = BiomeRegionLoader::BiomeDataPtr;
 	using DelaunayBuilderPtr = BiomeRegionLoader::DelaunayBuilderPtr;
 	using UpdatedRegionSet = BiomeRegionLoader::UpdatedRegionSet;
 	using BiomeRegionCache = BiomeRegionLoader::BiomeRegionCache;
