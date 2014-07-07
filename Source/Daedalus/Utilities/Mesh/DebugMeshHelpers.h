@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Utilities/Algebra/Algebra2.h>
-#include <Utilities/Algebra/Algebra3.h>
+#include <Utilities/Algebra/Algebra2D.h>
+#include <Utilities/Algebra/Algebra3D.h>
 
 #include <vector>
 
@@ -10,8 +10,8 @@
  */
 namespace utils {
 	Uint16 CreatePoint(
-		std::vector<Triangle> & results, const Vector3<> & position, const float radius);
+		std::vector<Triangle3D> & results, const Vector3D<> & position, const float radius);
 	Uint16 CreateLine(
-		std::vector<Triangle> & results, const Vector3<> & startPoint,
-		const Vector3<> & endPoint, const float radius);
+		std::vector<Triangle3D> & results, const Vector3D<> & startPoint,
+		const Vector3D<> & endPoint, const float radius);
 }

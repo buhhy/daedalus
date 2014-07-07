@@ -16,8 +16,8 @@ namespace events {
 	};
 
 	struct EPlayerMovement : public EventData {
-		const utils::Vector3<> Position;
-		EPlayerMovement(const utils::Vector3<> & position) : Position(position) {}
+		const utils::Vector3D<> Position;
+		EPlayerMovement(const utils::Vector3D<> & position) : Position(position) {}
 	};
 
 	struct EBiomeRegionUpdate : public EventData {

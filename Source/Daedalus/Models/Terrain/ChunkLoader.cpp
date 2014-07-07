@@ -11,13 +11,13 @@ namespace terrain {
 	}
 
 	std::shared_ptr<ChunkData> ChunkLoader::LoadChunkFromDisk(
-		const utils::Vector3<Int64> & offset
+		const utils::Vector3D<Int64> & offset
 	) {
 		return std::shared_ptr<ChunkData>(NULL);
 	}
 
 	std::shared_ptr<ChunkData> ChunkLoader::GenerateMissingChunk(
-		const utils::Vector3<Int64> & offset
+		const utils::Vector3D<Int64> & offset
 	) {
 		auto data = new ChunkData(TerrainGenParams.GridCellCount, offset);
 		SetDefaultHeight(*data, 32);
@@ -25,7 +25,7 @@ namespace terrain {
 	}
 
 	std::shared_ptr<ChunkData> ChunkLoader::GetChunkAt(
-		const utils::Vector3<Int64> & offset
+		const utils::Vector3D<Int64> & offset
 	) {
 		//UE_LOG(LogTemp, Error, TEXT("Loading chunk at offset: %d %d %d"), offset.X, offset.Y, offset.Z);
 		if (LoadedChunkCache.count(offset) > 0) {

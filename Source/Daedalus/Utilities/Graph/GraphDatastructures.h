@@ -12,13 +12,13 @@ namespace utils {
 
 		class Vertex {
 		private:
-			Vector2<> Point;
+			Vector2D<> Point;
 			Uint64 Id;
 			Uint64 NumEdges;
 			Edge * ExitEdge;
 
 		public:
-			const Vector2<> & GetPoint() const { return Point; }
+			const Vector2D<> & GetPoint() const { return Point; }
 			Uint64 VertexId() const { return Id; }
 			Uint64 EdgeCount() const { return NumEdges; }
 			Edge * GetExitEdge() { return ExitEdge; }
@@ -26,7 +26,7 @@ namespace utils {
 			Uint64 AddEdge(Edge * const edge);
 			Uint64 RemoveEdge(Edge * const edge);
 
-			Vertex(const Vector2<> & point, const Uint64 id): Point(point), Id(id) {}
+			Vertex(const Vector2D<> & point, const Uint64 id): Point(point), Id(id) {}
 
 		};
 

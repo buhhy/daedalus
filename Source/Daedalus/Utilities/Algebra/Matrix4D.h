@@ -1,17 +1,17 @@
 #pragma once
 
-#include "Vector3.h"
+#include "Vector3D.h"
 
 namespace utils {
 	template <typename T = double>
-	struct Matrix4 {
+	struct Matrix4D {
 	private:
 		T Values[16];
 	
 	public:
-		Matrix4() {}
+		Matrix4D() {}
 
-		Matrix4(
+		Matrix4D(
 			const T & c00, const T & c01, const T & c02, const T & c03,
 			const T & c10, const T & c11, const T & c12, const T & c13,
 			const T & c20, const T & c21, const T & c22, const T & c23,
@@ -41,7 +41,7 @@ namespace utils {
 		const T * operator [] (size_t row) const { return Values + row * 4; }
 		T * operator [] (size_t row) { return Values + row * 4; }
 
-		Matrix4<T> & operator = (const Matrix4<T> & other) {
+		Matrix4D<T> & operator = (const Matrix4D<T> & other) {
 			// Assignment swap principle
 			T Temp[16];
 			for (size_t i = 0; i < 16; i++) Temp[i] = other.Values[i];
@@ -56,8 +56,8 @@ namespace utils {
 		AXIS_Z
 	};
 
-	Matrix4<> CreateRotation(const double angle,  const Axis axis);
-	Matrix4<> CreateRotation(const Vector3<> & x,  const Vector3<> & y,  const Vector3<> & z);
-	Matrix4<> CreateTranslation(const Vector3<> & displacement);
-	Matrix4<> CreateScaling(const Vector3<> & scale);
+	Matrix4D<> CreateRotation(const double angle,  const Axis axis);
+	Matrix4D<> CreateRotation(const Vector3D<> & x,  const Vector3D<> & y,  const Vector3D<> & z);
+	Matrix4D<> CreateTranslation(const Vector3D<> & displacement);
+	Matrix4D<> CreateScaling(const Vector3D<> & scale);
 }

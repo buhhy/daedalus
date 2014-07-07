@@ -10,7 +10,7 @@
 #include <unordered_map>
 
 namespace terrain {
-	typedef utils::Vector2<> BiomeCellVertex;
+	typedef utils::Vector2D<> BiomeCellVertex;
 	typedef std::vector<Uint64> PointIds;
 
 	/**
@@ -84,6 +84,10 @@ namespace terrain {
 	 * cells. Each biome cell contains a least 1 Delaunay point for more even triangulations.
 	 */
 	class BiomeRegionData {
+	public:
+		using NearestBiomeResult =
+			std::tuple<Uint64, BiomeRegionGridVector, double, utils::Vector2D<Int8>>;
+
 	private:
 		bool bIsGraphGenerated;
 		bool bIsBiomeDataGenerated;
@@ -142,7 +146,6 @@ namespace terrain {
 		void GenerateDelaunayGraph(const utils::DelaunayBuilderDAC2D & builder);
 		void GenerateBiomeData();
 
-		std::tuple<Uint64, BiomeRegionGridVector, double> FindNearestPoint(
-			utils::Vector2<> offset) const;
+		NearestBiomeResult FindNearestPoint(utils::Vector2D<> offset) const;
 	};
 }

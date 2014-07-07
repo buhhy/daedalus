@@ -13,14 +13,14 @@ namespace utils {
 	 */
 	class PerlinNoise2D {
 	private:
-		Vector2<Int64> Offset;
+		Vector2D<Int64> Offset;
 		Uint64 Seed;
 		
 		double GradientAt(int hash, double x, double y) const;
 
 	public:
 		PerlinNoise2D(const Uint64 seed) : Offset(0, 0), Seed(seed) {}
-		PerlinNoise2D(const Vector2<Int64> & offset, const Uint64 seed) :
+		PerlinNoise2D(const Vector2D<Int64> & offset, const Uint64 seed) :
 			Offset(offset), Seed(seed)
 		{}
 

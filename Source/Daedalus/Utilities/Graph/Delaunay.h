@@ -14,7 +14,7 @@ namespace utils {
 	 */
 	class DelaunayBuilderDAC2D {
 	public:
-		using InputPointList = std::vector<std::pair<utils::Vector2<>, Uint64>>;
+		using InputPointList = std::vector<std::pair<utils::Vector2D<>, Uint64>>;
 		using GraphHullIndexArray = std::array<std::pair<DelaunayGraph *, Uint32>, 4>;
 		using AddedFaceList = std::vector<std::array<delaunay::Vertex *, 3>>;
 

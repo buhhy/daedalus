@@ -18,8 +18,9 @@ namespace terrain {
 	 */
 	class BiomeRegionLoader {
 	public:
-		using VertexWithHullIndex = std::pair<utils::Vector2<>, Uint32>;
+		using VertexWithHullIndex = std::pair<utils::Vector2D<>, Uint32>;
 		using BiomeRegionDataPtr = std::shared_ptr<BiomeRegionData>;
+		using BiomeDataPtr = std::shared_ptr<BiomeData>;
 		using DelaunayBuilderPtr = std::shared_ptr<utils::DelaunayBuilderDAC2D>;
 		using UpdatedRegionSet = std::unordered_set<BiomeRegionOffsetVector>;
 		using BiomeRegionCache =
@@ -78,7 +79,8 @@ namespace terrain {
 			return BiomeGenParams;
 		}
 
+		BiomeDataPtr GetBiomeAt(const BiomeId & id);
 		BiomeRegionDataPtr GetBiomeRegionAt(const BiomeRegionOffsetVector & offset);
-		const BiomeId FindNearestBiomeId(const utils::Vector2<> point);
+		const BiomeId FindNearestBiomeId(const utils::Vector2D<> point);
 	};
 }

@@ -81,7 +81,9 @@
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\DelaunayDatastructures.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\GraphDatastructures.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Noise\Perlin.cpp" />
+    <ClCompile Include="..\..\Source\DelaunayVisualization\BiomeRegionRenderer.cpp" />
     <ClCompile Include="..\..\Source\DelaunayVisualization\Main.cpp" />
+    <ClCompile Include="..\..\Source\DelaunayVisualization\SDLHelpers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\DelaunayVisualization\BiomeRegionRenderer.h" />

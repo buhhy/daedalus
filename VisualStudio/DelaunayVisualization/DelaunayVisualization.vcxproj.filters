@@ -54,6 +54,12 @@
     <ClCompile Include="..\..\Source\DelaunayVisualization\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\DelaunayVisualization\BiomeRegionRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\DelaunayVisualization\SDLHelpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\DelaunayVisualization\BiomeRegionRenderer.h">
@@ -68,24 +74,5 @@
     <ClInclude Include="..\..\Source\DelaunayVisualization\SDLHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Font Include="..\..\Libraries\Fonts\lato.ttf">
-      <Filter>Resource Files</Filter>
-    </Font>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\Libraries\Windows\DLL\libfreetype-6.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\Libraries\Windows\DLL\SDL2.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\Libraries\Windows\DLL\SDL2_ttf.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\Libraries\Windows\DLL\zlib1.dll">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
 </Project>

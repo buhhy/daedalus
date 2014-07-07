@@ -12,7 +12,7 @@ ADDGameState * ABiomeRegionManager::GetGameState() {
 	return GetWorld()->GetGameState<ADDGameState>();
 }
 
-void ABiomeRegionManager::UpdateBiomesAt(const utils::Vector3<> & playerPosition) {
+void ABiomeRegionManager::UpdateBiomesAt(const utils::Vector3D<> & playerPosition) {
 	terrain::BiomeRegionOffsetVector offset;
 	auto chunkLoader = GetGameState()->BiomeRegionLoader;
 	auto genParams = chunkLoader->GetGeneratorParameters();

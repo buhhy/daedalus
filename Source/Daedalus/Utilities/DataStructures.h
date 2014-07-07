@@ -1,11 +1,9 @@
 #pragma once
 
 #include <Utilities/Integers.h>
-#include <Utilities/Algebra/Vector2.h>
-#include <Utilities/Algebra/Vector3.h>
-#include <Utilities/Algebra/Vector4.h>
-#include <Utilities/Algebra/Matrix4.h>
-#include <Utilities/Algebra/Tensor2D.h>
+#include <Utilities/Algebra/Vector3D.h>
+#include <Utilities/Algebra/Vector4D.h>
+#include <Utilities/Algebra/Matrix4D.h>
 
 #include <vector>
 #include <memory>
@@ -30,31 +28,23 @@ namespace utils {
 	template <typename T>
 	inline Option<T> Some(const T & value) { return Option<T>(value); }
 
-	struct Circle2D {
-		Vector2<> Center;
-		double Radius;
-
-		Circle2D(const Vector2<> center, const double radius) : Center(center), Radius(radius) {}
-		Circle2D() : Circle2D({ 0, 0 }, 0) {}
-	};
-
 	// TODO: make actual colour class
-	using Colour = Vector3<Uint8>;
+	using Colour = Vector3D<Uint8>;
 
-	struct Triangle {
-		Vector3<> Point1, Point2, Point3;
+	struct Triangle3D {
+		Vector3D<> Point1, Point2, Point3;
 
-		Triangle(
-			const Vector3<> & p1,
-			const Vector3<> & p2,
-			const Vector3<> & p3
+		Triangle3D(
+			const Vector3D<> & p1,
+			const Vector3D<> & p2,
+			const Vector3D<> & p3
 		) : Point1(p1), Point2(p2), Point3(p3) {}
 	};
 
 	// TODO: get rid of this
 	struct GridCell {
 		float values[8];
-		Vector3<> points[8];
+		Vector3D<> points[8];
 
 		void Initialize(
 			const float blf, const float tlf,
@@ -64,14 +54,14 @@ namespace utils {
 		) {
 			values[0] = blf; values[1] = brf; values[2] = brb; values[3] = blb;
 			values[4] = tlf; values[5] = trf; values[6] = trb; values[7] = tlb;
-			points[0] = Vector3<>(0, 0, 0);
-			points[1] = Vector3<>(1, 0, 0);
-			points[2] = Vector3<>(1, 1, 0);
-			points[3] = Vector3<>(0, 1, 0);
-			points[4] = Vector3<>(0, 0, 1);
-			points[5] = Vector3<>(1, 0, 1);
-			points[6] = Vector3<>(1, 1, 1);
-			points[7] = Vector3<>(0, 1, 1);
+			points[0] = Vector3D<>(0, 0, 0);
+			points[1] = Vector3D<>(1, 0, 0);
+			points[2] = Vector3D<>(1, 1, 0);
+			points[3] = Vector3D<>(0, 1, 0);
+			points[4] = Vector3D<>(0, 0, 1);
+			points[5] = Vector3D<>(1, 0, 1);
+			points[6] = Vector3D<>(1, 1, 1);
+			points[7] = Vector3D<>(0, 1, 1);
 		}
 	};
 
@@ -85,11 +75,11 @@ namespace utils {
 		Tensor3() : Tensor3(0, 0, 0) {}
 		Tensor3(const size_t size) : Tensor3(size, size, size) {}
 		Tensor3(const size_t size, const T & value) : Tensor3(size, size, size, value) {}
-		Tensor3(const Vector3<Uint16> & size) : Tensor3(size.X, size.Y, size.Z) {}
-		Tensor3(const Vector3<Uint16> & size, const T & value) :
+		Tensor3(const Vector3D<Uint16> & size) : Tensor3(size.X, size.Y, size.Z) {}
+		Tensor3(const Vector3D<Uint16> & size, const T & value) :
 			Tensor3(size.X, size.Y, size.Z, value) {}
-		Tensor3(const Vector3<size_t> & size) : Tensor3(size.X, size.Y, size.Z) {}
-		Tensor3(const Vector3<size_t> & size, const T & value) :
+		Tensor3(const Vector3D<size_t> & size) : Tensor3(size.X, size.Y, size.Z) {}
+		Tensor3(const Vector3D<size_t> & size, const T & value) :
 			Tensor3(size.X, size.Y, size.Z, value) {}
 
 		Tensor3(size_t width, size_t depth, size_t height) :

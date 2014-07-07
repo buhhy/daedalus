@@ -29,7 +29,7 @@ private:
 	uint64 RenderDistance;
 
 	ADDGameState * GetGameState();
-	void UpdateChunksAt(const utils::Vector3<> & playerPosition);
+	void UpdateChunksAt(const utils::Vector3D<> & playerPosition);
 
 public:
 	virtual void HandleEvent(

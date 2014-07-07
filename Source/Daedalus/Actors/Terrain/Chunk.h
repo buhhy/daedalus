@@ -5,7 +5,7 @@
 #include "ChunkData.h"
 #include "TerrainDataStructures.h"
 
-#include <Utilities/Algebra/Algebra3.h>
+#include <Utilities/Algebra/Algebra3D.h>
 
 #include "Chunk.generated.h"
 

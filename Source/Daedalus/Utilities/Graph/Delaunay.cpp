@@ -41,12 +41,12 @@ namespace utils {
 		bool takeLeft, takeRight;
 		bool isLeftDone = false, isRightDone = false;
 
-		const Vector2<Int64> rightOffset = rightGraph.GraphOffset() - leftGraph.GraphOffset();
+		const Vector2D<Int64> rightOffset = rightGraph.GraphOffset() - leftGraph.GraphOffset();
 
 		// If the left and right graphs are different, we need to the add an offset to the
 		// right graph since coordinates are local to the tile, and not absolute.
-		const auto addRightOffset = [&] (const Vector2<> & input) -> Vector2<> {
-			return isSame ? input : Vector2<>(rightOffset.X + input.X, rightOffset.Y + input.Y);
+		const auto addRightOffset = [&] (const Vector2D<> & input) -> Vector2D<> {
+			return isSame ? input : Vector2D<>(rightOffset.X + input.X, rightOffset.Y + input.Y);
 		};
 
 		AddedFaceList leftAddedFaces;
@@ -444,7 +444,7 @@ namespace utils {
 
 	void DelaunayBuilderDAC2D::MergeDelaunayTileCorner(GraphHullIndexArray & graphs) const {
 		const Uint8 size = 4;
-		std::array<utils::Vector2<>, size> points;
+		std::array<utils::Vector2D<>, size> points;
 		std::array<Vertex *, size> vertices;
 
 		// Get all 4 points with offsets to the top-left graph

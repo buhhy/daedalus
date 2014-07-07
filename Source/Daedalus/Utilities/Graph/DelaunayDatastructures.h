@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utilities/Algebra/Algebra2.h>
+#include <Utilities/Algebra/Algebra2D.h>
 
 #include <array>
 #include <deque>
@@ -13,7 +13,7 @@
  */
 namespace utils {
 	namespace delaunay {
-		typedef Vector2<Int64> DelaunayId;                   // Positional ID
+		typedef Vector2D<Int64> DelaunayId;                   // Positional ID
 		typedef std::pair<DelaunayId, Uint64> GhostId;       // Position & local ID aggregate
 	}
 }
@@ -23,7 +23,7 @@ namespace std {
 	struct hash<utils::delaunay::GhostId> {
 		size_t operator()(const utils::delaunay::GhostId & g) const {
 			Int64 seed = 0;
-			std::hashCombine(seed, hash<utils::Vector2<Int64>>()(g.first));
+			std::hashCombine(seed, hash<utils::Vector2D<Int64>>()(g.first));
 			std::hashCombine(seed, g.second);
 			return (unsigned) seed;
 		}
@@ -61,25 +61,25 @@ namespace utils {
 			IdFaceMap IncidentFaces;
 			Uint64 Id;
 			Uint64 ForeignId;      // Local ID of the vertex in the foreign graph
-			Vector2<> Point;
+			Vector2D<> Point;
 			bool bIsForeign;
 			
 			DelaunayId GraphOffset;
 
 			// TODO: update copy constructor for face map
 			Vertex(
-				const DelaunayId & gid, const Vector2<> & point,
+				const DelaunayId & gid, const Vector2D<> & point,
 				const Uint64 id, const Uint64 fid, bool isForeign
 			) : GraphOffset(gid), Point(point),
 				Id(id), ForeignId(fid), bIsForeign(isForeign)
 			{}
 
 		public:
-			Vertex(const DelaunayId & gid, const Vector2<> & point, const Uint64 id) :
+			Vertex(const DelaunayId & gid, const Vector2D<> & point, const Uint64 id) :
 				Vertex(gid, point, id, 0, false)
 			{}
 			Vertex(
-				const DelaunayId & gid, const Vector2<> & point,
+				const DelaunayId & gid, const Vector2D<> & point,
 				const Uint64 id, const Uint64 fid
 			) : Vertex(gid, point, id, fid, true)
 			{}
@@ -104,7 +104,7 @@ namespace utils {
 				return IncidentFaces.cbegin()->second;
 			}
 			inline const DelaunayId & ParentGraphOffset() const { return GraphOffset; }
-			inline const Vector2<> & GetPoint() const { return Point; }
+			inline const Vector2D<> & GetPoint() const { return Point; }
 			inline Uint64 VertexId() const { return Id; };
 			inline Uint64 ForeignVertexId() const { return ForeignId; }
 			inline Uint64 FaceCount() const { return IncidentFaces.size(); }
@@ -325,7 +325,7 @@ namespace utils {
 			 * if the new point is collinear.
 			 */
 			bool AddVertex(Vertex * const vert);
-			utils::Vector2<> Centroid() const;
+			utils::Vector2D<> Centroid() const;
 			Int32 FindVertexById(const Uint64 id) const;
 
 			/**
@@ -442,7 +442,7 @@ namespace utils {
 		const std::vector<delaunay::Face const *> GetFaces() const;
 		const std::unordered_set<delaunay::Edge> GetUniqueEdges() const;
 
-		delaunay::Vertex * AddVertex(const Vector2<> & point, const Uint64 id);
+		delaunay::Vertex * AddVertex(const Vector2D<> & point, const Uint64 id);
 		delaunay::Face * AddFace(
 			delaunay::Vertex * const v1, delaunay::Vertex * const v2);
 

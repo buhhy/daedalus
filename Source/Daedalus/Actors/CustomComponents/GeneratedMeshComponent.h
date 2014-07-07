@@ -27,7 +27,7 @@ public:
 		VertexColor(255., 255., 255.) {}
 
 	FMeshTriangleVertex(
-		const utils::Vector3<> & position,
+		const utils::Vector3D<> & position,
 		UMaterialInterface * const material = NULL
 	) : FMeshTriangleVertex(utils::ToFVector(position), material) {}
 
@@ -63,7 +63,7 @@ public:
 		const FMeshTriangleVertex & vertex1,
 		const FMeshTriangleVertex & vertex2
 	) : Vertex0(vertex0), Vertex1(vertex1), Vertex2(vertex2) {}
-	FMeshTriangle(const utils::Triangle & tri, UMaterialInterface * const material) :
+	FMeshTriangle(const utils::Triangle3D & tri, UMaterialInterface * const material) :
 		FMeshTriangle(
 			FMeshTriangleVertex(tri.Point1, material),
 			FMeshTriangleVertex(tri.Point2, material),

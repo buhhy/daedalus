@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utilities/Algebra/Vector2.h>
+#include <Utilities/Algebra/Vector2D.h>
 
 #include <vector>
 
@@ -14,8 +14,8 @@ namespace utils {
 
 	public:
 		Tensor2DBase() :Tensor2DBase(0, 0) {}
-		Tensor2DBase(const Vector2<size_t> & size) : Tensor2DBase(size.X, size.Y) {}
-		Tensor2DBase(const Vector2<size_t> & size, const T & value) :
+		Tensor2DBase(const Vector2D<size_t> & size) : Tensor2DBase(size.X, size.Y) {}
+		Tensor2DBase(const Vector2D<size_t> & size, const T & value) :
 			Tensor2DBase(size.X, size.Y, value)
 		{}
 		Tensor2DBase(const size_t width, const size_t depth) :
@@ -38,8 +38,8 @@ namespace utils {
 
 	public:
 		Tensor2D() : Tensor2DBase<T>(0, 0) {}
-		Tensor2D(const Vector2<size_t> & size) : Tensor2DBase<T>(size.X, size.Y) {}
-		Tensor2D(const Vector2<size_t> & size, const T & value) :
+		Tensor2D(const Vector2D<size_t> & size) : Tensor2DBase<T>(size.X, size.Y) {}
+		Tensor2D(const Vector2D<size_t> & size, const T & value) :
 			Tensor2DBase<T>(size.X, size.Y, value)
 		{}
 		Tensor2D(const size_t width, const size_t depth) :
@@ -73,8 +73,8 @@ namespace utils {
 	class Tensor2D<bool> : public Tensor2DBase<bool> {
 	public:
 		Tensor2D() :Tensor2DBase(0, 0) {}
-		Tensor2D(const Vector2<size_t> & size) : Tensor2DBase(size.X, size.Y) {}
-		Tensor2D(const Vector2<size_t> & size, const bool value) :
+		Tensor2D(const Vector2D<size_t> & size) : Tensor2DBase(size.X, size.Y) {}
+		Tensor2D(const Vector2D<size_t> & size, const bool value) :
 			Tensor2DBase(size.X, size.Y, value)
 		{}
 		Tensor2D(const size_t width, const size_t depth) :
@@ -107,8 +107,8 @@ namespace utils {
 	class TensorResizable2D : public Tensor2D<T> {
 	public:
 		TensorResizable2D() :Tensor2D<T>(0, 0) {}
-		TensorResizable2D(const Vector2<size_t> & size) : Tensor2D<T>(size.X, size.Y) {}
-		TensorResizable2D(const Vector2<size_t> & size, const T & value) :
+		TensorResizable2D(const Vector2D<size_t> & size) : Tensor2D<T>(size.X, size.Y) {}
+		TensorResizable2D(const Vector2D<size_t> & size, const T & value) :
 			Tensor2D<T>(size.X, size.Y, value)
 		{}
 		TensorResizable2D(const size_t width, const size_t depth) :

@@ -27,7 +27,7 @@ private:
 	float RenderHeight;
 
 	ADDGameState * GetGameState();
-	void UpdateBiomesAt(const utils::Vector3<> & playerPosition);
+	void UpdateBiomesAt(const utils::Vector3D<> & playerPosition);
 	void ReloadRegionAt(const terrain::BiomeRegionOffsetVector & offset);
 	bool DeleteRegionAt(const terrain::BiomeRegionOffsetVector & offset);
 

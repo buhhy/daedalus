@@ -11,6 +11,7 @@
 namespace terrain {
 	using VertexWithHullIndex = BiomeRegionLoader::VertexWithHullIndex;
 	using BiomeRegionDataPtr = BiomeRegionLoader::BiomeRegionDataPtr;
+	using BiomeDataPtr = BiomeRegionLoader::BiomeDataPtr;
 	using DelaunayBuilderPtr = BiomeRegionLoader::DelaunayBuilderPtr;
 	using UpdatedRegionSet = BiomeRegionLoader::UpdatedRegionSet;
 	using BiomeRegionCache = BiomeRegionLoader::BiomeRegionCache;
@@ -257,7 +258,7 @@ namespace terrain {
 
 		Uint16 numPoints = 0;
 		BiomeCellVertex point;
-		utils::Vector2<> offset;
+		utils::Vector2D<> offset;
 		
 		// Create uniform random point distribution, and insert vertices into aggregate list
 		for (auto y = 0u; y < BiomeGenParams.GridCellCount; y++) {
@@ -375,7 +376,11 @@ namespace terrain {
 		return loaded;
 	}
 
-	const BiomeId BiomeRegionLoader::FindNearestBiomeId(const utils::Vector2<> point) {
+	BiomeDataPtr BiomeRegionLoader::GetBiomeAt(const BiomeId & id) {
+		return GetBiomeRegionAt(id.first)->GetBiomeAt(id.second);
+	}
+
+	const BiomeId BiomeRegionLoader::FindNearestBiomeId(const utils::Vector2D<> point) {
 		// Convert into region coordinates
 		const auto offset = BiomeGenParams.ToBiomeRegionCoordinates(point);
 		const auto position = BiomeGenParams.GetInnerRegionPosition(point, offset);

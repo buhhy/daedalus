@@ -13,11 +13,17 @@
 using namespace utils;
 using namespace terrain;
 
-class DelaunayDAC2DDebugger : public IDelaunayDAC2DDebug {
-private:
-	using EdgeSet = std::unordered_set<delaunay::Edge>;
+class DelaunayRenderer {
+public:
+	static const Colour VertexColour;
+	static const Colour EdgeColour;
+	static const Colour AddedEdgeColour;
+	static const Colour HullEdgeColour;
+	static const Colour HullIndexColour;
+	static const Colour TangentStartColour;
+	static const Colour TangentEndColour;
 
-	bool Skipping;
+	using EdgeSet = std::unordered_set<delaunay::Edge>;
 
 	Uint16 Width;
 	Uint16 Height;
@@ -26,7 +32,26 @@ private:
 
 	SDL_Renderer * Renderer;
 
-	void AddEdges(
+	Vector2<> GetPointPosition(const Vector2<> p) const {
+		return { p.X * Width, (1 - p.Y) * Height };
+	}
+
+	Vector2<> GetVertexPosition(const delaunay::Vertex * vert) const {
+		return GetPointPosition(vert->GetPoint());
+	}
+
+	DelaunayRenderer(
+		SDL_Renderer * renderer,
+		const Uint16 width, const Uint16 height,
+		FontPack & fonts
+	) : Width(width), Height(height), Renderer(renderer), Fonts(fonts)
+	{}
+
+	/**
+	 * Drawing helpers
+	 */
+
+	void AddHullEdges(
 		EdgeSet & edges,
 		const delaunay::ConvexHull & hull,
 		const EdgeSet & compareEdges
@@ -41,35 +66,37 @@ private:
 		}
 	}
 
-	Vector2<> GetVertexPosition(const delaunay::Vertex * vert) const {
-		const auto & p = vert->GetPoint();
-		return { p.X * Width, (1 - p.Y) * Height };
+	void Clear() { ClearCanvas(Renderer); }
+	void Present() { SDL_RenderPresent(Renderer); }
+
+	void DrawPoint(
+		const Vector2<> point, const Uint16 radius,
+		const Colour & colour, const bool filled = false
+	) {
+		if (filled)
+			RenderFilledCircle(Renderer, GetPointPosition(point), radius, colour);
+		else
+			RenderCircle(Renderer, GetPointPosition(point), radius, colour);
 	}
 
-public:
-	DelaunayDAC2DDebugger(
-		SDL_Renderer * renderer,
-		const Uint16 width, const Uint16 height,
-		FontPack & fonts
-	) : Width(width), Height(height), Skipping(false),
-		Renderer(renderer), Fonts(fonts)
-	{}
-
-	/**
-	 * Drawing helpers
-	 */
-
-	void DrawVertex(const delaunay::Vertex * vertex, const Uint16 radius, const Colour & colour) {
-		RenderCircle(Renderer, GetVertexPosition(vertex), radius, colour);
+	void DrawVertex(
+		const delaunay::Vertex * vertex,
+		const Uint16 radius,
+		const Colour & colour = VertexColour
+	) {
+		DrawPoint(vertex->GetPoint(), radius, colour);
 	}
 
-	void DrawVertices(const std::vector<const delaunay::Vertex *> & vertices, const Colour & colour) {
+	void DrawVertices(
+		const std::vector<const delaunay::Vertex *> & vertices,
+		const Colour & colour = VertexColour
+	) {
 		// Draw vertices
 		for (auto & vertex : vertices)
 			DrawVertex(vertex, 1, colour);
 	}
 
-	void DrawEdges(const EdgeSet & edges, const Colour & colour) {
+	void DrawEdges(const EdgeSet & edges, const Colour & colour = EdgeColour) {
 		SDL_SetRenderDrawColor(Renderer, colour.X, colour.Y, colour.Z, SDL_ALPHA_OPAQUE);
 		for (auto & edge : edges)
 			RenderLine(Renderer, GetVertexPosition(edge.Start), GetVertexPosition(edge.End));
@@ -77,7 +104,7 @@ public:
 
 	void DrawAddedFaces(
 		const DelaunayBuilderDAC2D::AddedFaceList & added,
-		const Colour & colour
+		const Colour & colour = EdgeColour
 	) {
 		EdgeSet edges;
 		for (auto & entry : added) {
@@ -87,7 +114,10 @@ public:
 		DrawEdges(edges, colour);
 	}
 
-	void DrawHullVertexNumbers(const delaunay::ConvexHull & hull, const Colour & colour) {
+	void DrawHullVertexNumbers(
+		const delaunay::ConvexHull & hull,
+		const Colour & colour = HullIndexColour
+	) {
 		Vector2<> offset(6, 4);
 		std::stringstream stream;
 
@@ -100,6 +130,20 @@ public:
 				Fonts.S10, colour);
 		}
 	}
+};
+
+class DelaunayDAC2DDebugger : public IDelaunayDAC2DDebug {
+private:
+	DelaunayRenderer & Renderer;
+	bool NextStep;
+	bool Finish;
+
+	using EdgeSet = DelaunayRenderer::EdgeSet;
+
+public:
+	DelaunayDAC2DDebugger(DelaunayRenderer & renderer) :
+		Renderer(renderer), NextStep(false), Finish(false)
+	{}
 
 	/**
 	 * Algorithm event hooks
@@ -115,8 +159,8 @@ public:
 		const DelaunayBuilderDAC2D::AddedFaceList & leftAddedFaces,
 		const DelaunayBuilderDAC2D::AddedFaceList & rightAddedFaces
 	) override {
-		if (!Skipping) {
-			ClearCanvas(Renderer);
+		if (!NextStep && !Finish) {
+			Renderer.Clear();
 		
 			EdgeSet leftEdges, rightEdges, hullEdges;
 
@@ -126,45 +170,45 @@ public:
 				leftEdges = leftGraph.GetUniqueEdges();
 				rightEdges = rightGraph.GetUniqueEdges();
 
-				DrawEdges(leftEdges, { 36, 120, 195 });
-				DrawEdges(rightEdges, { 36, 120, 195 });
+				Renderer.DrawEdges(leftEdges);
+				Renderer.DrawEdges(rightEdges);
 
-				DrawVertices(leftGraph.GetVertices(), { 9, 54, 95 });
-				DrawVertices(rightGraph.GetVertices(), { 9, 54, 95 });
+				Renderer.DrawVertices(leftGraph.GetVertices());
+				Renderer.DrawVertices(rightGraph.GetVertices());
 			} else {
 				// Same graphs, no need to draw both graphs
 				leftEdges = leftGraph.GetUniqueEdges();
 				rightEdges = leftEdges;
 				
-				DrawEdges(leftGraph.GetUniqueEdges(), { 36, 120, 195 });
-				DrawVertices(leftGraph.GetVertices(), { 9, 54, 95 });
+				Renderer.DrawEdges(leftGraph.GetUniqueEdges());
+				Renderer.DrawVertices(leftGraph.GetVertices());
 			}
 
-			AddEdges(hullEdges, leftHull, leftEdges);
-			AddEdges(hullEdges, rightHull, rightEdges);
+			Renderer.AddHullEdges(hullEdges, leftHull, leftEdges);
+			Renderer.AddHullEdges(hullEdges, rightHull, rightEdges);
 
-			DrawEdges(hullEdges, { 232, 183, 49 });
+			Renderer.DrawEdges(hullEdges, DelaunayRenderer::HullEdgeColour);
 
-			DrawAddedFaces(leftAddedFaces, { 24, 165, 37 });
-			DrawAddedFaces(rightAddedFaces, { 24, 165, 37 });
+			Renderer.DrawAddedFaces(leftAddedFaces, DelaunayRenderer::AddedEdgeColour);
+			Renderer.DrawAddedFaces(rightAddedFaces, DelaunayRenderer::AddedEdgeColour);
 
 			// Draw start and end points
 			// Lower tangent is orange
-			DrawVertex(leftHull[lowerTangent.LeftId], 4, { 245, 144, 46 });
-			DrawVertex(rightHull[lowerTangent.RightId], 4, { 245, 144, 46 });
+			Renderer.DrawVertex(leftHull[lowerTangent.LeftId], 4, DelaunayRenderer::TangentStartColour);
+			Renderer.DrawVertex(rightHull[lowerTangent.RightId], 4, DelaunayRenderer::TangentStartColour);
 			// Upper tangent is red
-			DrawVertex(leftHull[upperTangent.LeftId], 4, { 212, 25, 0 });
-			DrawVertex(rightHull[upperTangent.RightId], 4, { 212, 25, 0 });
+			Renderer.DrawVertex(leftHull[upperTangent.LeftId], 4, DelaunayRenderer::TangentEndColour);
+			Renderer.DrawVertex(rightHull[upperTangent.RightId], 4, DelaunayRenderer::TangentEndColour);
 
 			// Draw centroid
 			//RenderFilledCircle(Renderer, leftHull.Centroid() * Vector2<>(Width, Height), 4, { 0, 131, 129 });
 			//RenderFilledCircle(Renderer, rightHull.Centroid() * Vector2<>(Width, Height), 4, { 0, 131, 129 });
 
 			// Draw convex hull points
-			DrawHullVertexNumbers(leftHull, { 0, 0, 0 });
-			DrawHullVertexNumbers(rightHull, { 0, 0, 0 });
+			Renderer.DrawHullVertexNumbers(leftHull);
+			Renderer.DrawHullVertexNumbers(rightHull);
 		
-			SDL_RenderPresent(Renderer);
+			Renderer.Present();
 
 			// Wait for the enter key, right ctrl skips to next merge step
 			SDL_Event sdlEvent;
@@ -175,10 +219,14 @@ public:
 						exit(0);
 
 					if (sdlEvent.type == SDL_KEYUP) {
-						if (sdlEvent.key.keysym.scancode == SDL_SCANCODE_RETURN)
+						if (sdlEvent.key.keysym.scancode == SDL_SCANCODE_F11)
 							done = true;
-						if (sdlEvent.key.keysym.scancode == SDL_SCANCODE_RCTRL) {
-							Skipping = true;
+						if (sdlEvent.key.keysym.scancode == SDL_SCANCODE_F5) {
+							Finish = true;
+							done = true;
+						}
+						if (sdlEvent.key.keysym.scancode == SDL_SCANCODE_F10) {
+							NextStep = true;
 							done = true;
 						}
 					}
@@ -190,45 +238,40 @@ public:
 	virtual void StartMergeStep(
 		const DelaunayGraph & graph, const Uint32 subdivisionDepth
 	) override {
-		Skipping = false;
+		NextStep = false;
 	}
 };
 
 class BiomeRegionRenderer {
 private:
 	Int64 Seed;
-	Uint16 Width;
-	Uint16 Height;
+
 	std::shared_ptr<DelaunayDAC2DDebugger> Debugger;
 	std::shared_ptr<events::EventBus> MockBus;
+	BiomeGeneratorParameters GenParams;
 	BiomeRegionLoader RegionLoader;
-	
-	FontPack & Fonts;
-
-	SDL_Renderer * Renderer;
+	DelaunayRenderer Renderer;
 
 public:
 	BiomeRegionRenderer(
 		SDL_Renderer * renderer,
 		const Uint16 width, const Uint16 height,
 		FontPack & fonts
-	) : Seed(12345678), Width(width), Height(height),
-		Renderer(renderer),
-		Debugger(new DelaunayDAC2DDebugger(renderer, width, height, fonts)),
+	) : Seed(12345678), Renderer(renderer, width, height, fonts),
+		Debugger(new DelaunayDAC2DDebugger(Renderer)),
 		MockBus(new events::EventBus()),
+		GenParams({
+			16,              // Number of grid cells along a single axis
+			Seed,            // Seed
+			4,               // Number of buffer cells in grid
+			1,               // Minimum bound of number of points
+			1,               // Maximum bound of number of points
+			16 * 0x10        // Size of the biome region in real units along a single axis
+		}),
 		RegionLoader(
-			{
-				16,              // Number of grid cells along a single axis
-				Seed,            // Seed
-				4,               // Number of buffer cells in grid
-				1,               // Minimum bound of number of points
-				1,               // Maximum bound of number of points
-				16 * 0x10        // Size of the biome region in real units along a single axis
-			},
-			MockBus,
+			GenParams,MockBus,
 			BiomeRegionLoader::DelaunayBuilderPtr(new DelaunayBuilderDAC2D(0, Debugger)),
-			0),
-		Fonts(fonts)
+			0)
 	{}
 
 	void DrawBiomeRegion(
@@ -237,13 +280,23 @@ public:
 		auto region = RegionLoader.GetBiomeRegionAt(offset);
 		const auto & graph = region->DelaunayGraph;
 		const auto & edges = graph.GetUniqueEdges();
-		ClearCanvas(Renderer);
 
-		RenderText(Renderer, "Done!", 100, Height / 2, Fonts.S48, { 244, 60, 48 });
+		Renderer.Clear();
+
+		RenderText(Renderer.Renderer, "Done!",
+			Renderer.GetPointPosition({ 1.0, 0.5 }), Renderer.Fonts.S48, { 244, 60, 48 });
 		
 		// Draw edges
-		Debugger->DrawEdges(edges, { 36, 120, 195 });
-		
-		SDL_RenderPresent(Renderer);
+		Renderer.DrawEdges(edges, { 36, 120, 195 });
+
+		// Nearest biome test
+		auto testp = Vector2<>(25, 25);
+		auto relp = GenParams.GetInnerRegionPosition(testp, { 0, 0 });
+		Renderer.DrawPoint(relp, 4, { 35, 35, 35 }, true);
+		auto id = RegionLoader.FindNearestBiomeId(testp);
+		auto data = RegionLoader.GetBiomeAt(id);
+		Renderer.DrawPoint(data->GetLocalPosition(), 8, { 200, 0, 0 });
+
+		Renderer.Present();
 	}
 };

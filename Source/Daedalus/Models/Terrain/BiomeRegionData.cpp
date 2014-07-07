@@ -4,6 +4,10 @@
 #include <assert.h>
 
 namespace terrain {
+	using utils::Vector2D;
+
+	using NearestBiomeResult = BiomeRegionData::NearestBiomeResult;
+
 	BiomeRegionData::BiomeRegionData(
 		const Uint16 buffer,
 		const Uint32 biomeSize,
@@ -45,22 +49,44 @@ namespace terrain {
 		return id;
 	}
 
-	std::tuple<Uint64, BiomeRegionGridVector, double> BiomeRegionData::FindNearestPoint(
-		utils::Vector2<> offset
-	) const {
+	NearestBiomeResult BiomeRegionData::FindNearestPoint(Vector2D<> offset) const {
 		double xpos = offset.X * BiomeGridSize;
 		double ypos = offset.Y * BiomeGridSize;
 
-		Uint16 xstart = std::max((Uint32) std::floor(xpos) - 2, 0u);
-		Uint16 xend = std::min((Uint32) std::ceil(xpos) + 2, BiomeGridSize - 1);
-		Uint16 ystart = std::max((Uint32) std::floor(ypos) - 2, 0u);
-		Uint16 yend = std::min((Uint32) std::ceil(ypos) + 2, BiomeGridSize - 1);
+		// If the current point is too close to the edge of the region, we must also search
+		// the adjacent regions for closer biome points. (-1, -1) means to look at the 3
+		// regions to the left and bottom of the current region. (0, 0) means no additional
+		// search is required. (1, 1) means to look at the 3 regions to the top and right of
+		// the current region.
+		Vector2D<Int8> offmap(0, 0);
+
+		auto xstart = std::floor(xpos) - 2;
+		auto ystart = std::floor(ypos) - 2;
+		auto xend = std::ceil(xpos) + 2;
+		auto yend = std::ceil(ypos) + 2;
+
+		if (xstart <= utils::FLOAT_ERROR) {
+			xstart = 0;
+			offmap.X = -1;
+		}
+		if (ystart <= utils::FLOAT_ERROR) {
+			ystart = 0;
+			offmap.Y = -1;
+		}
+		if (xend - BiomeGridSize - 1 > -utils::FLOAT_ERROR) {
+			xend = BiomeGridSize - 1;
+			offmap.X = 1;
+		}
+		if (yend - BiomeGridSize - 1 > -utils::FLOAT_ERROR) {
+			yend = BiomeGridSize - 1;
+			offmap.Y = 1;
+		}
 
 		double min = 5.0;
 		Uint64 vid = 0;
-		BiomeRegionGridVector gpos;
-		for (Uint16 x = xstart; x <= xend; x++) {
-			for (Uint16 y = ystart; y <= yend; y++) {
+		BiomeRegionGridVector gpos(0, 0);
+		for (Uint32 x = xstart; x <= xend; x++) {
+			for (Uint32 y = ystart; y <= yend; y++) {
 				for (auto id : BiomeCells.Get(x, y).PointIds) {
 					double dist = (offset - Biomes.at(id)->GetLocalPosition()).Length2();
 					if (dist < min) {
@@ -72,7 +98,7 @@ namespace terrain {
 			}
 		}
 
-		return std::make_tuple(vid, gpos, min);
+		return NearestBiomeResult(vid, gpos, min, offmap);
 	}
 
 	void BiomeRegionData::GenerateDelaunayGraph(

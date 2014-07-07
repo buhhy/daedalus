@@ -2,13 +2,13 @@
 
 #include "ChunkData.h"
 #include "TerrainDataStructures.h"
-#include <Utilities/Algebra/Algebra3.h>
+#include <Utilities/Algebra/Algebra3D.h>
 
 #include <unordered_map>
 
 namespace terrain {
 	typedef std::unordered_map<
-		utils::Vector3<Int64>,
+		utils::Vector3D<Int64>,
 		std::shared_ptr<ChunkData>
 	> ChunkCache;
 

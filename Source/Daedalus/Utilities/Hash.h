@@ -6,7 +6,7 @@ namespace utils {
 	template <typename T>
 	Int64 HashFromVector(
 		const Int64 seed,
-		const Vector3<T> & absolutePos
+		const Vector3D<T> & absolutePos
 	) {
 		Int64 collapsed = (
 			absolutePos.X * 6151 +
@@ -27,7 +27,7 @@ namespace utils {
 	template <typename T>
 	Int64 HashFromVector(
 		const Int64 seed,
-		const Vector2<T> & absolutePos
+		const Vector2D<T> & absolutePos
 	) {
 		Int64 collapsed = (
 			absolutePos.X * 6151 +

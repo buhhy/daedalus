@@ -297,8 +297,8 @@ namespace utils {
 		{ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }
 	};
 
-	Vector3<> VertexLerp(
-		const float isoThreshold, const Vector3<> & p1, const Vector3<> & p2,
+	Vector3D<> VertexLerp(
+		const float isoThreshold, const Vector3D<> & p1, const Vector3D<> & p2,
 		float bp1, float bp2);
 
 	/*
@@ -310,11 +310,11 @@ namespace utils {
 	of totally below the isolevel.
 	*/
 	void MarchingCube(
-		std::vector<Triangle> & resultTries,
+		std::vector<Triangle3D> & resultTries,
 		const float isoThreshold,
 		const GridCell & grid
 	) {
-		Vector3<> vertlist[12];
+		Vector3D<> vertlist[12];
 		int cubeindex = 0;
 
 		/*
@@ -374,7 +374,7 @@ namespace utils {
 
 		/* Create the triangle */
 		for (Uint32 i = 0; TriTable[cubeindex][i] != -1; i += 3) {
-			resultTries.push_back(Triangle(
+			resultTries.push_back(Triangle3D(
 				vertlist[TriTable[cubeindex][i]],
 				vertlist[TriTable[cubeindex][i + 2]],
 				vertlist[TriTable[cubeindex][i + 1]]));
@@ -385,10 +385,10 @@ namespace utils {
 	Linearly interpolate the position where an isosurface cuts
 	an edge between two vertices, each with their own scalar value
 	*/
-	Vector3<> VertexLerp(
+	Vector3D<> VertexLerp(
 		const float isoThreshold,
-		const Vector3<> & p1,
-		const Vector3<> & p2,
+		const Vector3D<> & p1,
+		const Vector3D<> & p2,
 		float valp1,
 		float valp2
 	) {

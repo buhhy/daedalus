@@ -188,11 +188,11 @@ namespace utils {
 			}
 		}
 
-		utils::Vector2<> ConvexHull::Centroid() const {
+		utils::Vector2D<> ConvexHull::Centroid() const {
 			// Algorithm found here: http://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
 			const auto size = HullVertices.size();
 			
-			utils::Vector2<> sum(0, 0);
+			utils::Vector2D<> sum(0, 0);
 			
 			if (size < 3) {
 				// If degenerate hull, then return average of the points
@@ -379,8 +379,8 @@ namespace utils {
 		Uint64 index = 0;
 		Face * CCWFace = NULL, * CWFace = NULL;
 
-		Vector2<> CCWCompareEdge = pivotCWPoint->GetPoint() - pivotPoint->GetPoint();
-		Vector2<> CWCompareEdge = pivotCCWPoint->GetPoint() - pivotPoint->GetPoint();
+		Vector2D<> CCWCompareEdge = pivotCWPoint->GetPoint() - pivotPoint->GetPoint();
+		Vector2D<> CWCompareEdge = pivotCCWPoint->GetPoint() - pivotPoint->GetPoint();
 
 		// Traverse faces currently at pivot point in CCW fashion, keeping the smallest
 		// available CCW angle, as well as the smallest available CW angle.
@@ -525,7 +525,7 @@ namespace utils {
 		}
 	}
 
-	Vertex * DelaunayGraph::AddVertex(const Vector2<> & point, const Uint64 id) {
+	Vertex * DelaunayGraph::AddVertex(const Vector2D<> & point, const Uint64 id) {
 		return AddVertexToCache(new Vertex(Offset, point, id));
 	}
 

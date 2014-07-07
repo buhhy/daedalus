@@ -10,7 +10,7 @@ ADDGameState * AChunkManager::GetGameState() {
 	return GetWorld()->GetGameState<ADDGameState>();
 }
 
-void AChunkManager::UpdateChunksAt(const utils::Vector3<> & playerPosition) {
+void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 	terrain::ChunkOffsetVector offset;
 	FRotator defaultRotation(0, 0, 0);
 	FActorSpawnParameters defaultParameters;

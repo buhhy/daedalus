@@ -1,14 +1,14 @@
 #include <Daedalus.h>
 #include <Utilities/DataStructures.h>
-#include "Algebra2.h"
+#include "Algebra2D.h"
 
 #include <math.h>
 
 namespace utils {
 	Circle2D CalculateCircumcircle(
-		const Vector2<> & A,
-		const Vector2<> & B,
-		const Vector2<> & C
+		const Vector2D<> & A,
+		const Vector2D<> & B,
+		const Vector2D<> & C
 	) {
 		// See http://en.wikipedia.org/wiki/Circumscribed_circle#Circumcenter_coordinates
 		double AL = A.Length2();
@@ -21,21 +21,21 @@ namespace utils {
 		return Circle2D({ UX, UY }, radius);
 	}
 
-	Int8 IsWithinCircumcircle(const Vector2<> & point, const Circle2D & circle) {
+	Int8 IsWithinCircumcircle(const Vector2D<> & point, const Circle2D & circle) {
 		auto result = (point - circle.Center).Length2() - (circle.Radius * circle.Radius);
 		if (result < -FLOAT_ERROR) return 1;
 		else if (result > FLOAT_ERROR) return -1;
 		else return 0;
 	}
 
-	Int8 FindWinding(const Vector2<> & p1, const Vector2<> & pivot, const Vector2<> & p3) {
+	Int8 FindWinding(const Vector2D<> & p1, const Vector2D<> & pivot, const Vector2D<> & p3) {
 		double result = (p1 - pivot).Determinant(p3 - pivot);
 		if (result < -FLOAT_ERROR) return -1;       // Obtuse
 		if (result > FLOAT_ERROR) return 1;         // Acute
 		else return 0;                              // Colinear
 	}
 
-	double FindAngle(const Vector2<> & v1, const Vector2<> & v2) {
+	double FindAngle(const Vector2D<> & v1, const Vector2D<> & v2) {
 		double result = std::atan2(v1.Determinant(v2), v1.Dot(v2));
 		if (result < FLOAT_ERROR)
 			result += 2 * MATH_PI;
