@@ -31,6 +31,14 @@ namespace utils {
 			return FaceCount();
 		}
 
+		const Face * Vertex::FindFaceContainingPoint(const Vector2D<> & position) const {
+			for (auto & f : IncidentFaces) {
+				if (f.second->IsWithinFace(position))
+					return f.second;
+			}
+			return NULL;
+		}
+
 		bool Vertex::IsSurrounded() const {
 			if (FaceCount() < 2)
 				return false;
@@ -359,9 +367,11 @@ namespace utils {
 		Int8 pivotCWIndex = newFace->GetCWVertexIndex(pivotIndex);
 		Int8 pivotCCWIndex = newFace->GetCCWVertexIndex(pivotIndex);
 
-		const auto pivotPoint = newFace->Vertices[pivotIndex];
-		const auto pivotCWPoint = newFace->Vertices[pivotCWIndex];
-		const auto pivotCCWPoint = newFace->Vertices[pivotCCWIndex];
+		const auto & vertices = newFace->GetVertices();
+
+		const auto pivotPoint = vertices[pivotIndex];
+		const auto pivotCWPoint = vertices[pivotCWIndex];
+		const auto pivotCCWPoint = vertices[pivotCCWIndex];
 
 		// If pivot point has no faces yet, assign the new one
 		if (pivotPoint->FaceCount() == 0)
@@ -390,9 +400,9 @@ namespace utils {
 			Int8 otherPivotCCWIndex = otherFace->GetCCWVertexIndex(otherPivotIndex);
 
 			// Get the CCW point from the pivot from the other face
-			const auto otherPivotCCW = otherFace->Vertices[otherPivotCCWIndex];
+			const auto otherPivotCCW = otherFace->GetVertex(otherPivotCCWIndex);
 			// Get the CW point from the pivot from the other face
-			const auto otherPivotCW = otherFace->Vertices[otherPivotCWIndex];
+			const auto otherPivotCW = otherFace->GetVertex(otherPivotCWIndex);
 
 			// Compare the minimum CCW face with this current one to get new minimum
 			if (*otherPivotCCW == *pivotCWPoint) {
@@ -445,7 +455,7 @@ namespace utils {
 	}
 
 	void DelaunayGraph::AdjustRemovedFaceAdjacencies(Face * const face, const Uint8 pivotIndex) {
-		Vertex * const pivot = face->Vertices[pivotIndex];
+		Vertex * const pivot = face->GetVertex(pivotIndex);
 		Face * const CCWFace = face->GetAdjacentFaceCCW(pivot);
 		Face * const CWFace = face->GetAdjacentFaceCW(pivot);
 
@@ -552,9 +562,11 @@ namespace utils {
 				adjust.first->AdjacentFaces[adjust.second] = newFace;
 		}
 
+		const auto & verts = newFace->GetVertices();
+
 		// Add new face to face vertices
 		for (Uint8 i = 0; i < newFace->VertexCount(); i++)
-			newFace->Vertices[i]->AddFace(newFace);
+			verts[i]->AddFace(newFace);
 
 		AddFaceToCache(newFace);
 
@@ -606,8 +618,9 @@ namespace utils {
 		}
 
 		// Add new face to face vertices
+		const auto & verts = newFace->GetVertices();
 		for (Uint8 i = 0; i < newFace->VertexCount(); i++)
-			newFace->Vertices[i]->AddFace(newFace);
+			verts[i]->AddFace(newFace);
 
 		AddFaceToCache(newFace);
 
@@ -619,8 +632,10 @@ namespace utils {
 			return false;
 		for (Uint8 i = 0; i < face->VertexCount(); i++)
 			AdjustRemovedFaceAdjacencies(face, i);
+
+		const auto & verts = face->GetVertices();
 		for (Uint8 i = 0; i < face->VertexCount(); i++)
-			face->Vertices[i]->RemoveFace(face);
+			verts[i]->RemoveFace(face);
 		RemoveFaceFromCache(face);
 		delete face;
 		return true;
@@ -670,10 +685,11 @@ namespace utils {
 
 		for (auto & it : IdFaceMap) {
 			const auto face = it.second;
-			edgeSet.insert({ face->Vertices[0], face->Vertices[1] });
+			const auto & verts = face->GetVertices();
+			edgeSet.insert({ verts[0], verts[1] });
 			if (!face->IsDegenerate()) {
-				edgeSet.insert({ face->Vertices[0], face->Vertices[2] });
-				edgeSet.insert({ face->Vertices[1], face->Vertices[2] });
+				edgeSet.insert({ verts[0], verts[2] });
+				edgeSet.insert({ verts[1], verts[2] });
 			}
 		}
 

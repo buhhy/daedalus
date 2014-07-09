@@ -19,7 +19,7 @@ class ABiomeRegion : public AActor {
 	GENERATED_UCLASS_BODY()
 
 private:
-	std::shared_ptr<terrain::BiomeRegionData> RegionData;
+	terrain::BiomeRegionDataPtr RegionData;
 	float BiomeGridScale;
 	float RenderHeight;
 	void GenerateBiomeRegionMesh();
@@ -31,5 +31,5 @@ public:
 		UMaterial * TestMaterial;
 
 	void InitializeBiomeRegion(const float scale);
-	void SetBiomeRegionData(const std::shared_ptr<terrain::BiomeRegionData> & BiomeRegionData);
+	void SetBiomeRegionData(const terrain::BiomeRegionDataPtr & BiomeRegionData);
 };

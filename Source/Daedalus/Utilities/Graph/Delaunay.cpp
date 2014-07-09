@@ -370,10 +370,11 @@ namespace utils {
 			if (count == 3) {
 				// Create triangle with 3 vertices
 				auto newFace = results.AddFace(vertices[0], vertices[1], vertices[2]);
+				const auto & newVertices = newFace->GetVertices();
 				
 				if (newFace != NULL) {
 					for (Uint8 i = 0u; i < newFace->VertexCount(); i++)
-						hull.AddVertex(newFace->Vertices[i]);
+						hull.AddVertex(newVertices[i]);
 				} else {
 					// The 3 points are colinear, add 2 edges instead
 					results.AddFace(vertices[0], vertices[1]);
@@ -387,9 +388,10 @@ namespace utils {
 				auto newFace = results.AddFace(
 					vertices[0],
 					vertices[1]);
+				const auto & newVertices = newFace->GetVertices();
 
 				for (Uint8 i = 0u; i < newFace->VertexCount(); i++)
-					hull.AddVertex(newFace->Vertices[i]);
+					hull.AddVertex(newVertices[i]);
 			} else {
 				assert(!"Divide: we should never divide to the point where there are less than 2 vertices");
 				// This shouldn't ever happen

@@ -79,7 +79,7 @@ namespace utils {
 
 		public:
 			Vertex(const DelaunayId & gid, const Vector2D<> & point, const Uint64 id) :
-				Vertex(gid, point, id, 0, false)
+				Vertex(gid, point, id, id, false)
 			{}
 			Vertex(
 				const DelaunayId & gid, const Vector2D<> & point,
@@ -92,6 +92,7 @@ namespace utils {
 
 			Uint64 AddFace(Face * const face);
 			Uint64 RemoveFace(Face * const face);
+			const Face * FindFaceContainingPoint(const Vector2D<> & position) const;
 
 			/**
 			 * @return true if the current vertex is not part of the concave/convex hull
@@ -144,13 +145,18 @@ namespace utils {
 		 * Triangle datastructure: each vertex has a corresponding opposite face.
 		 */
 		class Face {
+		public:
+			using VertexList = std::array<Vertex *, 3>;
+
 		private:
 			bool bIsDegenerate;
 			Uint8 NumVertices;
 			Uint64 Id;
 
+			const VertexList Vertices;  // Vertices of the triangle provided in CW order
+			const Triangle2D Bounds;
+
 		public:
-			std::array<Vertex *, 3> Vertices;        // Vertices of the triangle provided in CW order
 			std::array<Face *, 3> AdjacentFaces;     // Each adjacent face opposite of the vertex provided
 
 			inline bool IsDegenerate() const { return bIsDegenerate; }
@@ -164,13 +170,16 @@ namespace utils {
 
 			Face(Vertex * const v1, Vertex * const v2, Vertex * const v3, const Uint64 id) :
 				Vertices({{ v1, v2, v3 }}),
-				AdjacentFaces({{ this, this, v3 == NULL ? NULL : this }}),
+				AdjacentFaces({{ this, this, v3 ? this : NULL }}),
 				bIsDegenerate(v3 == NULL),
-				NumVertices(v3 == NULL ? 2 : 3),
-				Id(id)
+				NumVertices(v3 ? 3 : 2),
+				Id(id),
+				Bounds(v1->GetPoint(), v2->GetPoint(), v3 ? v3->GetPoint() : v1->GetPoint())
 			{}
 
-			Face(const Face & copy) : Face(copy.Vertices[0], copy.Vertices[1], copy.Vertices[2], copy.Id) {}
+			Face(const Face & copy) :
+				Face(copy.Vertices[0], copy.Vertices[1], copy.Vertices[2], copy.Id)
+			{}
 
 			inline Uint8 GetCWVertexIndex(const Uint8 current) const {
 				return (current + 1) % NumVertices;
@@ -200,6 +209,14 @@ namespace utils {
 				auto value = GetCCWVertexIndex(current);
 				return value == -1 ? NULL : Vertices[value];
 			}
+
+			inline bool IsWithinFace(const Vector2D<> & point) const {
+				UVWVector temp;
+				return Bounds.GetBarycentricCoordinates(temp, point);
+			}
+
+			inline VertexList GetVertices() const { return Vertices; }
+			inline Vertex * GetVertex(const Uint8 index) const { return Vertices[index]; }
 
 			Int8 FindVertex(Vertex const * const vertex) const;
 			Int8 FindFace(Face const * const face) const;

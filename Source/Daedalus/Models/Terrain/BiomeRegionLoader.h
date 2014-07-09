@@ -9,6 +9,38 @@
 #include <memory>
 
 namespace terrain {
+	struct BiomeTriangle {
+	private:
+		utils::Vector2D<> ApplyOffset(
+			BiomeData const * biome,
+			const BiomeRegionOffsetVector & offset
+		) const {
+			const auto & globalPos = biome->GetGlobalPosition();
+			return (globalPos.first - offset).Cast<double>() + globalPos.second;
+		}
+
+	public:
+		const std::array<BiomeData *, 3> Biomes;
+
+		BiomeTriangle(BiomeData * const b1, BiomeData * const b2, BiomeData * const b3) :
+			Biomes{{ b1, b2, b3 }}
+		{}
+
+		utils::UVWVector InterpolatePoint(const BiomePositionVector & position) const {
+			utils::Triangle2D bounds {
+				ApplyOffset(Biomes[0], position.first),
+				ApplyOffset(Biomes[1], position.first),
+				ApplyOffset(Biomes[2], position.first)
+			};
+			utils::UVWVector uvw;
+			bounds.GetBarycentricCoordinates(uvw, position.second);
+			return uvw;
+		}
+
+		BiomeData * operator [] (const Uint8 index) { return Biomes[index]; }
+		const BiomeData * operator [] (const Uint8 index) const { return Biomes[index]; }
+	};
+
 	/**
 	 * This class will load data related to a particular biome region. Biome regions will
 	 * contain multiple biomes linked through a delaunay triangulation. After the generation
@@ -73,12 +105,14 @@ namespace terrain {
 		~BiomeRegionLoader();
 		
 
-		const BiomeGeneratorParameters & GetGeneratorParameters() const {
+		inline const BiomeGeneratorParameters & GetGeneratorParameters() const {
 			return BiomeGenParams;
 		}
 
 		BiomeDataPtr GetBiomeAt(const BiomeId & id);
 		BiomeRegionDataPtr GetBiomeRegionAt(const BiomeRegionOffsetVector & offset);
 		const BiomeId FindNearestBiomeId(const utils::Vector2D<> point);
+		const BiomeTriangle FindContainingBiomeTriangle(
+			const utils::Vector2D<> point);
 	};
 }

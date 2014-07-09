@@ -65,5 +65,8 @@
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Matrix4D.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\DataStructures2D.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

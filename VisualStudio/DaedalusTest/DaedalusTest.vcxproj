@@ -20,6 +20,7 @@
     <ClCompile Include="..\..\Source\DaedalusTest\Main.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra2D.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra3D.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\DataStructures2D.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Matrix4D.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\Delaunay.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\DelaunayDatastructures.cpp" />

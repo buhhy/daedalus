@@ -9,24 +9,42 @@
 #include <memory>
 
 namespace utils {
+	struct None {};
+
+	template <typename T>
+	union OptionStorage {
+		None Dummy;
+		T Value;
+		OptionStorage() : Dummy{} {}
+		OptionStorage(const T & val) : Value{val} {}
+	};
+
 	// Equivalent to the Scala Option construct which can be a Some or None value
 	template <typename T>
 	struct Option {
 	private:
-		std::shared_ptr<T> Value;
+		bool HasValue;
+		std::unique_ptr<T> Opt;
+
 	public:
-		Option() : Value(NULL) {}
-		Option(const T & value) : Value(new T(value)) {}
-		bool IsValid() const { return Value->IsValid(); }
-		T & Get() { return *Value; }
-		const T & Get() const { return *Value; }
+		Option() : Opt{nullptr}, HasValue{false} {}
+		Option(const T & val) : Opt{new T(val)}, HasValue{true} {}
+		Option(T && val) : Opt{new T(val)}, HasValue{true} {}
+		Option(const Option<T> & other) :
+			Opt{other.HasValue ? new T(*other.Opt) : nullptr}, HasValue{other.HasValue}
+		{}
+
+		bool IsValid() const { return HasValue; }
+		T & operator () () {
+			if (HasValue) return *Opt;
+			throw std::exception("Option::Get: Trying to get value from <None>");
+		}
+		
+		const T & operator () () const {
+			if (HasValue) return *Opt;
+			throw std::exception("Option::Get: Trying to get value from <None>");
+		}
 	};
-	
-	template <typename T>
-	inline Option<T> None() { return Option<T>(); }
-	
-	template <typename T>
-	inline Option<T> Some(const T & value) { return Option<T>(value); }
 
 	// TODO: make actual colour class
 	using Colour = Vector3D<Uint8>;

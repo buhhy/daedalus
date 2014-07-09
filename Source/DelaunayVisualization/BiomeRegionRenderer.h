@@ -277,7 +277,7 @@ public:
 	void DrawBiomeRegion(
 		const BiomeRegionOffsetVector & offset
 	) {
-		auto region = RegionLoader.GetBiomeRegionAt({ 0, 0 });
+		auto region = RegionLoader.GetBiomeRegionAt(offset);
 		const auto & graph = region->DelaunayGraph;
 		const auto & edges = graph.GetUniqueEdges();
 		const auto & points = graph.GetVertices();
@@ -287,17 +287,25 @@ public:
 		// Nearest biome test
 		for (Uint32 y = 0; y < Renderer.Height; y++) {
 			for (Uint32 x = 0; x < Renderer.Width; x++) {
-				double dx = GenParams.BiomeScale * x / Renderer.Width;
-				double dy = GenParams.BiomeScale * y / Renderer.Height;
-				auto id = RegionLoader.FindNearestBiomeId({ dx, dy });
-				auto data = RegionLoader.GetBiomeAt(id);
-				Uint8 colour = (data->GetElevation() / 2.0) * 255;
+				Vector2D<> point { (double) x / Renderer.Width, (double) y / Renderer.Height };
+				BiomePositionVector globalPos { offset, point };
+				auto found =
+					RegionLoader.FindContainingBiomeTriangle(point * GenParams.BiomeScale);
+				//auto id = RegionLoader.FindNearestBiomeId({ dx, dy });
+				//auto data = RegionLoader.GetBiomeAt(id);
+				UVWVector uvw = found.InterpolatePoint(globalPos);
+				double height =
+					found[0]->GetElevation() * uvw.X +
+					found[1]->GetElevation() * uvw.Y +
+					found[2]->GetElevation() * uvw.Z;
+				Uint8 colour = (height / 2.0) * 255;
+				//Uint8 colour = Uint8(found[0]->GetElevation() / 2.0 * 255);
 				SDL_SetRenderDrawColor(Renderer.Renderer, colour, colour, colour, SDL_ALPHA_OPAQUE);
 				SDL_RenderDrawPoint(Renderer.Renderer, x, Renderer.Height - y);
 			}
 
-//			if (y % 50 == 0)
-//				Renderer.Present();
+			if (y % 10 == 0)
+				Renderer.Present();
 		}
 
 		RenderText(Renderer.Renderer, "Done!",
@@ -307,6 +315,8 @@ public:
 		//Renderer.DrawEdges(edges);
 		Renderer.DrawVertices(points, { 0, 0, 0 });
 		Renderer.Present();
+
+		HandleClickEvent(737, Renderer.Height - 3);
 	}
 
 	void HandleClickEvent(const double x, const double y) {

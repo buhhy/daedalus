@@ -26,9 +26,12 @@ namespace terrain {
 	};
 
 
-	typedef utils::Vector2D<Int64> BiomeRegionOffsetVector;   // Offset vector for biome regions
-	typedef utils::Vector2D<Uint16> BiomeRegionGridVector;    // Offset vector within a region
-	typedef std::pair<BiomeRegionOffsetVector, Uint64> BiomeId;
+	using BiomeRegionOffsetVector = utils::Vector2D<Int64>;   // Offset vector for biome regions
+	using BiomeRegionGridVector = utils::Vector2D<Uint16>;    // Offset vector within a region
+	// UID referencing an entity within a biome region
+	using BiomeId = std::pair<BiomeRegionOffsetVector, Uint64>;
+	// Positioning component for referencing a point within a biome region
+	using BiomePositionVector = std::pair<BiomeRegionOffsetVector, utils::Vector2D<>>;
 
 	struct BiomeGeneratorParameters {
 		Uint32 GridCellCount;       // Number of grid cells along a single edge of the square
@@ -44,21 +47,16 @@ namespace terrain {
 			return utils::Vector2D<>(offset.X * BiomeScale, offset.Y * BiomeScale);
 		}
 
-		inline const BiomeRegionOffsetVector ToBiomeRegionCoordinates(
-			const utils::Vector2D<> & position
+		inline const BiomePositionVector ToBiomeRegionCoordinates(
+			const utils::Vector2D<> & point
 		) const {
-			return BiomeRegionOffsetVector(
-				(Int64) std::floor(position.X / BiomeScale),
-				(Int64) std::floor(position.Y / BiomeScale));
-		}
-
-		inline const utils::Vector2D<> GetInnerRegionPosition(
-			const utils::Vector2D<> & position,
-			const BiomeRegionOffsetVector & regionOffset
-		) const {
-			return utils::Vector2D<>(
-				position.X / BiomeScale - regionOffset.X,
-				position.Y / BiomeScale - regionOffset.Y);
+			const auto offset = BiomeRegionOffsetVector(
+				(Int64) std::floor(point.X / BiomeScale),
+				(Int64) std::floor(point.Y / BiomeScale));
+			const auto position = utils::Vector2D<>(
+				point.X / BiomeScale - offset.X,
+				point.Y / BiomeScale - offset.Y);
+			return BiomePositionVector(offset, position);
 		}
 	};
 }

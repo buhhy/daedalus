@@ -22,6 +22,7 @@ Daedalus.xcodeproj
 [Dd]ebugPublic/
 [Rr]elease/[Rr]eleases/
 x64/x86/
+x64/
 build/
 bld/
 [Bb]in/

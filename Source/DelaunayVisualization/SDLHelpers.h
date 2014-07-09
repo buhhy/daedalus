@@ -55,7 +55,7 @@ inline void RenderLine(
 	SDL_Renderer * renderer,
 	const Vector2D<> & start, const Vector2D<> & end
 ) {
-	SDL_RenderDrawLine(renderer, start.X, start.Y, end.X, end.Y);
+	SDL_RenderDrawLine(renderer, int(start.X), int(start.Y), int(end.X), int(end.Y));
 }
 
 inline void RenderCircle(

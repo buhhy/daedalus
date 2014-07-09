@@ -10,7 +10,6 @@
 #include <unordered_map>
 
 namespace terrain {
-	typedef utils::Vector2D<> BiomeCellVertex;
 	typedef std::vector<Uint64> PointIds;
 
 	/**
@@ -34,27 +33,28 @@ namespace terrain {
 
 	private:
 		BiomeId GlobalId;
-		BiomeCellVertex LocalPosition;
-		float Elevation;                        // Average biome elevation in metres
-		float Rainfall;                         // Average rainfall in millimetres
+		BiomePositionVector GlobalPosition;
+		double Elevation;                        // Average biome elevation in metres
+		double Rainfall;                         // Average rainfall in millimetres
 		TerrainTypeId TerrainType;              // Topology of terrain
 		VegetationTypeId VegetationType;        // General vegetation within terrain
 
 	public:
-		BiomeData(const BiomeId & gid, const BiomeCellVertex & position) :
+		BiomeData(const BiomeId & gid, const BiomePositionVector & position) :
 			GlobalId(gid),
-			LocalPosition(position),
+			GlobalPosition(position),
 			Elevation(0), Rainfall(0),
 			TerrainType(T_PLAINS), VegetationType(V_BARREN)
 		{}
-
-		const BiomeCellVertex & GetLocalPosition() const { return LocalPosition; }
+		
+		const BiomePositionVector & GetGlobalPosition() const { return GlobalPosition; }
+		const utils::Vector2D<> & GetLocalPosition() const { return GlobalPosition.second; }
 		const BiomeId & GlobalBiomeId() const { return GlobalId; }
 		
-		const float GetElevation() const { return Elevation; }
-		const float GetRainfall() const { return Rainfall; }
-		void SetElevation(const float elevation) { Elevation = elevation; }
-		void SetRainfall(const float rainfall) { Rainfall = rainfall; }
+		const double GetElevation() const { return Elevation; }
+		const double GetRainfall() const { return Rainfall; }
+		void SetElevation(const double elevation) { Elevation = elevation; }
+		void SetRainfall(const double rainfall) { Rainfall = rainfall; }
 	};
 
 	typedef std::unordered_map<Uint64, std::unique_ptr<BiomeData>> BiomeDataMap;
@@ -86,14 +86,18 @@ namespace terrain {
 	 */
 	class BiomeRegionData {
 	public:
+		using BiomeTriangleIds = std::array<BiomeId, 3>;
 		using NearestBiomeResult =
 			std::tuple<Uint64, BiomeRegionGridVector, double, utils::Vector2D<Int8>>;
+
+		using ContainingTriangleResult =
+			std::tuple<utils::Option<BiomeTriangleIds>, utils::Vector2D<Int8>>;
 
 	private:
 		bool bIsGraphGenerated;
 		bool bIsBiomeDataGenerated;
 
-		Uint64 CurrentVertexId;          // Temporary variable that tracks the available IDs
+		Uint64 CurrentVertexId;            // Temporary variable that tracks the available IDs
 		BiomeDataMap Biomes;               // Individual biomes mapped by an unique ID
 		BiomeCellField BiomeCells;         // Subdivision of the region into cells that contain
 		                                   // a number of individual biomes
@@ -124,13 +128,17 @@ namespace terrain {
 		inline BiomeDataPtr GetBiomeAt(const Uint64 localBiomeId) {
 			return Biomes.at(localBiomeId).get();
 		}
-
 		inline const BiomeDataPtr GetBiomeAt(const Uint64 localBiomeId) const {
 			return Biomes.at(localBiomeId).get();
 		}
-
 		inline const BiomeRegionOffsetVector & GetBiomeRegionOffset() const {
 			return BiomeOffset;
+		}
+		inline utils::Vector2D<Int64> ToGridCoordinates(const utils::Vector2D<> & point) const {
+			return {
+				(Int64) std::floor(point.X * BiomeGridSize),
+				(Int64) std::floor(point.Y * BiomeGridSize)
+			};
 		}
 		inline const Uint32 & GetBiomeGridSize() const { return BiomeGridSize; }
 		inline const BiomeCellField & GetBiomeCells() const { return BiomeCells; }
@@ -141,13 +149,15 @@ namespace terrain {
 
 
 
-		Uint64 AddBiome(const Uint32 x, const Uint32 y, const BiomeCellVertex & position);
+		Uint64 AddBiome(const Uint32 x, const Uint32 y, const utils::Vector2D<> & position);
 		bool IsMergedWithAllNeighbours() const;
 
 		void GenerateDelaunayGraph(const utils::DelaunayBuilderDAC2D & builder);
 		void GenerateBiomeData();
 
-		NearestBiomeResult FindNearestPoint(utils::Vector2D<> offset) const;
+		const NearestBiomeResult FindNearestPoint(const utils::Vector2D<> & position) const;
+		const ContainingTriangleResult FindContainingTriangle(
+			const utils::Vector2D<> & position) const;
 	};
 
 	using BiomeRegionDataPtr = BiomeRegionData *;

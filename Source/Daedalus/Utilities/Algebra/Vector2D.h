@@ -64,7 +64,7 @@ namespace utils {
 
 namespace std {
 	template <typename T>
-	struct hash<utils::Vector2D<T> > {
+	struct hash<utils::Vector2D<T>> {
 		hash<T> hasher;
 		size_t operator()(const utils::Vector2D<T> & v) const {
 			Int64 seed = 0;

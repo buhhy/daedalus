@@ -7,6 +7,8 @@ using namespace utils;
 using namespace delaunay;
 using namespace terrain;
 
+#define ITERATOR_DEBUG_LEVEL 0
+
 void Run() {
 	Int64 Seed = 12345678;
 	std::shared_ptr<DelaunayBuilderDAC2D> Builder(new DelaunayBuilderDAC2D(0, NULL));

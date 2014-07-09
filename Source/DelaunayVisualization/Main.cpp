@@ -22,7 +22,7 @@ void DrawNoise(
 			double noise = generator->GenerateFractal(x * scale, y * scale, 6u, 0.5) * 0.5;
 			if (noise < min) min = noise;
 			if (noise > max) max = noise;
-			Uint8 r = noise * 255, g = noise * 255, b = noise * 255;
+			Uint8 r = Uint8(noise * 255), g = Uint8(noise * 255), b = Uint8(noise * 255);
 			SDL_SetRenderDrawColor(renderer, r, g, b, SDL_ALPHA_OPAQUE);
 			SDL_RenderDrawPoint(renderer, x, y);
 		}

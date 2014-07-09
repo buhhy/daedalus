@@ -7,8 +7,11 @@
 #include <algorithm>
 #include <functional>
 #include <random>
+#include <cassert>
 
 namespace terrain {
+	using namespace utils;
+
 	using VertexWithHullIndex = BiomeRegionLoader::VertexWithHullIndex;
 	using DelaunayBuilderPtr = BiomeRegionLoader::DelaunayBuilderPtr;
 	using UpdatedRegionSet = BiomeRegionLoader::UpdatedRegionSet;
@@ -127,7 +130,7 @@ namespace terrain {
 			GetCornerHullVertex(br, false, true)
 		}};
 
-		std::array<std::pair<utils::DelaunayGraph *, Uint32>, size> input;
+		std::array<std::pair<DelaunayGraph *, Uint32>, size> input;
 
 		for (Uint8 i = 0; i < size; i++)
 			input[i] = std::make_pair(&data[i]->DelaunayGraph, vertices[i]->second);
@@ -160,7 +163,7 @@ namespace terrain {
 		const BiomeRegionOffsetVector & biomeOffset = targetRegion->GetBiomeRegionOffset();
 
 		// Update neighbor's neighbor generation cache
-		utils::TensorFixed2D<BiomeRegionDataPtr, 3> neighbors(NULL);
+		TensorFixed2D<BiomeRegionDataPtr, 3> neighbors(NULL);
 		BiomeRegionOffsetVector currentOffset;
 
 		// Load up the neighboring biome regions if they haven't already been cached
@@ -246,17 +249,17 @@ namespace terrain {
 
 		// Initialize Mersenne Twister PRNG with seed, this guarantees each region will
 		// always have the same sequence of random numbers
-		auto mtSeed = utils::HashFromVector(BiomeGenParams.Seed, biomeOffset);
+		auto mtSeed = Uint32(HashFromVector(BiomeGenParams.Seed, biomeOffset));
 		auto randNumPoints = std::bind(
-			std::uniform_int_distribution<int>(
+			std::uniform_int_distribution<Uint16>(
 				BiomeGenParams.MinPointsPerCell,
 				BiomeGenParams.MaxPointsPerCell), std::mt19937(mtSeed));
 		auto randPosition = std::bind(
 			std::uniform_real_distribution<double>(0.1, 0.9), std::mt19937(mtSeed));
 
 		Uint16 numPoints = 0;
-		BiomeCellVertex point;
-		utils::Vector2D<> offset;
+		Vector2D<> point;
+		Vector2D<> offset;
 		
 		// Create uniform random point distribution, and insert vertices into aggregate list
 		for (auto y = 0u; y < BiomeGenParams.GridCellCount; y++) {
@@ -290,7 +293,7 @@ namespace terrain {
 		// Generate 8 surrounding regions as well as the current region
 		BiomeRegionDataPtr newRegion;
 		BiomeRegionOffsetVector currentOffset;
-		utils::Tensor2D<BiomeRegionDataPtr> loadedRegions(diameter, diameter);
+		Tensor2D<BiomeRegionDataPtr> loadedRegions(diameter, diameter);
 
 		for (Int64 offY = 0; offY < diameter; offY++) {
 			for (Int64 offX = 0; offX < diameter; offX++) {
@@ -320,7 +323,7 @@ namespace terrain {
 		UpdatedRegionSet & updatedRegions,
 		BiomeRegionDataPtr biomeRegion
 	) {
-		utils::PerlinNoise2D generator(1234);
+		PerlinNoise2D generator(1234);
 		// TODO: implement disk storage
 		if (!biomeRegion->IsBiomeDataGenerated()) {
 			auto & biomeCells = biomeRegion->GetBiomeCells();
@@ -379,11 +382,11 @@ namespace terrain {
 		return GetBiomeRegionAt(id.first)->GetBiomeAt(id.second);
 	}
 
-	const BiomeId BiomeRegionLoader::FindNearestBiomeId(const utils::Vector2D<> point) {
+	const BiomeId BiomeRegionLoader::FindNearestBiomeId(const Vector2D<> point) {
 		// Convert into region coordinates
-		const auto offset = BiomeGenParams.ToBiomeRegionCoordinates(point);
-		const auto position = BiomeGenParams.GetInnerRegionPosition(point, offset);
-		const auto foundResults = GetBiomeRegionAt(offset)->FindNearestPoint(position);
+		const auto position = BiomeGenParams.ToBiomeRegionCoordinates(point);
+		const auto biomeRegion = GetBiomeRegionAt(position.first);
+		const auto foundResults = biomeRegion->FindNearestPoint(position.second);
 
 		const auto & foundGridOffset = std::get<1>(foundResults);
 		const Int8 startX = foundGridOffset.X < 2 ? -1 : 0;
@@ -391,7 +394,7 @@ namespace terrain {
 		const Int8 endX = foundGridOffset.X >= BiomeGenParams.GridCellCount - 2 ? 1 : 0;
 		const Int8 endY = foundGridOffset.Y >= BiomeGenParams.GridCellCount - 2 ? 1 : 0;
 
-		BiomeRegionOffsetVector foundGlobalOffset(offset);
+		BiomeRegionOffsetVector foundGlobalOffset(position.first);
 		Uint64 vid = std::get<0>(foundResults);
 		double min = std::get<2>(foundResults);
 
@@ -401,10 +404,11 @@ namespace terrain {
 		for (Int8 x = startX; x <= endX; x++) {
 			for (Int8 y = startY; y <= endY; y++) {
 				if (x != 0 || y != 0) {
-					auto newOffsetVector = BiomeRegionOffsetVector(offset.X + x, offset.Y + y);
+					auto newOffsetVector =
+						BiomeRegionOffsetVector(position.first.X + x, position.first.Y + y);
 					if (IsBiomeRegionGenerated(newOffsetVector)) {
 						auto compare = GetBiomeRegionAt(newOffsetVector)
-							->FindNearestPoint({ position.X + x, position.Y + y });
+							->FindNearestPoint({ position.second.X - x, position.second.Y - y });
 						auto dist = std::get<2>(compare);
 						if (min > dist) {
 							min = dist;
@@ -417,5 +421,58 @@ namespace terrain {
 		}
 
 		return BiomeId(foundGlobalOffset, vid);
+	}
+
+	const BiomeTriangle BiomeRegionLoader::FindContainingBiomeTriangle(
+		const Vector2D<> point
+	) {
+		const auto position = BiomeGenParams.ToBiomeRegionCoordinates(point);
+		const auto biomeRegion = GetBiomeRegionAt(position.first);
+		const auto foundResults = biomeRegion->FindContainingTriangle(position.second);
+		const auto triOpt = std::get<0>(foundResults);
+
+		if (triOpt.IsValid()) {
+			const auto results = triOpt();
+			return BiomeTriangle {
+				GetBiomeAt(results[0]),
+				GetBiomeAt(results[1]),
+				GetBiomeAt(results[2])
+			};
+		} else {
+			// Search neighbours if current graph doesn't contain this point
+			const auto searchOffset = std::get<1>(foundResults);
+			const Int8 startX = std::min(searchOffset.X, Int8(0));
+			const Int8 startY = std::min(searchOffset.Y, Int8(0));
+			const Int8 endX = std::max(searchOffset.X, Int8(0));
+			const Int8 endY = std::max(searchOffset.Y, Int8(0));
+
+			for (Int8 x = startX; x <= endX; x++) {
+				for (Int8 y = startY; y <= endY; y++) {
+					if (x != 0 || y != 0) {
+						auto newOffsetVector =
+							BiomeRegionOffsetVector(position.first.X + x, position.first.Y + y);
+						if (IsBiomeRegionGenerated(newOffsetVector)) {
+
+							const auto found = std::get<0>(GetBiomeRegionAt(newOffsetVector)
+								->FindContainingTriangle({
+									position.second.X - x,
+									position.second.Y - y
+								}));
+							if (found.IsValid()) {
+								const auto results = found();
+								return BiomeTriangle {
+									GetBiomeAt(results[0]),
+									GetBiomeAt(results[1]),
+									GetBiomeAt(results[2])
+								};
+							}
+						}
+					}
+				}
+			}
+
+			assert(!"BiomeRegionLoader::FindContainingBiomeTriangle: Point should always resolve to a valid Delaunay triangle in either the current region or a neighbouring region, but it does not.");
+			throw std::exception("BiomeRegionLoader::FindContainingBiomeTriangle: Point should always resolve to a valid Delaunay triangle in either the current region or a neighbouring region, but it does not.");
+		}
 	}
 }
