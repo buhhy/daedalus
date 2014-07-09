@@ -8,7 +8,8 @@ namespace utils {
 	bool Triangle2D::GetBarycentricCoordinates(
 		UVWVector & output, const Vector2D<> & point
 	) const {
-		// interpolated = u(p - A) + v(p - B) + w(p - C)
+		// To use the UVW values, use this formula:
+		// ivalue = u * v2 + v * v3 + w * v1
 		// X is aliased to u, Y to v, Z to w
 		Vector3D<> AC = Point3 - Point1;
 		Vector3D<> CB = Point2 - Point3;

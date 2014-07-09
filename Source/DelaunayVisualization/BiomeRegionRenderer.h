@@ -295,9 +295,9 @@ public:
 				//auto data = RegionLoader.GetBiomeAt(id);
 				UVWVector uvw = found.InterpolatePoint(globalPos);
 				double height =
-					found[0]->GetElevation() * uvw.X +
-					found[1]->GetElevation() * uvw.Y +
-					found[2]->GetElevation() * uvw.Z;
+					found[1]->GetElevation() * uvw.X +
+					found[2]->GetElevation() * uvw.Y +
+					found[0]->GetElevation() * uvw.Z;
 				Uint8 colour = (height / 2.0) * 255;
 				//Uint8 colour = Uint8(found[0]->GetElevation() / 2.0 * 255);
 				SDL_SetRenderDrawColor(Renderer.Renderer, colour, colour, colour, SDL_ALPHA_OPAQUE);
@@ -312,7 +312,7 @@ public:
 			Renderer.GetPointPosition({ 1.0, 0.5 }), Renderer.Fonts.S48, { 244, 60, 48 });
 		
 		// Draw edges
-		//Renderer.DrawEdges(edges);
+		Renderer.DrawEdges(edges);
 		Renderer.DrawVertices(points, { 0, 0, 0 });
 		Renderer.Present();
 
