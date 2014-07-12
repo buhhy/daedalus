@@ -1,16 +1,14 @@
 #pragma once
 
 #include "ChunkData.h"
-#include "TerrainDataStructures.h"
+#include <Models/Terrain/TerrainDataStructures.h>
+#include <Models/Terrain/BiomeRegionLoader.h>
 #include <Utilities/Algebra/Algebra3D.h>
 
 #include <unordered_map>
 
 namespace terrain {
-	typedef std::unordered_map<
-		utils::Vector3D<Int64>,
-		std::shared_ptr<ChunkData>
-	> ChunkCache;
+	using ChunkDataPtr = std::shared_ptr<ChunkData>;
 
 	/**
 	 * This class will load data related to a particular chunk, or serve it from
@@ -19,22 +17,31 @@ namespace terrain {
 	 * the server-side.
 	 */
 	class ChunkLoader {
+	public:
+		using BiomeRegionLoaderPtr = std::shared_ptr<BiomeRegionLoader>;
+		using ChunkCache = std::unordered_map<ChunkOffsetVector, ChunkDataPtr>;
+
 	private:
 		ChunkCache LoadedChunkCache;
 
 		TerrainGeneratorParameters TerrainGenParams;
+		BiomeRegionLoaderPtr BRLoader;
 
-		std::shared_ptr<ChunkData> LoadChunkFromDisk(const ChunkOffsetVector & offset);
-		std::shared_ptr<ChunkData> GenerateMissingChunk(const ChunkOffsetVector & offset);
+		ChunkDataPtr LoadChunkFromDisk(const ChunkOffsetVector & offset);
+		ChunkDataPtr GenerateMissingChunk(const ChunkOffsetVector & offset);
 
 		//void RunDiamondSquare(ChunkData & data);
 		void SetDefaultHeight(ChunkData & data, Int32 height);
 
 	public:
-		ChunkLoader(const TerrainGeneratorParameters & params);
+		ChunkLoader(
+			const TerrainGeneratorParameters & params,
+			const BiomeRegionLoaderPtr & brLoader
+		) : TerrainGenParams(params), BRLoader(brLoader)
+		{}
 		~ChunkLoader();
 
 		const TerrainGeneratorParameters & GetGeneratorParameters() const;
-		std::shared_ptr<ChunkData> GetChunkAt(const ChunkOffsetVector & offset);
+		ChunkDataPtr GetChunkAt(const ChunkOffsetVector & offset);
 	};
 }

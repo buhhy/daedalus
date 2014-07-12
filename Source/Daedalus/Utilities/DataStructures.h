@@ -7,16 +7,19 @@
 
 #include <vector>
 #include <memory>
+#include <string>
 
 namespace utils {
 	struct None {};
 
-	template <typename T>
-	union OptionStorage {
-		None Dummy;
-		T Value;
-		OptionStorage() : Dummy{} {}
-		OptionStorage(const T & val) : Value{val} {}
+	struct StringException: public std::exception {
+	private:
+		std::string Message;
+
+	public:
+		StringException(const std::string & message) : Message(message) {}
+		StringException(const char * && message) : Message(message) {}
+		virtual const char * what() const throw() { return Message.c_str(); }
 	};
 
 	// Equivalent to the Scala Option construct which can be a Some or None value
@@ -37,12 +40,12 @@ namespace utils {
 		bool IsValid() const { return HasValue; }
 		T & operator () () {
 			if (HasValue) return *Opt;
-			throw std::exception("Option::Get: Trying to get value from <None>");
+			throw StringException("Option::Get: Trying to get value from <None>");
 		}
 		
 		const T & operator () () const {
 			if (HasValue) return *Opt;
-			throw std::exception("Option::Get: Trying to get value from <None>");
+			throw StringException("Option::Get: Trying to get value from <None>");
 		}
 	};
 

@@ -1,32 +1,38 @@
-#include "Daedalus.h"
+#include <Daedalus.h>
 #include "ChunkLoader.h"
 
 namespace terrain {
-	ChunkLoader::ChunkLoader(const TerrainGeneratorParameters & params) {
-		this->TerrainGenParams = params;
-	}
+	using BiomeRegionLoaderPtr = ChunkLoader::BiomeRegionLoaderPtr;
+	using ChunkCache = ChunkLoader::ChunkCache;
 
 	ChunkLoader::~ChunkLoader() {
 		LoadedChunkCache.empty();
 	}
 
-	std::shared_ptr<ChunkData> ChunkLoader::LoadChunkFromDisk(
-		const utils::Vector3D<Int64> & offset
-	) {
+	ChunkDataPtr ChunkLoader::LoadChunkFromDisk(const ChunkOffsetVector & offset) {
 		return std::shared_ptr<ChunkData>(NULL);
 	}
 
-	std::shared_ptr<ChunkData> ChunkLoader::GenerateMissingChunk(
-		const utils::Vector3D<Int64> & offset
-	) {
+	ChunkDataPtr ChunkLoader::GenerateMissingChunk(const ChunkOffsetVector & offset) {
 		auto data = new ChunkData(TerrainGenParams.GridCellCount, offset);
-		SetDefaultHeight(*data, 32);
+		auto point = TerrainGenParams.ToRealCoordinates(offset);
+		auto biomeTri = BRLoader->FindContainingBiomeTriangle(point);
+		BRLoader->GetBiomeGenParams();
+		UVWVector uvw = found.InterpolatePoint(globalPos);
+		double height =
+		found[1]->GetElevation() * uvw.X +
+		found[2]->GetElevation() * uvw.Y +
+		found[0]->GetElevation() * uvw.Z;
+		Uint8 colour = (height / 2.0) * 255;
+		//Uint8 colour = Uint8(found[0]->GetElevation() / 2.0 * 255);
+		SDL_SetRenderDrawColor(Renderer.Renderer, colour, colour, colour, SDL_ALPHA_OPAQUE);
+		SDL_RenderDrawPoint(Renderer.Renderer, x, Renderer.Height - y);
+		auto biome = BRLoader->GetBiomeAt(offset);
+		SetDefaultHeight(*data, biome->GetElevation() * 250);
 		return std::shared_ptr<ChunkData>(data);
 	}
 
-	std::shared_ptr<ChunkData> ChunkLoader::GetChunkAt(
-		const utils::Vector3D<Int64> & offset
-	) {
+	ChunkDataPtr ChunkLoader::GetChunkAt(const ChunkOffsetVector & offset) {
 		//UE_LOG(LogTemp, Error, TEXT("Loading chunk at offset: %d %d %d"), offset.X, offset.Y, offset.Z);
 		if (LoadedChunkCache.count(offset) > 0) {
 			return LoadedChunkCache.at(offset);
@@ -40,7 +46,7 @@ namespace terrain {
 		return TerrainGenParams;
 	}
 
-	void ChunkLoader::SetDefaultHeight(ChunkData & data, Int32 height) {
+	void ChunkLoader::SetDefaultHeight(ChunkData & data, const Int32 height) {
 		// TODO: if the chunk height ended on a chunk division line, no triangles are generated
 		auto chunkHeight = TerrainGenParams.ChunkScale;
 		if (((data.ChunkOffset.Z + 1) * (Int64) chunkHeight) < height) {
