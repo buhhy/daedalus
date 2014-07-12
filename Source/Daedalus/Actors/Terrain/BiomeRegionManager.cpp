@@ -18,7 +18,8 @@ void ABiomeRegionManager::UpdateBiomesAt(const utils::Vector3D<> & playerPositio
 	auto genParams = chunkLoader->GetGeneratorParameters();
 
 	// Get player's current chunk location
-	auto playerChunkPos = genParams.ToBiomeRegionCoordinates(playerPosition.Truncate());
+	auto const & playerChunkPos =
+		genParams.ToBiomeRegionCoordinates(playerPosition.Truncate()).first;
 
 	int64 fromX = playerChunkPos.X - RenderDistance;
 	int64 fromY = playerChunkPos.Y - RenderDistance;
@@ -80,8 +81,8 @@ bool ABiomeRegionManager::DeleteRegionAt(const terrain::BiomeRegionOffsetVector 
 
 void ABiomeRegionManager::BeginPlay() {
 	Super::BeginPlay();
-	GetGameState()->EventBus->AddListener(events::E_PlayerMovement, this);
-	GetGameState()->EventBus->AddListener(events::E_BiomeRegionUpdate, this);
+	//GetGameState()->EventBus->AddListener(events::E_PlayerMovement, this);
+	//GetGameState()->EventBus->AddListener(events::E_BiomeRegionUpdate, this);
 }
 
 void ABiomeRegionManager::HandleEvent(
