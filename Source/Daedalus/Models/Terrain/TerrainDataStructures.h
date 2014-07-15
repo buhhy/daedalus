@@ -3,12 +3,12 @@
 #include <Utilities/DataStructures.h>
 
 namespace terrain {
-	typedef utils::Vector3D<Int64> ChunkOffsetVector;
+	using ChunkOffsetVector = utils::Vector3D<Int64>;
 
 	struct TerrainGeneratorParameters {
 		Uint32 GridCellCount;       // Number of grid cells along a single edge of the cube
 		Int64 Seed;
-		double ChunkScale;			// Maps chunk grid to real world coordinates
+		double ChunkScale;          // Maps chunk grid to real world coordinates
 
 		const utils::Vector3D<> ToRealCoordinates(const ChunkOffsetVector & offset) const {
 			return utils::Vector3D<>(

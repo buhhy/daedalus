@@ -9,15 +9,15 @@
 #include <memory>
 
 namespace events {
-	typedef std::vector<EventListener *> ListenerList;
-	typedef std::unordered_map<events::EventType, std::shared_ptr<ListenerList> > ListenerMap;
+	using ListenerList = std::vector<EventListener *>;
+	using ListenerMap = std::unordered_map<events::EventType, std::shared_ptr<ListenerList>>;
 
 	/**
 	*
 	*/
 	class EventBus {
 	private:
-		events::ListenerMap Listeners;
+		ListenerMap Listeners;
 	public:
 		EventBus();
 		/**
@@ -32,20 +32,20 @@ namespace events {
 		 * longer valid, then it is automatically removed at some point.
 		 */
 		void AddListener(
-			const events::EventType type,
+			const EventType type,
 			EventListener * const listener);
 
 		void RemoveListener(
-			const events::EventType type,
+			const EventType type,
 			EventListener * const listener);
 
-		Uint64 Count(const events::EventType type) const;
+		Uint64 Count(const EventType type) const;
 
 		/**
 		 * Broadcast the event along with its event data to all listening interfaces.
 		 */
-		Uint32 BroadcastEvent(
-			const events::EventType type,
-			const std::shared_ptr<events::EventData> & data);
+		Uint32 BroadcastEvent(const EventType type, const std::shared_ptr<EventData> & data);
 	};
+
+	using EventBusPtr = std::shared_ptr<EventBus>;
 }

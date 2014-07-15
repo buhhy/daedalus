@@ -11,6 +11,7 @@
 
 namespace terrain {
 	using namespace utils;
+	using namespace events;
 
 	using VertexWithHullIndex = BiomeRegionLoader::VertexWithHullIndex;
 	using DelaunayBuilderPtr = BiomeRegionLoader::DelaunayBuilderPtr;
@@ -19,10 +20,13 @@ namespace terrain {
 
 	BiomeRegionLoader::BiomeRegionLoader(
 		const BiomeGeneratorParameters & params,
-		std::shared_ptr<events::EventBus> eventBus,
+		EventBusPtr eventBus,
 		DelaunayBuilderPtr builder,
 		Uint8 fetchRadius
-	) : BiomeGenParams(params), EventBus(eventBus), DelaunayBuilder(builder), FetchRadius(fetchRadius)
+	) : BiomeGenParams(params),
+		EventBus(eventBus),
+		DelaunayBuilder(builder),
+		FetchRadius(fetchRadius)
 	{}
 
 	BiomeRegionLoader::~BiomeRegionLoader() {
@@ -172,7 +176,7 @@ namespace terrain {
 			for (Int8 offX = -1; offX <= 1; offX++) {
 				if (offY != 0 || offX != 0) {
 					currentOffset.Reset(offX + biomeOffset.X, offY + biomeOffset.Y);
-					neighbors.Set(offX + 1, offY + 1, GetBiomeRegionFromCache(currentOffset));
+					neighbors.Set(offX + 1, offY + 1, GetGeneratedBiomeRegion(currentOffset));
 				}
 			}
 		}
@@ -220,7 +224,7 @@ namespace terrain {
 		return LoadedBiomeRegionCache.find(offset) != LoadedBiomeRegionCache.end();
 	}
 	
-	BiomeRegionDataPtr BiomeRegionLoader::GetBiomeRegionFromCache(
+	BiomeRegionDataPtr BiomeRegionLoader::GetGeneratedBiomeRegion(
 		const BiomeRegionOffsetVector & offset
 	) {
 		auto found = LoadedBiomeRegionCache.find(offset);
@@ -299,7 +303,7 @@ namespace terrain {
 			for (Int64 offX = 0; offX < diameter; offX++) {
 				currentOffset.Reset(offset.X - radius + offX, offset.Y - radius + offY);
 				// Don't generate region if it has already been generated
-				auto currentRegion = GetBiomeRegionFromCache(currentOffset);
+				auto currentRegion = GetGeneratedBiomeRegion(currentOffset);
 				if (!currentRegion)
 					currentRegion = GenerateBiomeRegion(currentOffset);
 				loadedRegions.Set(offX, offY, currentRegion);
@@ -352,7 +356,7 @@ namespace terrain {
 	) {
 		UpdatedRegionSet updatedRegions;
 		//UE_LOG(LogTemp, Error, TEXT("Loading chunk at offset: %d %d %d"), offset.X, offset.Y, offset.Z);
-		auto loaded = GetBiomeRegionFromCache(offset);
+		auto loaded = GetGeneratedBiomeRegion(offset);
 		if (!loaded || !loaded->IsMergedWithAllNeighbours()) {
 			// Biome region has not been generated yet or its neighbours haven't been
 			// generated yet.

@@ -29,13 +29,10 @@ namespace utils {
 		size_t GetDepth() const { return Depth; }
 	};
 
+
+
 	template <typename T>
 	class Tensor2D : public Tensor2DBase<T> {
-	private:
-		using Tensor2DBase<T>::Data;
-		using Tensor2DBase<T>::Width;
-		using Tensor2DBase<T>::Depth;
-
 	public:
 		Tensor2D() : Tensor2DBase<T>(0, 0) {}
 		Tensor2D(const Vector2D<size_t> & size) : Tensor2DBase<T>(size.X, size.Y) {}
@@ -88,10 +85,6 @@ namespace utils {
 			return this->Data.at(x * this->Width + y);
 		}
 
-		bool Get(const size_t x, const size_t y) {
-			return this->Data.at(x * this->Width + y);
-		}
-
 		void Set(const size_t x, const size_t y, const bool value) {
 			this->Data[x * this->Width + y] = value;
 		}
@@ -118,7 +111,7 @@ namespace utils {
 			Tensor2D<T>(width, depth, value)
 		{}
 
-		TensorResizable2D & Reset(size_t Width, size_t Depth, const T & value) {
+		TensorResizable2D & Reset(const size_t Width, const size_t Depth, const T & value) {
 			this->Width = Width;
 			this->Depth = Depth;
 			this->Data.resize(this->Width * this->Depth, value);

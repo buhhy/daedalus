@@ -2,9 +2,9 @@
 
 #include "GameFramework/Actor.h"
 #include "GeneratedMeshComponent.h"
-#include "ChunkData.h"
-#include "TerrainDataStructures.h"
 
+#include <Models/Terrain/ChunkData.h>
+#include <Models/Terrain/TerrainDataStructures.h>
 #include <Utilities/Algebra/Algebra3D.h>
 
 #include "Chunk.generated.h"
@@ -15,9 +15,12 @@
 UCLASS()
 class AChunk : public AActor {
 	GENERATED_UCLASS_BODY()
+public:
+	// (0, 0) is the root chunk data for this actor, the others are neighbours for tiling
+	using ChunkDataSet = utils::TensorFixed3D<terrain::ChunkDataPtr, 2>;
 
 private:
-	std::shared_ptr<terrain::ChunkData> ChunkData;
+	ChunkDataSet ChunkData;
 	terrain::TerrainGeneratorParameters TerrainGenParams;
 	void GenerateChunkMesh();
 
@@ -28,5 +31,5 @@ public:
 		UMaterial * TestMaterial;
 
 	void InitializeChunk(const terrain::TerrainGeneratorParameters & params);
-	void SetChunkData(const std::shared_ptr<terrain::ChunkData> & chunkData);
+	void SetChunkData(const ChunkDataSet & chunkData);
 };

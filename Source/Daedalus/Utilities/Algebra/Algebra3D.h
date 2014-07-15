@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Algebra.h"
+#include <Utilities/Algebra/Tensor3D.h>
+#include <Utilities/Algebra/DataStructures2D.h>
 #include <Utilities/DataStructures.h>
 
 #include <iostream>

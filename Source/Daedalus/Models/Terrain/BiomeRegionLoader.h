@@ -2,6 +2,7 @@
 
 #include "BiomeRegionData.h"
 #include "TerrainDataStructures.h"
+#include <Models/Terrain/TerrainDataStructures.h>
 #include <Utilities/DataStructures.h>
 #include <Controllers/EventBus/EventBus.h>
 
@@ -53,8 +54,7 @@ namespace terrain {
 		using VertexWithHullIndex = std::pair<utils::Vector2D<>, Uint32>;
 		using DelaunayBuilderPtr = std::shared_ptr<utils::DelaunayBuilderDAC2D>;
 		using UpdatedRegionSet = std::unordered_set<BiomeRegionOffsetVector>;
-		using BiomeRegionCache =
-			std::unordered_map<terrain::BiomeRegionOffsetVector, BiomeRegionDataPtr>;
+		using BiomeRegionCache = std::unordered_map<BiomeRegionOffsetVector, BiomeRegionDataPtr>;
 
 	private:
 		BiomeRegionCache LoadedBiomeRegionCache;
@@ -62,7 +62,7 @@ namespace terrain {
 		
 		DelaunayBuilderPtr DelaunayBuilder;
 		Uint8 FetchRadius;
-		std::shared_ptr<events::EventBus> EventBus;
+		events::EventBusPtr EventBus;
 		std::shared_ptr<const VertexWithHullIndex> GetCornerHullVertex(
 			const BiomeRegionData & data, const bool cornerX, const bool cornerY) const;
 
@@ -70,12 +70,28 @@ namespace terrain {
 
 		
 		bool IsBiomeRegionGenerated(const BiomeRegionOffsetVector & offset) const;
-		BiomeRegionDataPtr GetBiomeRegionFromCache(const BiomeRegionOffsetVector & offset);
-
-		BiomeRegionDataPtr LoadBiomeRegionFromDisk(
-			const BiomeRegionOffsetVector & offset);
-		BiomeRegionDataPtr GenerateBiomeRegion(
-			const BiomeRegionOffsetVector & offset);
+		/**
+		 * @return Null pointer if the biome region has not yet been generated, otherwise
+		 *         retrieve the region from cache, or load the biome region from disk if it
+		 *         hasn't been cached yet.
+		 */
+		BiomeRegionDataPtr GetGeneratedBiomeRegion(const BiomeRegionOffsetVector & offset);
+		/**
+		 * @return Null pointer if the biome region has not yet been generated, otherwise
+		 *         load the biome region from disk and cache it, replacing the current value.
+		 */
+		BiomeRegionDataPtr LoadBiomeRegionFromDisk(const BiomeRegionOffsetVector & offset);
+		/**
+		 * This method generates the biome region triangulation at the given point. It does
+		 * not fill in biome data for each triangulation point.
+		 * @return A single generated biome region at given offset.
+		 */
+		BiomeRegionDataPtr GenerateBiomeRegion(const BiomeRegionOffsetVector & offset);
+		/**
+		 * Generate the biome region triangulation at the given offset if it doesn't already
+		 * exist, then generate the surrounding biome regions and merge the 8 neighbouring
+		 * triangulations together.
+		 */
 		BiomeRegionDataPtr GenerateBiomeRegionArea(
 			UpdatedRegionSet & updatedRegions,
 			const BiomeRegionOffsetVector & offset,
@@ -98,7 +114,7 @@ namespace terrain {
 	public:
 		BiomeRegionLoader(
 			const BiomeGeneratorParameters & params,
-			std::shared_ptr<events::EventBus> eventBus,
+			events::EventBusPtr eventBus,
 			DelaunayBuilderPtr builder =
 				DelaunayBuilderPtr(new utils::DelaunayBuilderDAC2D()),
 			Uint8 fetchRadius = 1);
@@ -115,4 +131,6 @@ namespace terrain {
 		const BiomeTriangle FindContainingBiomeTriangle(
 			const utils::Vector2D<> point);
 	};
+	
+	using BiomeRegionLoaderPtr = std::shared_ptr<BiomeRegionLoader>;
 }

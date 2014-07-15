@@ -1,6 +1,8 @@
 #include "Daedalus.h"
-#include "ChunkLoader.h"
 #include "ChunkManager.h"
+#include <Models/Terrain/ChunkLoader.h>
+
+using namespace utils;
 
 AChunkManager::AChunkManager(
 	const class FPostConstructInitializeProperties & PCIP
@@ -47,9 +49,17 @@ void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 				// Chunk is cached already
 				if (LocalCache.count(offset) > 0) {
 				} else {
-					auto data = chunkLoader->GetChunkAt(offset);
-					auto position = utils::ToFVector(
-						genParams.ToRealCoordinates(data->ChunkOffset));
+					auto data = AChunk::ChunkDataSet();
+					for (Uint8 x = 0; x < data.GetWidth(); x++) {
+						for (Uint8 y = 0; y < data.GetDepth(); y++) {
+							for (Uint8 z = 0; z < data.GetHeight(); z++) {
+								data.Set(x, y, z, chunkLoader->GetChunkAt({
+									offset.X + x, offset.Y + y, offset.Z + z
+								}));
+							}
+						}
+					}
+					auto position = utils::ToFVector(genParams.ToRealCoordinates(offset));
 
 					//UE_LOG(LogTemp, Error, TEXT("Placing chunk at %f %f %f"), position.X, position.Y, position.Z)
 					AChunk * newChunk = GetWorld()->SpawnActor<AChunk>(

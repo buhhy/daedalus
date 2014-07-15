@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ChunkData.h"
+#include <Models/Terrain/ChunkData.h>
 #include <Models/Terrain/TerrainDataStructures.h>
 #include <Models/Terrain/BiomeRegionLoader.h>
 #include <Utilities/Algebra/Algebra3D.h>
@@ -8,7 +8,6 @@
 #include <unordered_map>
 
 namespace terrain {
-	using ChunkDataPtr = std::shared_ptr<ChunkData>;
 
 	/**
 	 * This class will load data related to a particular chunk, or serve it from
@@ -18,7 +17,6 @@ namespace terrain {
 	 */
 	class ChunkLoader {
 	public:
-		using BiomeRegionLoaderPtr = std::shared_ptr<BiomeRegionLoader>;
 		using ChunkCache = std::unordered_map<ChunkOffsetVector, ChunkDataPtr>;
 
 	private:
@@ -27,6 +25,14 @@ namespace terrain {
 		TerrainGeneratorParameters TerrainGenParams;
 		BiomeRegionLoaderPtr BRLoader;
 
+		bool IsChunkGenerated(const ChunkOffsetVector & offset) const;
+		
+		/**
+		 * @return Null pointer if the chunk has not yet been generated, otherwise
+		 *         retrieve the chunk from cache, or load the chunk from disk if it
+		 *         hasn't been cached yet.
+		 */
+		ChunkDataPtr GetGeneratedChunk(const ChunkOffsetVector & offset);
 		ChunkDataPtr LoadChunkFromDisk(const ChunkOffsetVector & offset);
 		ChunkDataPtr GenerateMissingChunk(const ChunkOffsetVector & offset);
 
