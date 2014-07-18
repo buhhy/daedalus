@@ -6,7 +6,7 @@ using namespace utils;
 
 AChunkManager::AChunkManager(
 	const class FPostConstructInitializeProperties & PCIP
-) : Super(PCIP), RenderDistance(2) {}
+) : Super(PCIP), RenderDistance(1) {}
 
 ADDGameState * AChunkManager::GetGameState() {
 	return GetWorld()->GetGameState<ADDGameState>();

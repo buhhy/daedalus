@@ -1,19 +1,20 @@
-#include "Daedalus.h"
+#include <Daedalus.h>
 #include "Chunk.h"
-#include "MarchingCubes.h"
+#include <Utilities/Mesh/MarchingCubes.h>
+#include <Utilities/Mesh/DebugMeshHelpers.h>
 
 using namespace utils;
 using namespace terrain;
 
 using ChunkDataSet = AChunk::ChunkDataSet;
 
-AChunk::AChunk(const class FPostConstructInitializeProperties & PCIP)
-	: Super(PCIP), ChunkData(NULL) {
-
+AChunk::AChunk(const FPostConstructInitializeProperties & PCIP)
+	: Super(PCIP), ChunkData(NULL)
+{
 	Mesh = PCIP.CreateDefaultSubobject<UGeneratedMeshComponent>(this, TEXT("GeneratedMesh"));
 	TestMaterial = ConstructorHelpers::FObjectFinder<UMaterial>(
 		TEXT("Material'/Game/TestMaterial.TestMaterial'")).Object;
-	RootComponent = Mesh;
+	this->RootComponent = Mesh;
 }
 
 void AChunk::InitializeChunk(const TerrainGeneratorParameters & params) {

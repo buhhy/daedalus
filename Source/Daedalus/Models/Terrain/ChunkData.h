@@ -23,6 +23,8 @@ namespace terrain {
 		 have a 17x17x17 field where the 17th points are synchronized, or have a 16x16x16
 		 vertex field where the 17th points are retrieved upon use. I am going with the latter
 		 approach because it seems conceptually simpler, at the potential cost of performance.
+
+		 The density and material data field is the dual of the ingame grid.
 		 */
 		utils::Tensor3D<float> DensityData;
 		utils::Tensor3D<Uint64> MaterialData;

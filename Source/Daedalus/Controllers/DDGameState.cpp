@@ -2,13 +2,16 @@
 #include "DDGameState.h"
 
 // TODO: terrain generation data should probably be loaded from a settings file.
+/*
+ Real units are specified in centimetres. Each ingame grid cell is 50cm * 50cm * 50cm.
+ */
 ADDGameState::ADDGameState(const class FPostConstructInitializeProperties& PCIP) :
 	Super(PCIP),
 	Seed(12345678),
 	TerrainGenParams({
 		16,              // Number of grid cells along a single axis
 		Seed,            // Seed
-		1024.0           // Size of the chunk in real units along a single axis
+		16 * 50          // Size of the chunk in real units along a single axis
 	}),
 	BiomeGenParams({
 		32,              // Number of grid cells along a single axis
