@@ -6,11 +6,9 @@ using namespace utils;
 
 AChunkManager::AChunkManager(
 	const class FPostConstructInitializeProperties & PCIP
-) : Super(PCIP), RenderDistance(1) {}
-
-ADDGameState * AChunkManager::GetGameState() {
-	return GetWorld()->GetGameState<ADDGameState>();
-}
+) : Super(PCIP), RenderDistance(1),
+	ItemFactory(NewObject<UItemFactory>(this, UItemFactory::StaticClass()))
+{}
 
 void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 	terrain::ChunkOffsetVector offset;
@@ -18,6 +16,8 @@ void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 	FActorSpawnParameters defaultParameters;
 	auto chunkLoader = GetGameState()->ChunkLoader;
 	auto genParams = chunkLoader->GetGeneratorParameters();
+
+	defaultParameters.Owner = this;
 
 	// Get player's current chunk location
 	auto playerChunkPos = genParams.ToChunkCoordinates(playerPosition);
@@ -64,7 +64,7 @@ void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 					//UE_LOG(LogTemp, Error, TEXT("Placing chunk at %f %f %f"), position.X, position.Y, position.Z)
 					AChunk * newChunk = GetWorld()->SpawnActor<AChunk>(
 						AChunk::StaticClass(), position, defaultRotation, defaultParameters);
-					newChunk->InitializeChunk(genParams);
+					newChunk->InitializeChunk(genParams, ItemFactory);
 					newChunk->SetChunkData(data);
 					LocalCache.insert({ offset, newChunk });
 				}

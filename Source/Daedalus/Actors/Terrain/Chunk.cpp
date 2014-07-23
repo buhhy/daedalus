@@ -1,10 +1,12 @@
 #include <Daedalus.h>
 #include "Chunk.h"
+#include <Utilities/UnrealBridge.h>
 #include <Utilities/Mesh/MarchingCubes.h>
 #include <Utilities/Mesh/DebugMeshHelpers.h>
 
 using namespace utils;
 using namespace terrain;
+using namespace item;
 
 using ChunkDataSet = AChunk::ChunkDataSet;
 
@@ -17,13 +19,60 @@ AChunk::AChunk(const FPostConstructInitializeProperties & PCIP)
 	this->RootComponent = Mesh;
 }
 
-void AChunk::InitializeChunk(const TerrainGeneratorParameters & params) {
+void AChunk::SpawnItem(const item::ItemDataPtr & itemData) {
+	const FRotator defaultRotator(0, 0, 0);
+	auto params = FActorSpawnParameters();
+	params.Name = *FString::Printf(TEXT("(%lld,%lld,%lld)PlacedItem%llu"),
+		itemData->ItemId.second.first.X,
+		itemData->ItemId.second.first.Y,
+		itemData->ItemId.second.first.Z,
+		itemData->ItemId.first);
+	UE_LOG(LogTemp, Warning, TEXT("(%lld,%lld,%lld)PlacedItem%llu"),
+		itemData->ItemId.second.first.X,
+		itemData->ItemId.second.first.Y,
+		itemData->ItemId.second.first.Z,
+		itemData->ItemId.first);
+	auto actor = GetWorld()->SpawnActor<AItem>(
+		ItemFactory->GetItemClass(itemData),
+		ToFVector(TerrainGenParams.GetChunkInnerPosition(itemData->ItemId.second)),
+		defaultRotator,
+		params);
+	PlacedItems.Add({ itemData->ItemId, actor });
+	actor->AttachRootComponentToActor(this);
+}
+
+void AChunk::RemoveItem(const item::ItemDataPtr & itemData) {
+	Uint32 index = 0;
+	for (const auto & it : PlacedItems) {
+		if (it.ItemId == itemData->ItemId) {
+			it.ItemActor->Destroy();
+			PlacedItems.RemoveAt(index);
+			break;
+		}
+		++index;
+	}
+}
+
+void AChunk::ReceiveDestroyed() {
+	for (const auto & it : PlacedItems)
+		it.ItemActor->Destroy();
+	Super::ReceiveDestroyed();
+}
+
+void AChunk::InitializeChunk(
+	const TerrainGeneratorParameters & params,
+	const UItemFactory * itemFactory
+) {
 	TerrainGenParams = params;
+	ItemFactory = itemFactory;
 }
 
 void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 	ChunkData = chunkData;
 	GenerateChunkMesh();
+
+	ItemDataPtr test(new ItemData(I_Chest, ItemDataId(0u, ChunkPositionVector(ChunkData.Get(0, 0, 0)->ChunkOffset, { 0, 0, 0 }))));
+	SpawnItem(test);
 }
 
 void AChunk::GenerateChunkMesh() {

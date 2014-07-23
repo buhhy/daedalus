@@ -1,11 +1,12 @@
+#pragma once
+
+#include <Actors/Items/ItemFactory.h>
+#include <Actors/Terrain/Chunk.h>
+#include <Controllers/DDGameState.h>
+#include <Controllers/EventBus/EventBus.h>
+#include <Models/Terrain/TerrainDataStructures.h>
+
 #include <unordered_map>
-
-#include "EventListener.h"
-#include "DataStructures.h"
-#include "DDGameState.h"
-#include "TerrainDataStructures.h"
-#include "Chunk.h"
-
 #include <memory>
 
 #include "ChunkManager.generated.h"
@@ -21,18 +22,19 @@ class AChunkManager : public AActor, public EventListener {
 	GENERATED_UCLASS_BODY()
 
 private:
-	typedef std::unordered_map <
-		terrain::ChunkOffsetVector, AChunk *
-	> ChunkCache;
+	using ChunkCache = std::unordered_map<terrain::ChunkOffsetVector, AChunk *>;
 
 	ChunkCache LocalCache;
-	uint64 RenderDistance;
+	Uint64 RenderDistance;
 
-	ADDGameState * GetGameState();
+	const UItemFactory * ItemFactory;
+
+	
+
+	inline ADDGameState * GetGameState() { return GetWorld()->GetGameState<ADDGameState>(); }
 	void UpdateChunksAt(const utils::Vector3D<> & playerPosition);
 
-public:
-	virtual void HandleEvent(
+public:virtual void HandleEvent(
 		const events::EventType type,
 		const std::shared_ptr<events::EventData> & data) override;
 

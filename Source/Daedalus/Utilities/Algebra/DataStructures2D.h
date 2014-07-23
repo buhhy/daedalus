@@ -1,10 +1,12 @@
 #pragma once
 
 #include <Utilities/Algebra/Vector2D.h>
+#include <Utilities/Algebra/Vector3D.h>
 #include <Utilities/Algebra/Tensor2D.h>
 
 namespace utils {
-	using UVWVector = Vector3D<double>;
+	using UVWVector = Vector3D<>;
+	using Point3D = Vector3D<>;
 
 	struct Circle2D {
 		Vector2D<> Center;
