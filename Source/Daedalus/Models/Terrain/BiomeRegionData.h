@@ -88,7 +88,7 @@ namespace terrain {
 	public:
 		using BiomeTriangleIds = std::array<BiomeId, 3>;
 		using NearestBiomeResult =
-			std::tuple<Uint64, BiomeRegionGridVector, double, utils::Vector2D<Int8>>;
+			std::tuple<Uint64, BiomeRegionGridIndexVector, double, utils::Vector2D<Int8>>;
 
 		using ContainingTriangleResult =
 			std::tuple<utils::Option<BiomeTriangleIds>, utils::Vector2D<Int8>>;

@@ -52,16 +52,6 @@ namespace utils {
 	// TODO: make actual colour class
 	using Colour = Vector3D<Uint8>;
 
-	struct Triangle3D {
-		Vector3D<> Point1, Point2, Point3;
-
-		Triangle3D(
-			const Vector3D<> & p1,
-			const Vector3D<> & p2,
-			const Vector3D<> & p3
-		) : Point1(p1), Point2(p2), Point3(p3) {}
-	};
-
 	// TODO: get rid of this
 	struct GridCell {
 		float values[8];
@@ -83,6 +73,13 @@ namespace utils {
 			points[5] = Vector3D<>(1, 0, 1);
 			points[6] = Vector3D<>(1, 1, 1);
 			points[7] = Vector3D<>(0, 1, 1);
+		}
+
+		inline float Sum() const {
+			float sum = 0;
+			for (Uint8 i = 0; i < 8; i++)
+				sum += values[i];
+			return sum;
 		}
 	};
 }

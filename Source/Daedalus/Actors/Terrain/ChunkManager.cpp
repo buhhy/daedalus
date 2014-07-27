@@ -3,6 +3,7 @@
 #include <Models/Terrain/ChunkLoader.h>
 
 using namespace utils;
+using namespace events;
 
 AChunkManager::AChunkManager(
 	const class FPostConstructInitializeProperties & PCIP
@@ -22,13 +23,13 @@ void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 	// Get player's current chunk location
 	auto playerChunkPos = genParams.ToChunkCoordinates(playerPosition);
 
-	Int64 fromX = playerChunkPos.X - RenderDistance;
-	Int64 fromY = playerChunkPos.Y - RenderDistance;
-	Int64 fromZ = playerChunkPos.Z - RenderDistance;
+	Int64 fromX = playerChunkPos.first.X - RenderDistance;
+	Int64 fromY = playerChunkPos.first.Y - RenderDistance;
+	Int64 fromZ = playerChunkPos.first.Z - RenderDistance;
 
-	Int64 toX = playerChunkPos.X + RenderDistance;
-	Int64 toY = playerChunkPos.Y + RenderDistance;
-	Int64 toZ = playerChunkPos.Z + RenderDistance;
+	Int64 toX = playerChunkPos.first.X + RenderDistance;
+	Int64 toY = playerChunkPos.first.Y + RenderDistance;
+	Int64 toZ = playerChunkPos.first.Z + RenderDistance;
 
 	// Once the player leaves an area, the chunks are cleared
 	for (auto chunkKey = LocalCache.begin(); chunkKey != LocalCache.end(); ) {
@@ -75,14 +76,11 @@ void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 
 void AChunkManager::BeginPlay() {
 	Super::BeginPlay();
-	GetGameState()->EventBus->AddListener(events::E_PlayerMovement, this);
+	GetGameState()->EventBus->AddListener(events::E_PlayerPosition, this);
 }
 
-void AChunkManager::HandleEvent(
-	const events::EventType type,
-	const std::shared_ptr<events::EventData> & data
-) {
-	auto castedData = std::static_pointer_cast<events::EPlayerMovement>(data);
+void AChunkManager::HandleEvent(const EventDataPtr & data) {
+	auto castedData = std::static_pointer_cast<events::EPlayerPosition>(data);
 	//UE_LOG(LogTemp, Warning, TEXT("Player position: %f %f %f"), position.X, position.Y, position.Z);
 	UpdateChunksAt(castedData->Position);
 }

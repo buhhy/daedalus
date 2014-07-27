@@ -4,23 +4,30 @@
 #include <algorithm>
 
 namespace events {
+	using ListenerList = EventBus::ListenerList;
+	using ListenerMap = EventBus::ListenerMap;
+
 	EventBus::EventBus() {
 		Listeners.clear();
 	}
 
-	void EventBus::AddListener(
-		const events::EventType type,
-		EventListener * const listener
-	) {
+	EventBus::~EventBus() {
+		for (auto it = Listeners.begin(); it != Listeners.end(); ++it)
+			it->second->clear();
+
+		Listeners.clear();
+	}
+
+	void EventBus::AddListener(const EventType type, EventListener * const listener) {
 		// Insert a list if no listeners are currently listening on this event
 		if (Listeners.count(type) == 0) {
 			Listeners.insert({
 				type,
-				std::shared_ptr<events::ListenerList>(new events::ListenerList())
+				std::shared_ptr<ListenerList>(new ListenerList())
 			});
 		}
 
-		std::shared_ptr<events::ListenerList> & listeners = Listeners.at(type);
+		std::shared_ptr<ListenerList> & listeners = Listeners.at(type);
 
 		bool found = false;
 
@@ -35,10 +42,7 @@ namespace events {
 			listeners->push_back(listener);
 	}
 
-	void EventBus::RemoveListener(
-		const events::EventType type,
-		EventListener * const listener
-	) {
+	void EventBus::RemoveListener(const EventType type, EventListener * const listener) {
 		if (Listeners.count(type) > 0) {
 			auto & listeners = Listeners.at(type);
 
@@ -49,35 +53,25 @@ namespace events {
 		}
 	}
 
-	Uint64 EventBus::Count(const events::EventType type) const {
+	Uint64 EventBus::Count(const EventType type) const {
 		if (Listeners.count(type) > 0)
 			return Listeners.at(type)->size();
 		return 0;
 	}
 
-	Uint32 EventBus::BroadcastEvent(
-		const events::EventType type,
-		const std::shared_ptr<events::EventData> & data
-	) {
+	Uint32 EventBus::BroadcastEvent(const EventDataPtr & data) {
 		Uint32 broadcastCount = 0;
 
-		if (Listeners.count(type) > 0) {
-			auto & listeners = Listeners.at(type);
+		if (Listeners.count(data->Type) > 0) {
+			auto & listeners = Listeners.at(data->Type);
 
 			for (auto it = listeners->cbegin(); it != listeners->cend();) {
-				(*it)->HandleEvent(type, data);
+				(*it)->HandleEvent(data);
 				++broadcastCount;
 				++it;
 			}
 		}
 
 		return broadcastCount;
-	}
-
-	EventBus::~EventBus() {
-		for (auto it = Listeners.begin(); it != Listeners.end(); ++it)
-			it->second->clear();
-
-		Listeners.clear();
 	}
 }

@@ -6,6 +6,10 @@
 #include <functional>
 
 namespace utils {
+	template <typename T>
+	Int8 Sign(const T value) {
+		return (T(0) < value) - (value < T(0));
+	}
 }
 
 namespace std {

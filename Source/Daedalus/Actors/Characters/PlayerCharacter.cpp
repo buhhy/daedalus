@@ -66,18 +66,3 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent * InputCo
 	InputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::HoldJump);
 	InputComponent->BindAction("Jump", IE_Released, this, &APlayerCharacter::ReleaseJump);
 }
-
-void APlayerCharacter::Tick(float delta) {
-	Super::Tick(delta);
-	TickDeltaCount += delta;
-
-	// Tick once every second
-	if (TickDeltaCount >= 1.0) {
-		TickDeltaCount -= 1.0;
-		
-		GetWorld()->GetGameState<ADDGameState>()->EventBus->BroadcastEvent(
-			events::E_PlayerMovement,
-			std::shared_ptr<events::EventData>(
-				new events::EPlayerMovement(utils::ToVector3(this->GetActorLocation()))));
-	}
-}

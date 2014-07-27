@@ -1,4 +1,5 @@
 #include <Daedalus.h>
+#include <Utilities/Algebra/DataStructures3D.h>
 #include "Algebra3D.h"
 
 namespace utils {
@@ -29,5 +30,4 @@ namespace utils {
 		GramSchmidt(u1, u2, u3);
 		input = u1; y = u2; z = u3;
 	}
-
 }

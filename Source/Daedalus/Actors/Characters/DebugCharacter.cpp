@@ -61,18 +61,3 @@ void ADebugCharacter::SetupPlayerInputComponent(class UInputComponent * InputCom
 	InputComponent->BindAxis("LookUp", this, &ADebugCharacter::LookUp);
 	InputComponent->BindAxis("LookRight", this, &ADebugCharacter::LookRight);
 }
-
-void ADebugCharacter::Tick(float delta) {
-	Super::Tick(delta);
-	TickDeltaCount += delta;
-
-	// Tick once every second
-	if (TickDeltaCount >= 1.0) {
-		TickDeltaCount -= 1.0;
-		
-		GetWorld()->GetGameState<ADDGameState>()->EventBus->BroadcastEvent(
-			events::E_PlayerMovement,
-			std::shared_ptr<events::EventData>(
-				new events::EPlayerMovement(utils::ToVector3(this->GetActorLocation()))));
-	}
-}

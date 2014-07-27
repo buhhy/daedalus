@@ -7,25 +7,46 @@
 
 namespace events {
 	enum EventType {
-		E_PlayerMovement,
+		E_PlayerPosition,
+		E_ViewPosition,
 		E_BiomeRegionUpdate
 	};
 
 	struct EventData {
-		EventData() {}
+		const EventType Type;
+
+		EventData(const EventType type) : Type(type) {}
 	};
 
-	struct EPlayerMovement : public EventData {
-		const utils::Vector3D<> Position;
-		EPlayerMovement(const utils::Vector3D<> & position) : Position(position) {}
+	struct EPlayerPosition : public EventData {
+		const utils::Point3D Position;
+
+		EPlayerPosition(const utils::Point3D & position) :
+			EventData(E_PlayerPosition), Position(position)
+		{}
+	};
+
+	struct EViewPosition : public EventData {
+		const utils::Point3D ViewOrigin;
+		const utils::Vector3D<double> ViewDirection;
+
+		EViewPosition(
+			const utils::Point3D & origin,
+			const utils::Vector3D<double> & viewDir
+		) : EventData(E_PlayerPosition), ViewOrigin(origin), ViewDirection(viewDir)
+		{}
 	};
 
 	struct EBiomeRegionUpdate : public EventData {
 		std::vector<terrain::BiomeRegionOffsetVector> UpdatedOffsets;
-		EBiomeRegionUpdate() {}
+
+		EBiomeRegionUpdate() : EventData(E_BiomeRegionUpdate) {}
 		EBiomeRegionUpdate(const std::vector<terrain::BiomeRegionOffsetVector> & offs) :
-			UpdatedOffsets(offs) {}
+			EventData(E_BiomeRegionUpdate), UpdatedOffsets(offs)
+		{}
 	};
+
+	using EventDataPtr = std::shared_ptr<EventData>;
 }
 
 namespace std {

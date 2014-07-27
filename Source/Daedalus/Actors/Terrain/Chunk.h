@@ -33,8 +33,10 @@ public:
 	using ChunkDataSet = utils::TensorFixed3D<terrain::ChunkDataPtr, 2>;
 
 private:
-	ChunkDataSet ChunkData;
+	ChunkDataSet ChunkNeighbourData;
+	terrain::ChunkDataPtr CurrentChunkData;
 	terrain::TerrainGeneratorParameters TerrainGenParams;
+	utils::TensorResizable3D<bool> SolidTerrain;
 
 	const UItemFactory * ItemFactory;
 
@@ -59,4 +61,13 @@ public:
 		const terrain::TerrainGeneratorParameters & params,
 		const UItemFactory * itemFactory);
 	void SetChunkData(const ChunkDataSet & chunkData);
+	
+	/**
+	 * @param ray The origin of the ray should be in chunk grid coordinate space, and the
+	 *            direction vector should be a normal vector
+	 * @param maxDistance Maximum number of grid cells to search for solid blocks.
+	 */
+	bool SolidIntersection(
+		terrain::ChunkGridIndexVector & result,
+		const utils::Ray3D & ray, const double maxDistance) const;
 };

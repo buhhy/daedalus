@@ -1,7 +1,9 @@
-#include "Daedalus.h"
+#include <Daedalus.h>
 #include "BiomeRegion.h"
-#include "DebugMeshHelpers.h"
-#include "MarchingCubes.h"
+#include <Utilities/Mesh/DebugMeshHelpers.h>
+#include <Utilities/Mesh/MarchingCubes.h>
+
+using namespace utils;
 
 /**
  * Test function to build colored materials from a base material.
@@ -59,21 +61,21 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 		RegionData->GetBiomeRegionOffset().X, RegionData->GetBiomeRegionOffset().Y, 0);
 	
 	// Draw grid lines
-	std::vector<utils::Triangle3D> gridTries;
-	utils::Vector3D<> tempVector31, tempVector32, tempVector33;
+	std::vector<Triangle3D> gridTries;
+	Point3D tempVector31, tempVector32, tempVector33;
 	// Y lines
 	for (auto y = 0u; y < size; y++) {
 		double lineY = (scale * y) / size;
-		tempVector31.Reset(0, lineY, 0);
-		tempVector32.Reset(scale, lineY, 0);
-		utils::CreateLine(gridTries, tempVector31, tempVector32, gridLineWidth);
+		tempVector31.Reset(0., lineY, 0.);
+		tempVector32.Reset(scale, lineY, 0.);
+		CreateLine(gridTries, tempVector31, tempVector32, gridLineWidth);
 	}
 	// X lines
 	for (auto x = 0u; x < size; x++) {
 		double lineX = (scale * x) / size;
-		tempVector31.Reset(lineX, 0, 0);
-		tempVector32.Reset(lineX, scale, 0);
-		utils::CreateLine(gridTries, tempVector31, tempVector32, gridLineWidth);
+		tempVector31.Reset(lineX, 0., 0.);
+		tempVector32.Reset(lineX, scale, 0.);
+		CreateLine(gridTries, tempVector31, tempVector32, gridLineWidth);
 	}
 	for (auto it : gridTries)
 		triangles.Add(FMeshTriangle(it, gridColor));
@@ -81,19 +83,19 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 	auto & graph = RegionData->DelaunayGraph;
 
 	// Draw points at every Delaunay point
-	std::vector<utils::Triangle3D> pointTries;
+	std::vector<Triangle3D> pointTries;
 	auto verts = graph.GetVertices();
 	for (auto v : verts) {
 		if (v->IsForeign())
 			continue;
 		auto biome = RegionData->GetBiomeAt(v->VertexId());
 		tempVector31.Reset(v->GetPoint() * scale, biome->GetElevation() * heightMultiplier);
-		utils::CreatePoint(pointTries, tempVector31, pointSize);
+		CreatePoint(pointTries, tempVector31, pointSize);
 	}
 	for (auto it : pointTries) triangles.Add(FMeshTriangle(it, vertexColor));
 
 	//// Draw convex hull
-	//std::vector<utils::Triangle3D> edgeTries;
+	//std::vector<Triangle3D> edgeTries;
 	//auto hull = graph.ConvexHull;
 	//for (uint64 i = 0, j = 1; i < hull.size(); i++, j++) {
 	//	if (j == hull.size())
@@ -101,12 +103,12 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 
 	//	tempVector31.Reset(hull[i]->GetPoint() * scale, 0);
 	//	tempVector32.Reset(hull[j]->GetPoint() * scale, 0);
-	//	utils::CreateLine(edgeTries, tempVector31, tempVector32, 3);
+	//	CreateLine(edgeTries, tempVector31, tempVector32, 3);
 	//}
 	//for (auto it : edgeTries) triangles.Add(FMeshTriangle(it, edgeColor));
 
 	// Draw lines at every Delaunay edge
-	std::vector<utils::Triangle3D> edgeTries;
+	std::vector<Triangle3D> edgeTries;
 	auto edges = graph.GetUniqueEdges();
 	for (auto e : edges) {
 		if (e.Start->IsForeign() || e.End->IsForeign())
@@ -115,12 +117,12 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 		auto biome2 = RegionData->GetBiomeAt(e.End->VertexId());
 		tempVector31.Reset(e.Start->GetPoint() * scale, biome1->GetElevation() * heightMultiplier);
 		tempVector32.Reset(e.End->GetPoint() * scale, biome2->GetElevation() * heightMultiplier);
-		utils::CreateLine(edgeTries, tempVector31, tempVector32, edgeWidth);
+		CreateLine(edgeTries, tempVector31, tempVector32, edgeWidth);
 	}
 	for (auto it : edgeTries) triangles.Add(FMeshTriangle(it, edgeColor));
 
 	// Draw each Delaunay triangle
-	std::vector<utils::Triangle3D> faceTries;
+	std::vector<Triangle3D> faceTries;
 	auto faces = graph.GetFaces();
 	for (auto f : faces) {
 		if (!f->IsDegenerate()) {
@@ -133,7 +135,7 @@ void ABiomeRegion::GenerateBiomeRegionMesh() {
 			tempVector31.Reset(verts[0]->GetPoint() * scale, biome1->GetElevation() * heightMultiplier);
 			tempVector32.Reset(verts[1]->GetPoint() * scale, biome2->GetElevation() * heightMultiplier);
 			tempVector33.Reset(verts[2]->GetPoint() * scale, biome3->GetElevation() * heightMultiplier);
-			faceTries.push_back(utils::Triangle3D(tempVector31, tempVector32, tempVector33));
+			faceTries.push_back(Triangle3D(tempVector31, tempVector32, tempVector33));
 		}
 	}
 	for (auto it : faceTries) triangles.Add(FMeshTriangle(it, faceColor));

@@ -11,6 +11,7 @@
 
 #include "ChunkManager.generated.h"
 
+using events::EventListener;
 
 /**
  * This class takes data fetched from the ChunkLoader and renders it. It is
@@ -34,9 +35,7 @@ private:
 	inline ADDGameState * GetGameState() { return GetWorld()->GetGameState<ADDGameState>(); }
 	void UpdateChunksAt(const utils::Vector3D<> & playerPosition);
 
-public:virtual void HandleEvent(
-		const events::EventType type,
-		const std::shared_ptr<events::EventData> & data) override;
-
+public:
+	virtual void HandleEvent(const events::EventDataPtr & data) override;
 	virtual void BeginPlay() override;
 };

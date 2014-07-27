@@ -4,6 +4,9 @@
 
 #include <Utilities/UnrealBridge.h>
 
+using namespace utils;
+using namespace events;
+
 ABiomeRegionManager::ABiomeRegionManager(
 	const class FPostConstructInitializeProperties & PCIP
 ) : Super(PCIP), RenderDistance(0), RenderHeight(100.0) {}
@@ -12,7 +15,7 @@ ADDGameState * ABiomeRegionManager::GetGameState() {
 	return GetWorld()->GetGameState<ADDGameState>();
 }
 
-void ABiomeRegionManager::UpdateBiomesAt(const utils::Vector3D<> & playerPosition) {
+void ABiomeRegionManager::UpdateBiomesAt(const Vector3D<> & playerPosition) {
 	terrain::BiomeRegionOffsetVector offset;
 	auto chunkLoader = GetGameState()->BiomeRegionLoader;
 	auto genParams = chunkLoader->GetGeneratorParameters();
@@ -56,7 +59,7 @@ void ABiomeRegionManager::ReloadRegionAt(const terrain::BiomeRegionOffsetVector 
 	auto chunkLoader = GetGameState()->BiomeRegionLoader;
 	auto genParams = chunkLoader->GetGeneratorParameters();
 	auto data = chunkLoader->GetBiomeRegionAt(offset);
-	auto position = utils::ToFVector(
+	auto position = ToFVector(
 		genParams.ToRealCoordinates(data->GetBiomeRegionOffset()), RenderHeight);
 	FRotator defaultRotation(0, 0, 0);
 	FActorSpawnParameters defaultParameters;
@@ -81,19 +84,16 @@ bool ABiomeRegionManager::DeleteRegionAt(const terrain::BiomeRegionOffsetVector 
 
 void ABiomeRegionManager::BeginPlay() {
 	Super::BeginPlay();
-	//GetGameState()->EventBus->AddListener(events::E_PlayerMovement, this);
+	//GetGameState()->EventBus->AddListener(events::E_PlayerPosition, this);
 	//GetGameState()->EventBus->AddListener(events::E_BiomeRegionUpdate, this);
 }
 
-void ABiomeRegionManager::HandleEvent(
-	const events::EventType type,
-	const std::shared_ptr<events::EventData> & data
-) {
-	if (type == events::E_PlayerMovement) {
-		auto castedData = std::static_pointer_cast<events::EPlayerMovement>(data);
+void ABiomeRegionManager::HandleEvent(const EventDataPtr & data) {
+	if (data->Type == events::E_PlayerPosition) {
+		auto castedData = std::static_pointer_cast<events::EPlayerPosition>(data);
 		//UE_LOG(LogTemp, Warning, TEXT("Player position: %f %f %f"), position.X, position.Y, position.Z);
 		UpdateBiomesAt(castedData->Position);
-	} else if (type == events::E_BiomeRegionUpdate) {
+	} else if (data->Type == events::E_BiomeRegionUpdate) {
 		auto castedData = std::static_pointer_cast<events::EBiomeRegionUpdate>(data);
 		for (auto offset : castedData->UpdatedOffsets) {
 			if (DeleteRegionAt(offset))

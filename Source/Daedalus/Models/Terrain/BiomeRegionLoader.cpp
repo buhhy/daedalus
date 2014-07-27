@@ -374,9 +374,7 @@ namespace terrain {
 			updatedVec.insert(
 				updatedVec.begin(), updatedRegions.cbegin(), updatedRegions.cend());
 			EventBus->BroadcastEvent(
-				events::E_BiomeRegionUpdate,
-				std::shared_ptr<events::EBiomeRegionUpdate>(
-					new events::EBiomeRegionUpdate(updatedVec)));
+				events::EventDataPtr(new events::EBiomeRegionUpdate(updatedVec)));
 		}
 
 		return loaded;

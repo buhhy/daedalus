@@ -321,14 +321,14 @@ namespace utils {
 		Determine the index into the edge table which
 		tells us which vertices are inside of the surface
 		*/
-		if (grid.values[0] < isoThreshold) cubeindex |= 1;
-		if (grid.values[1] < isoThreshold) cubeindex |= 2;
-		if (grid.values[2] < isoThreshold) cubeindex |= 4;
-		if (grid.values[3] < isoThreshold) cubeindex |= 8;
-		if (grid.values[4] < isoThreshold) cubeindex |= 16;
-		if (grid.values[5] < isoThreshold) cubeindex |= 32;
-		if (grid.values[6] < isoThreshold) cubeindex |= 64;
-		if (grid.values[7] < isoThreshold) cubeindex |= 128;
+		if (grid.values[0] <= isoThreshold) cubeindex |= 1;
+		if (grid.values[1] <= isoThreshold) cubeindex |= 2;
+		if (grid.values[2] <= isoThreshold) cubeindex |= 4;
+		if (grid.values[3] <= isoThreshold) cubeindex |= 8;
+		if (grid.values[4] <= isoThreshold) cubeindex |= 16;
+		if (grid.values[5] <= isoThreshold) cubeindex |= 32;
+		if (grid.values[6] <= isoThreshold) cubeindex |= 64;
+		if (grid.values[7] <= isoThreshold) cubeindex |= 128;
 
 		/* Cube is entirely in/out of the surface */
 		if (EdgeTable[cubeindex] == 0)

@@ -9,10 +9,18 @@
 UCLASS()
 class APlayerCharacter : public ACharacter {
 	GENERATED_UCLASS_BODY()
-
-		float TickDeltaCount;
+private:
+	float TickDeltaCount;
 
 	virtual void BeginPlay() override;
+
+protected:
+	virtual void SetupPlayerInputComponent(class UInputComponent * InputComponent) override;
+	//virtual void Tick(float delta) override;
+
+public:
+	UPROPERTY(VisibleAnywhere, Category = Data)
+		bool bHoldingJump;
 
 	UFUNCTION() void MoveForward(float amount);
 	UFUNCTION() void MoveRight(float amount);
@@ -20,12 +28,5 @@ class APlayerCharacter : public ACharacter {
 	UFUNCTION() void LookRight(float amount);
 	UFUNCTION() void HoldJump();
 	UFUNCTION() void ReleaseJump();
-protected:
-	virtual void SetupPlayerInputComponent(class UInputComponent * InputComponent) override;
-	virtual void Tick(float delta) override;
-
-public:
-	UPROPERTY(VisibleAnywhere, Category = Data)
-		bool bHoldingJump;
 };
 

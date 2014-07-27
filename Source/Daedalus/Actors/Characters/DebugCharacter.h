@@ -9,8 +9,8 @@
 UCLASS()
 class ADebugCharacter : public ACharacter {
 	GENERATED_UCLASS_BODY()
-
-		float TickDeltaCount;
+private:
+	float TickDeltaCount;
 
 	virtual void BeginPlay() override;
 
@@ -21,5 +21,5 @@ class ADebugCharacter : public ACharacter {
 	UFUNCTION() void LookRight(float amount);
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent * InputComponent) override;
-	virtual void Tick(float delta) override;
+	//virtual void Tick(float delta) override;
 };

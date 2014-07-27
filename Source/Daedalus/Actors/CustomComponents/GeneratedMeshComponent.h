@@ -3,6 +3,7 @@
 #pragma once
 
 #include <Utilities/UnrealBridge.h>
+#include <Utilities/Algebra/Algebra3D.h>
 #include "GeneratedMeshComponent.generated.h"
 
 /**

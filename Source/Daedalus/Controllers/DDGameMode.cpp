@@ -1,8 +1,9 @@
 #include "Daedalus.h"
 #include "DDGameMode.h"
-#include "PlayerCharacter.h"
-#include "DebugCharacter.h"
-#include "DDGameState.h"
+#include <Actors/Characters/PlayerCharacter.h>
+#include <Actors/Characters/DebugCharacter.h>
+#include <Controllers/DDGameState.h>
+#include <Controllers/DDPlayerController.h>
 
 
 ADDGameMode::ADDGameMode(const class FPostConstructInitializeProperties& PCIP)
@@ -10,4 +11,5 @@ ADDGameMode::ADDGameMode(const class FPostConstructInitializeProperties& PCIP)
 {
 	DefaultPawnClass = ADebugCharacter::StaticClass();
 	GameStateClass = ADDGameState::StaticClass();
+	PlayerControllerClass = ADDPlayerController::StaticClass();
 }

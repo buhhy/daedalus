@@ -3,6 +3,7 @@
 #include <Utilities/Algebra/Vector2D.h>
 #include <Utilities/Algebra/Algebra.h>
 #include <functional>
+#include <cassert>
 
 namespace utils {
 	template <typename T>
@@ -46,6 +47,8 @@ namespace utils {
 		inline T Length2() const { return X * X + Y * Y + Z * Z; }
 		inline double Length() const { return std::sqrt(Length2()); }
 
+		inline bool IsNormal() const { return std::abs(Length2() - 1) <= FLOAT_ERROR; }
+
 		inline Vector3D<> Normalize() const {
 			double length = Length();
 			return Vector3D<>(
@@ -64,6 +67,24 @@ namespace utils {
 		template <typename T1>
 		inline Vector3D<T1> Cast() const {
 			return Vector3D<T1>((T1) this->X, (T1) this->Y, (T1) this->Z);
+		}
+
+		inline T & operator [] (const Uint64 index) {
+			switch (index) {
+			case 0: return X;
+			case 1: return Y;
+			case 2: return Z;
+			default: assert(!"Vector3D::[]: Invalid index value");
+			}
+		}
+
+		inline const T & operator [] (const Uint64 index) const {
+			switch (index) {
+			case 0: return X;
+			case 1: return Y;
+			case 2: return Z;
+			default: assert(!"Vector3D::[]: Invalid index value");
+			}
 		}
 
 		inline Vector3D<T> & operator += (const Vector3D<T> & rhs) {

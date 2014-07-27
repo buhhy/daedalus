@@ -88,7 +88,7 @@ namespace terrain {
 
 		double min = 5.0;
 		Uint64 vid = 0;
-		BiomeRegionGridVector gpos(0, 0);
+		BiomeRegionGridIndexVector gpos(0, 0);
 		for (Uint32 x = xstart; x <= xend; x++) {
 			for (Uint32 y = ystart; y <= yend; y++) {
 				for (auto id : BiomeCells.Get(x, y).PointIds) {
