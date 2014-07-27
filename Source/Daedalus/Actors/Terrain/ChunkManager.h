@@ -24,18 +24,25 @@ class AChunkManager : public AActor, public EventListener {
 
 private:
 	using ChunkCache = std::unordered_map<terrain::ChunkOffsetVector, AChunk *>;
-
+	
+	AItem * DefaultCursor;                            // Default cursor item
+	AItem * CurrentCursor;                            // Item actor held as the cursor
 	ChunkCache LocalCache;
-	Uint64 RenderDistance;
+	const Uint64 RenderDistance;                      // Specified in number of chunks
+	const float TerrainInteractionDistance;           // Specified in centimetres
 
 	const UItemFactory * ItemFactory;
 
 	
 
 	inline ADDGameState * GetGameState() { return GetWorld()->GetGameState<ADDGameState>(); }
+	AChunk * GetChunkAt(const terrain::ChunkOffsetVector & point);
 	void UpdateChunksAt(const utils::Vector3D<> & playerPosition);
+	void UpdateCursorPosition(const utils::Ray3D & viewpoint);
+	void SetUpDefaultCursor();
 
 public:
 	virtual void HandleEvent(const events::EventDataPtr & data) override;
 	virtual void BeginPlay() override;
+
 };

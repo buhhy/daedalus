@@ -38,6 +38,16 @@ namespace terrain {
 		}
 
 		/**
+		 */
+		const utils::Point3D GetChunkInnerPosition(const ChunkGridIndexVector & point) const {
+			return {
+				ChunkScale * (double) point.X / GridCellCount,
+				ChunkScale * (double) point.Y / GridCellCount,
+				ChunkScale * (double) point.Z / GridCellCount
+			};
+		}
+
+		/**
 		 * @param position Chunk inner position vector between [0, 1].
 		 * @return The inner grid indices of the given position point.
 		 */

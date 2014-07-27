@@ -22,6 +22,20 @@ namespace utils {
 		Vector3D(const Vector2D<T> & vec) : Vector3D(vec.X, vec.Y, 0) {}
 		Vector3D(const Vector2D<T> & vec, const T z) : Vector3D(vec.X, vec.Y, z) {}
 
+		bool IsBoundedBy(
+			const T min, const T max,
+			const bool isMinIncluded = true,
+			const bool isMaxIncluded = false
+		) const {
+			if (isMinIncluded && (X < min || Y < min || Z < min) ||
+				!isMinIncluded && (X <= min || Y <= min || Z <= min)) return false;
+			
+			if (isMaxIncluded && (X > max || Y > max || Z > max) ||
+				!isMaxIncluded && (X >= max || Y >= max || Z >= max)) return false;
+
+			return true;
+		}
+
 		/**
 		 * Dot product.
 		 */

@@ -11,7 +11,7 @@ ADDGameState::ADDGameState(const class FPostConstructInitializeProperties& PCIP)
 	TerrainGenParams({
 		16,              // Number of grid cells along a single axis
 		Seed,            // Seed
-		16 * 50          // Size of the chunk in real units along a single axis
+		16 * 50          // Size of the chunk in real units along a single axis (cm)
 	}),
 	BiomeGenParams({
 		32,              // Number of grid cells along a single axis
@@ -19,7 +19,7 @@ ADDGameState::ADDGameState(const class FPostConstructInitializeProperties& PCIP)
 		4,               // Number of buffer cells in grid
 		1,               // Minimum bound of number of points
 		1,               // Maximum bound of number of points
-		64 * 0x1000      // Size of the biome region in real units along a single axis
+		64 * 0x1000      // Size of the biome region in real units along a single axis (cm)
 	}),
 	EventBus(new events::EventBus())
 {

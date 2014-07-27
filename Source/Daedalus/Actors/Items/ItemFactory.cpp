@@ -1,7 +1,7 @@
 #include <Daedalus.h>
 #include "ItemFactory.h"
 
-using namespace item;
+using namespace items;
 
 UItemFactory::UItemFactory(const class FPostConstructInitializeProperties & PCIP)
 	: Super(PCIP)

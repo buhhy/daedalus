@@ -7,10 +7,7 @@
  * 
  */
 UCLASS()
-class ADDGameMode : public AGameMode
-{
+class ADDGameMode : public AGameMode {
 	GENERATED_UCLASS_BODY()
-
-	
 	
 };

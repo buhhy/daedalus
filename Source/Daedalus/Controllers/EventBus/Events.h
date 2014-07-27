@@ -33,7 +33,7 @@ namespace events {
 		EViewPosition(
 			const utils::Point3D & origin,
 			const utils::Vector3D<double> & viewDir
-		) : EventData(E_PlayerPosition), ViewOrigin(origin), ViewDirection(viewDir)
+		) : EventData(E_ViewPosition), ViewOrigin(origin), ViewDirection(viewDir)
 		{}
 	};
 

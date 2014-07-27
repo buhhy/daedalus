@@ -17,7 +17,7 @@ USTRUCT()
 struct FItemPtrPair {
 	GENERATED_USTRUCT_BODY()
 public:
-	item::ItemDataId ItemId;
+	items::ItemDataId ItemId;
 	UPROPERTY(Category = Item, VisibleAnywhere)
 		AItem * ItemActor;
 };
@@ -43,8 +43,8 @@ private:
 
 	inline ADDGameState * GetGameState() { return GetWorld()->GetGameState<ADDGameState>(); }
 	void GenerateChunkMesh();
-	void SpawnItem(const item::ItemDataPtr & itemData);
-	void RemoveItem(const item::ItemDataPtr & itemData);
+	void SpawnItem(const items::ItemDataPtr & itemData);
+	void RemoveItem(const items::ItemDataPtr & itemData);
 
 protected:
 	virtual void ReceiveDestroyed() override;
@@ -63,11 +63,11 @@ public:
 	void SetChunkData(const ChunkDataSet & chunkData);
 	
 	/**
-	 * @param ray The origin of the ray should be in chunk grid coordinate space, and the
-	 *            direction vector should be a normal vector
+	 * @param ray The origin of the ray should be in chunk coordinates, the
+	 *            direction should be normal.
 	 * @param maxDistance Maximum number of grid cells to search for solid blocks.
 	 */
-	bool SolidIntersection(
+	bool TerrainIntersection(
 		terrain::ChunkGridIndexVector & result,
 		const utils::Ray3D & ray, const double maxDistance) const;
 };

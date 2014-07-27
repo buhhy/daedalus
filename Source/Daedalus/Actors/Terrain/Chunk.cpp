@@ -9,7 +9,7 @@
 
 using namespace utils;
 using namespace terrain;
-using namespace item;
+using namespace items;
 
 using ChunkDataSet = AChunk::ChunkDataSet;
 
@@ -22,7 +22,7 @@ AChunk::AChunk(const FPostConstructInitializeProperties & PCIP)
 	this->RootComponent = Mesh;
 }
 
-void AChunk::SpawnItem(const item::ItemDataPtr & itemData) {
+void AChunk::SpawnItem(const ItemDataPtr & itemData) {
 	const FRotator defaultRotator(0, 0, 0);
 	auto params = FActorSpawnParameters();
 	params.Name = *FString::Printf(TEXT("(%lld,%lld,%lld)PlacedItem%llu"),
@@ -44,7 +44,7 @@ void AChunk::SpawnItem(const item::ItemDataPtr & itemData) {
 	actor->AttachRootComponentToActor(this);
 }
 
-void AChunk::RemoveItem(const item::ItemDataPtr & itemData) {
+void AChunk::RemoveItem(const ItemDataPtr & itemData) {
 	Uint32 index = 0;
 	for (const auto & it : PlacedItems) {
 		if (it.ItemId == itemData->ItemId) {
@@ -75,9 +75,6 @@ void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 	ChunkNeighbourData = chunkData;
 	CurrentChunkData = chunkData.Get(0, 0, 0);
 	GenerateChunkMesh();
-
-	ItemDataPtr test(new ItemData(I_Chest, ItemDataId(0u, ChunkPositionVector(ChunkNeighbourData.Get(0, 0, 0)->ChunkOffset, { 0, 0, 0 }))));
-	SpawnItem(test);
 }
 
 void AChunk::GenerateChunkMesh() {
@@ -148,7 +145,7 @@ void AChunk::GenerateChunkMesh() {
 	}
 }
 
-bool AChunk::SolidIntersection(
+bool AChunk::TerrainIntersection(
 	ChunkGridIndexVector & result,
 	const Ray3D & ray,
 	const double maxDistance
@@ -156,27 +153,26 @@ bool AChunk::SolidIntersection(
 	// Algorithm from here: http://www.cse.yorku.ca/~amana/research/grid.pdf
 	result.Reset(0, 0, 0);
 
-	const Point3D adjustedOrigin =
-		TerrainGenParams.ToChunkCoordinates(ray.Origin, CurrentChunkData->ChunkOffset).second;
+	/*const Point3D adjustedOrigin =
+		TerrainGenParams.ToChunkCoordinates(ray.Origin, CurrentChunkData->ChunkOffset).second;*/
+	
+	const Point3D adjustedOrigin = ray.Origin;
 	const auto gcc = TerrainGenParams.GridCellCount;
 
 	const AxisAlignedBoundingBox3D boundingBox({ 0, 0, 0 }, { 0.9999999, 0.9999999, 0.9999999 });
 
 	// Make sure the ray intersects the bounding box.
 	Point3D entryPoint;
-	const double tCheckRadius = maxDistance / gcc;
-	const double tEntry = boundingBox.FindIntersection(
-		Ray3D(adjustedOrigin, ray.Direction), &entryPoint);
+	double tEntry;
+	const double tCheckRadius = maxDistance / TerrainGenParams.ChunkScale;
+	const bool doesEnter = boundingBox.FindIntersection(
+		Ray3D(adjustedOrigin, ray.Direction), &entryPoint, &tEntry);
 
 	// If the ray doesn't enter the chunk within the maximum allowed t-value, then return false.
-	if (tEntry > tCheckRadius || tEntry < 0)
+	if (!doesEnter, tEntry > tCheckRadius || tEntry < 0)
 		return false;
 
-	assert(
-		entryPoint.X >= 0 && entryPoint.X < 1 &&
-		entryPoint.Y >= 0 && entryPoint.Y < 1 &&
-		entryPoint.Z >= 0 && entryPoint.Z < 1 &&
-		"AChunk::SolidIntersection: Invalid entry point");
+	assert(!entryPoint.IsBoundedBy(0, 1) && "AChunk::SolidIntersection: Invalid entry point");
 
 	ChunkGridIndexVector currentCell = TerrainGenParams.GetChunkGridIndicies(entryPoint);
 	const Vector3D<Int8> step(
@@ -193,7 +189,7 @@ bool AChunk::SolidIntersection(
 			tMax[i] = (currentCell[i] / (double) gcc - entryPoint[i]) / ray.Direction[i];
 		else if (step[i] > 0)
 			tMax[i] = ((currentCell[i] + 1) / (double) gcc - entryPoint[i]) / ray.Direction[i];
-		tDelta[i] = (1.0 / gcc) / ray.Direction[i];
+		tDelta[i] = (1.0 / gcc) / std::abs(ray.Direction[i]);
 	}
 
 	bool isFound = false;

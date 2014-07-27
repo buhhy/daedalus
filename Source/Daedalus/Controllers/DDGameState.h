@@ -14,13 +14,13 @@
  * 
  */
 UCLASS()
-class ADDGameState : public AGameState
-{
+class ADDGameState : public AGameState {
 	GENERATED_UCLASS_BODY()
+
 private:
-	int64 Seed;
-	terrain::TerrainGeneratorParameters TerrainGenParams;
-	terrain::BiomeGeneratorParameters BiomeGenParams;
+	const Int64 Seed;
+	const terrain::TerrainGeneratorParameters TerrainGenParams;
+	const terrain::BiomeGeneratorParameters BiomeGenParams;
 
 public:
 	std::shared_ptr<events::EventBus> EventBus;

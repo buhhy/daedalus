@@ -16,6 +16,6 @@ class UItemFactory : public UObject {
 protected:
 
 public:
-	UClass * GetItemClass(const item::ItemDataPtr & itemData) const;
+	UClass * GetItemClass(const items::ItemDataPtr & itemData) const;
 	
 };

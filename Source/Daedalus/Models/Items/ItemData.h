@@ -5,7 +5,7 @@
 
 #include <memory>
 
-namespace item {
+namespace items {
 	enum ItemType {
 		I_Chest
 	};
