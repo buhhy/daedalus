@@ -9,6 +9,9 @@ namespace events {
 	enum EventType {
 		E_PlayerPosition,
 		E_ViewPosition,
+		E_FPItemPlacementBegin,
+		E_FPItemPlacementEnd,
+		E_FPItemPlacementRotation,
 		E_BiomeRegionUpdate
 	};
 
@@ -43,6 +46,28 @@ namespace events {
 		EBiomeRegionUpdate() : EventData(E_BiomeRegionUpdate) {}
 		EBiomeRegionUpdate(const std::vector<terrain::BiomeRegionOffsetVector> & offs) :
 			EventData(E_BiomeRegionUpdate), UpdatedOffsets(offs)
+		{}
+	};
+
+	// Events related to item placement from the first person perspective.
+	struct EFPItemPlacementBegin : public EventData {
+		// TODO: probably need some form of player identification here
+		EFPItemPlacementBegin() : EventData(E_FPItemPlacementBegin) {}
+	};
+
+	struct EFPItemPlacementEnd : public EventData {
+		// TODO: probably need some form of player identification here
+		const bool bIsCancelled;
+		EFPItemPlacementEnd(const bool isCancelled = false) :
+			EventData(E_FPItemPlacementEnd), bIsCancelled(isCancelled)
+		{}
+	};
+
+	struct EFPItemPlacementRotation : public EventData {
+		// TODO: probably need some form of player identification here
+		const utils::Point2D MouseOffset;
+		EFPItemPlacementRotation(const utils::Point2D & mouseOffset) :
+			EventData(E_FPItemPlacementRotation), MouseOffset(mouseOffset)
 		{}
 	};
 

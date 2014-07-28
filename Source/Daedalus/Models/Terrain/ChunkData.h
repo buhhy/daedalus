@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Models/Items/ItemData.h>
 #include <Models/Terrain/TerrainDataStructures.h>
 #include <Utilities/Algebra/Algebra3D.h>
 
@@ -28,6 +29,9 @@ namespace terrain {
 		 */
 		utils::Tensor3D<float> DensityData;
 		utils::Tensor3D<Uint64> MaterialData;
+
+		// TODO: might need to change this to octree depending on performance
+		std::vector<items::ItemDataPtr> PlacedItems;
 
 		Uint32 ChunkGridSize;           // Size of the chunk in grid cells
 		Uint32 ChunkFieldSize;          // Size of the chunk scalar field

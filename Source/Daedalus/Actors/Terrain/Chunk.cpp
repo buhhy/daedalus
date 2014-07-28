@@ -14,7 +14,7 @@ using namespace items;
 using ChunkDataSet = AChunk::ChunkDataSet;
 
 AChunk::AChunk(const FPostConstructInitializeProperties & PCIP)
-	: Super(PCIP), ChunkNeighbourData(NULL)
+	: Super(PCIP), ChunkNeighbourData(NULL), ItemIdCounter(0)
 {
 	Mesh = PCIP.CreateDefaultSubobject<UGeneratedMeshComponent>(this, TEXT("GeneratedMesh"));
 	TestMaterial = ConstructorHelpers::FObjectFinder<UMaterial>(
@@ -22,38 +22,45 @@ AChunk::AChunk(const FPostConstructInitializeProperties & PCIP)
 	this->RootComponent = Mesh;
 }
 
-void AChunk::SpawnItem(const ItemDataPtr & itemData) {
+AItem * AChunk::SpawnItem(const ItemDataPtr & itemData) {
 	const FRotator defaultRotator(0, 0, 0);
 	auto params = FActorSpawnParameters();
 	params.Name = *FString::Printf(TEXT("(%lld,%lld,%lld)PlacedItem%llu"),
-		itemData->ItemId.second.first.X,
-		itemData->ItemId.second.first.Y,
-		itemData->ItemId.second.first.Z,
-		itemData->ItemId.first);
+		itemData->Position.first.X,
+		itemData->Position.first.Y,
+		itemData->Position.first.Z,
+		itemData->ItemId);
 	UE_LOG(LogTemp, Warning, TEXT("(%lld,%lld,%lld)PlacedItem%llu"),
-		itemData->ItemId.second.first.X,
-		itemData->ItemId.second.first.Y,
-		itemData->ItemId.second.first.Z,
-		itemData->ItemId.first);
+		itemData->Position.first.X,
+		itemData->Position.first.Y,
+		itemData->Position.first.Z,
+		itemData->ItemId);
 	auto actor = GetWorld()->SpawnActor<AItem>(
 		ItemFactory->GetItemClass(itemData),
-		ToFVector(TerrainGenParams.GetChunkInnerPosition(itemData->ItemId.second)),
+		ToFVector(TerrainGenParams.ToRealInnerCoordinates(itemData->Position)),
 		defaultRotator,
 		params);
 	PlacedItems.Add({ itemData->ItemId, actor });
+	actor->SetItemData(itemData);
 	actor->AttachRootComponentToActor(this);
+	return actor;
 }
 
-void AChunk::RemoveItem(const ItemDataPtr & itemData) {
+ItemDataPtr AChunk::RemoveItem(const ItemDataPtr & itemData) {
 	Uint32 index = 0;
+	ItemDataPtr removed = NULL;
+
 	for (const auto & it : PlacedItems) {
 		if (it.ItemId == itemData->ItemId) {
 			it.ItemActor->Destroy();
 			PlacedItems.RemoveAt(index);
+			removed = it.ItemActor->GetItemData();
 			break;
 		}
 		++index;
 	}
+
+	return removed;
 }
 
 void AChunk::ReceiveDestroyed() {
@@ -74,7 +81,20 @@ void AChunk::InitializeChunk(
 void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 	ChunkNeighbourData = chunkData;
 	CurrentChunkData = chunkData.Get(0, 0, 0);
+	// Make sure the item ID counter is at least 1 larger than the current largest ID
+	for (const auto & itemData : CurrentChunkData->PlacedItems) {
+		if (itemData->ItemId >= ItemIdCounter)
+			ItemIdCounter = itemData->ItemId + 1;
+	}
 	GenerateChunkMesh();
+}
+
+AItem * AChunk::CreateItem(const items::ItemDataPtr & itemData, const bool preserveId) {
+	if (!preserveId)
+		itemData->ItemId = ItemIdCounter++;
+	itemData->bIsPlaced = true;
+	CurrentChunkData->PlacedItems.push_back(itemData);
+	return SpawnItem(itemData);
 }
 
 void AChunk::GenerateChunkMesh() {
@@ -169,7 +189,7 @@ bool AChunk::TerrainIntersection(
 		Ray3D(adjustedOrigin, ray.Direction), &entryPoint, &tEntry);
 
 	// If the ray doesn't enter the chunk within the maximum allowed t-value, then return false.
-	if (!doesEnter, tEntry > tCheckRadius || tEntry < 0)
+	if (!doesEnter || tEntry > tCheckRadius || tEntry < 0)
 		return false;
 
 	assert(!entryPoint.IsBoundedBy(0, 1) && "AChunk::SolidIntersection: Invalid entry point");
@@ -220,6 +240,9 @@ bool AChunk::TerrainIntersection(
 				tMax.Z += tDelta.Z;
 			}
 		}
+		// Target is out of range
+		if (tMax.X > tCheckRadius && tMax.Y > tCheckRadius && tMax.Z > tCheckRadius)
+			break;
 		// Stop when a solid block of terrain is found.
 		isFound = SolidTerrain.Get(currentCell.X, currentCell.Y, currentCell.Z);
 	} while (!isFound);

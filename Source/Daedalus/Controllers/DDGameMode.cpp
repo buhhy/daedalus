@@ -9,7 +9,7 @@
 ADDGameMode::ADDGameMode(const class FPostConstructInitializeProperties& PCIP)
 	: Super(PCIP)
 {
-	DefaultPawnClass = ADebugCharacter::StaticClass();
+	DefaultPawnClass = APlayerCharacter::StaticClass();
 	GameStateClass = ADDGameState::StaticClass();
 	PlayerControllerClass = ADDPlayerController::StaticClass();
 }

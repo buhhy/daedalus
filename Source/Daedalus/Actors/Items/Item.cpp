@@ -1,6 +1,8 @@
 #include <Daedalus.h>
 #include "Item.h"
 
+using namespace items;
+
 AItem::AItem(const class FPostConstructInitializeProperties & PCIP)
 	: Super(PCIP)
 {
@@ -12,4 +14,8 @@ AItem::AItem(const class FPostConstructInitializeProperties & PCIP)
 void AItem::PostInitialize() {
 	MeshComponent->SetMobility(EComponentMobility::Movable);
 	this->RootComponent = MeshComponent;
+}
+
+void AItem::SetItemData(const ItemDataPtr & data) {
+	ItemData = data;
 }

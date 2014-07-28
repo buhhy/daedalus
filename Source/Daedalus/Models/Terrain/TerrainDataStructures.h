@@ -27,23 +27,37 @@ namespace terrain {
 		 * Converts the entire chunk position vector into real world coordinates.
 		 */
 		const utils::Point3D ToRealCoordinates(const ChunkPositionVector & position) const {
-			return ToRealCoordinates(position.first) + GetChunkInnerPosition(position);
+			return ToRealCoordinates(position.first) + ToRealInnerCoordinates(position);
+		}
+
+		const utils::Point3D ToRealInnerCoordinates(const utils::Point3D & virtualPos) const {
+			return virtualPos * ChunkScale;
 		}
 
 		/**
 		 * Retrieves the inner position of the chunk position vector in real world coordinates.
 		 */
-		const utils::Point3D GetChunkInnerPosition(const ChunkPositionVector & position) const {
+		const utils::Point3D ToRealInnerCoordinates(const ChunkPositionVector & position) const {
 			return position.second * ChunkScale;
 		}
 
 		/**
 		 */
-		const utils::Point3D GetChunkInnerPosition(const ChunkGridIndexVector & point) const {
+		const utils::Point3D ToRealInnerCoordinates(const ChunkGridIndexVector & point) const {
 			return {
 				ChunkScale * (double) point.X / GridCellCount,
 				ChunkScale * (double) point.Y / GridCellCount,
 				ChunkScale * (double) point.Z / GridCellCount
+			};
+		}
+
+		/**
+		 */
+		const utils::Point3D ToInnerVirtualPosition(const ChunkGridIndexVector & v) const {
+			return {
+				(double) v.X / GridCellCount,
+				(double) v.Y / GridCellCount,
+				(double) v.Z / GridCellCount
 			};
 		}
 

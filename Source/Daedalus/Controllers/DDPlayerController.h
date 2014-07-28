@@ -10,11 +10,8 @@ UCLASS()
 class ADDPlayerController : public APlayerController {
 	GENERATED_UCLASS_BODY()
 private:
-	float PositionSecondCount;
-	float ViewSecondCount;
 
 protected:
-	virtual void Tick(float delta) override;
 
 public:
 };

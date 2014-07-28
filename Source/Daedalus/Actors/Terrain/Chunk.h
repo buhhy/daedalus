@@ -17,7 +17,7 @@ USTRUCT()
 struct FItemPtrPair {
 	GENERATED_USTRUCT_BODY()
 public:
-	items::ItemDataId ItemId;
+	Uint64 ItemId;
 	UPROPERTY(Category = Item, VisibleAnywhere)
 		AItem * ItemActor;
 };
@@ -37,14 +37,15 @@ private:
 	terrain::ChunkDataPtr CurrentChunkData;
 	terrain::TerrainGeneratorParameters TerrainGenParams;
 	utils::TensorResizable3D<bool> SolidTerrain;
+	Uint64 ItemIdCounter;                            // Used to store the minimum unique ID
 
 	const UItemFactory * ItemFactory;
 
 
 	inline ADDGameState * GetGameState() { return GetWorld()->GetGameState<ADDGameState>(); }
 	void GenerateChunkMesh();
-	void SpawnItem(const items::ItemDataPtr & itemData);
-	void RemoveItem(const items::ItemDataPtr & itemData);
+	AItem * SpawnItem(const items::ItemDataPtr & itemData);
+	items::ItemDataPtr RemoveItem(const items::ItemDataPtr & itemData);
 
 protected:
 	virtual void ReceiveDestroyed() override;
@@ -61,6 +62,7 @@ public:
 		const terrain::TerrainGeneratorParameters & params,
 		const UItemFactory * itemFactory);
 	void SetChunkData(const ChunkDataSet & chunkData);
+	AItem * CreateItem(const items::ItemDataPtr & itemData, const bool preserveId = false);
 	
 	/**
 	 * @param ray The origin of the ray should be in chunk coordinates, the
