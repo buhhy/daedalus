@@ -65,9 +65,9 @@ namespace events {
 
 	struct EFPItemPlacementRotation : public EventData {
 		// TODO: probably need some form of player identification here
-		const utils::Point2D MouseOffset;
+		const utils::Point2D RotationOffset;
 		EFPItemPlacementRotation(const utils::Point2D & mouseOffset) :
-			EventData(E_FPItemPlacementRotation), MouseOffset(mouseOffset)
+			EventData(E_FPItemPlacementRotation), RotationOffset(mouseOffset)
 		{}
 	};
 

@@ -36,12 +36,11 @@ AItem * AChunk::SpawnItem(const ItemDataPtr & itemData) {
 		itemData->Position.first.Z,
 		itemData->ItemId);
 	auto actor = GetWorld()->SpawnActor<AItem>(
-		ItemFactory->GetItemClass(itemData),
-		ToFVector(TerrainGenParams.ToRealInnerCoordinates(itemData->Position)),
-		defaultRotator,
-		params);
+		AItem::StaticClass(),
+		ToFVector(TerrainGenParams->ToRealInnerCoordinates(itemData->Position)),
+		FRotator(0, 0, 0), params);
 	PlacedItems.Add({ itemData->ItemId, actor });
-	actor->SetItemData(itemData);
+	actor->Initialize(itemData);
 	actor->AttachRootComponentToActor(this);
 	return actor;
 }
@@ -69,13 +68,9 @@ void AChunk::ReceiveDestroyed() {
 	Super::ReceiveDestroyed();
 }
 
-void AChunk::InitializeChunk(
-	const TerrainGeneratorParameters & params,
-	const UItemFactory * itemFactory
-) {
-	SolidTerrain.Reset(params.GridCellCount, params.GridCellCount, params.GridCellCount, false);
+void AChunk::InitializeChunk(const TerrainGeneratorParameters * params) {
+	SolidTerrain.Reset(params->GridCellCount, params->GridCellCount, params->GridCellCount, false);
 	TerrainGenParams = params;
-	ItemFactory = itemFactory;
 }
 
 void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
@@ -100,9 +95,9 @@ AItem * AChunk::CreateItem(const items::ItemDataPtr & itemData, const bool prese
 void AChunk::GenerateChunkMesh() {
 	auto material = UMaterialInstanceDynamic::Create((UMaterial *) TestMaterial, this);
 
-	Uint32 size = TerrainGenParams.GridCellCount;
+	Uint32 size = TerrainGenParams->GridCellCount;
 
-	double scale = TerrainGenParams.ChunkScale / size;
+	double scale = TerrainGenParams->ChunkScale / size;
 
 	std::vector<Triangle3D> tempTris;
 	Vector3D<double> displacementVector;
@@ -174,17 +169,17 @@ bool AChunk::TerrainIntersection(
 	result.Reset(0, 0, 0);
 
 	/*const Point3D adjustedOrigin =
-		TerrainGenParams.ToChunkCoordinates(ray.Origin, CurrentChunkData->ChunkOffset).second;*/
+		TerrainGenParams->ToChunkCoordinates(ray.Origin, CurrentChunkData->ChunkOffset).second;*/
 	
 	const Point3D adjustedOrigin = ray.Origin;
-	const auto gcc = TerrainGenParams.GridCellCount;
+	const auto gcc = TerrainGenParams->GridCellCount;
 
 	const AxisAlignedBoundingBox3D boundingBox({ 0, 0, 0 }, { 0.9999999, 0.9999999, 0.9999999 });
 
 	// Make sure the ray intersects the bounding box.
 	Point3D entryPoint;
 	double tEntry;
-	const double tCheckRadius = maxDistance / TerrainGenParams.ChunkScale;
+	const double tCheckRadius = maxDistance / TerrainGenParams->ChunkScale;
 	const bool doesEnter = boundingBox.FindIntersection(
 		Ray3D(adjustedOrigin, ray.Direction), &entryPoint, &tEntry);
 
@@ -194,7 +189,7 @@ bool AChunk::TerrainIntersection(
 
 	assert(!entryPoint.IsBoundedBy(0, 1) && "AChunk::SolidIntersection: Invalid entry point");
 
-	ChunkGridIndexVector currentCell = TerrainGenParams.GetChunkGridIndicies(entryPoint);
+	ChunkGridIndexVector currentCell = TerrainGenParams->GetChunkGridIndicies(entryPoint);
 	const Vector3D<Int8> step(
 		Sign(ray.Direction.X),
 		Sign(ray.Direction.Y),

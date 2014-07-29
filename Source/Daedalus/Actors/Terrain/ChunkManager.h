@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Actors/Items/ItemFactory.h>
 #include <Actors/Terrain/Chunk.h>
 #include <Controllers/DDGameState.h>
 #include <Controllers/EventBus/EventBus.h>
+#include <Models/Items/ItemDataFactory.h>
 #include <Models/Terrain/TerrainDataStructures.h>
 
 #include <unordered_map>
@@ -34,7 +34,7 @@ private:
 	const float TerrainInteractionDistance;           // Specified in centimetres
 	//const float ItemRotationNotch;                    // How far the mouse must move 
 
-	const UItemFactory * ItemFactory;
+	items::ItemDataFactoryPtr ItemDataFactory;
 
 	
 

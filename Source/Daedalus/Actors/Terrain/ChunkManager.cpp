@@ -1,7 +1,6 @@
 #include "Daedalus.h"
 #include "ChunkManager.h"
 
-#include <Actors/Items/ItemFactory.h>
 #include <Models/Terrain/ChunkLoader.h>
 
 using namespace utils;
@@ -9,20 +8,20 @@ using namespace events;
 using namespace terrain;
 using namespace items;
 
+// TODO: pull out the item factory and data factory into a more global class
 AChunkManager::AChunkManager(const class FPostConstructInitializeProperties & PCIP) :
 	Super(PCIP), RenderDistance(1), TerrainInteractionDistance(250),
-	ItemFactory(NewObject<UItemFactory>(this, UItemFactory::StaticClass()))
+	ItemDataFactory(new items::ItemDataFactory())
 {}
 
 void AChunkManager::SetUpDefaultCursor() {
 	const FRotator defaultRotator(0, 0, 0);
 	auto params = FActorSpawnParameters();
 	params.Name = TEXT("DummyCursor");
-	auto itemData = ItemDataPtr(new ItemData(0, { 0, 0 }, I_Chest));
+	auto itemData = ItemDataFactory->BuildItemData(I_Chest);
 	DefaultCursor = GetWorld()->SpawnActor<AItem>(
-		ItemFactory->GetItemClass(itemData),
-		{ 0, 0, 0 }, defaultRotator, params);
-	DefaultCursor->SetItemData(itemData);
+		AItem::StaticClass(), { 0, 0, 0 }, { 0, 0, 0 }, params);
+	DefaultCursor->Initialize(itemData);
 	DefaultCursor->SetActorEnableCollision(false);
 	CurrentCursor = DefaultCursor;
 	CurrentCursor->SetActorHiddenInGame(true);
@@ -71,7 +70,6 @@ void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 
 AChunk * AChunkManager::GetChunkAt(const ChunkOffsetVector & point) {
 	auto chunkLoader = GetGameState()->ChunkLoader;
-	auto genParams = chunkLoader->GetGeneratorParameters();
 	
 	FRotator defaultRotation(0, 0, 0);
 	FActorSpawnParameters defaultParameters;
@@ -91,12 +89,12 @@ AChunk * AChunkManager::GetChunkAt(const ChunkOffsetVector & point) {
 				}
 			}
 		}
-		auto position = ToFVector(genParams.ToRealCoordinates(point));
+		auto position = ToFVector(GenParams->ToRealCoordinates(point));
 
 		//UE_LOG(LogTemp, Error, TEXT("Placing chunk at %f %f %f"), position.X, position.Y, position.Z)
 		AChunk * newChunk = GetWorld()->SpawnActor<AChunk>(
 			AChunk::StaticClass(), position, defaultRotation, defaultParameters);
-		newChunk->InitializeChunk(genParams, ItemFactory);
+		newChunk->InitializeChunk(GenParams);
 		newChunk->SetChunkData(data);
 		LocalCache.insert({ point, newChunk });
 		return newChunk;
@@ -104,18 +102,14 @@ AChunk * AChunkManager::GetChunkAt(const ChunkOffsetVector & point) {
 }
 
 void AChunkManager::UpdateItemPosition(AItem * item, const ChunkPositionVector & position) {
-	const auto newPosition = ToFVector(GenParams->ToRealInnerCoordinates(position.second));
 	auto chunk = GetChunkAt(position.first);
-	item->SetActorRelativeLocation(newPosition);
 	item->AttachRootComponentToActor(chunk);
-	item->GetItemData()->Position = position;
+	item->SetPosition(position);
 }
 
 void AChunkManager::UpdateCursorPosition(const Ray3D & viewpoint) {
-	auto genParams = GetGameState()->ChunkLoader->GetGeneratorParameters();
-
 	// Get player's current chunk location
-	auto playerChunkPos = genParams.ToChunkCoordinates(viewpoint.Origin);
+	auto playerChunkPos = GenParams->ToChunkCoordinates(viewpoint.Origin);
 	auto chunk = GetChunkAt(playerChunkPos.first);
 	ChunkGridIndexVector indexVec;
 	bool foundIntersect = chunk->TerrainIntersection(
@@ -124,7 +118,7 @@ void AChunkManager::UpdateCursorPosition(const Ray3D & viewpoint) {
 		indexVec.Z += 1;
 		UpdateItemPosition(
 			CurrentCursor,
-			ChunkPositionVector(playerChunkPos.first, genParams.ToInnerVirtualPosition(indexVec)));
+			ChunkPositionVector(playerChunkPos.first, GenParams->ToInnerVirtualPosition(indexVec)));
 		CurrentCursor->SetActorHiddenInGame(false);
 		// Found an intersection at the current chunk position.
 	} else {
@@ -133,7 +127,14 @@ void AChunkManager::UpdateCursorPosition(const Ray3D & viewpoint) {
 	}
 }
 
-void AChunkManager::UpdateCursorRotation(const utils::Point2D & mouseOffset) {
+void AChunkManager::UpdateCursorRotation(const Point2D & rotationOffset) {
+	if (CurrentCursor) {
+		const auto & data = CurrentCursor->GetItemData();
+		ItemRotation rot(
+			rotationOffset.X / 360.0 * data->Template.RotationInterval.Yaw,
+			rotationOffset.Y / 360.0 * data->Template.RotationInterval.Pitch);
+		CurrentCursor->SetRotation(rot);
+	}
 }
 
 void AChunkManager::PlaceItem() {
@@ -183,7 +184,7 @@ void AChunkManager::HandleEvent(const EventDataPtr & data) {
 	}
 	case E_FPItemPlacementRotation: {
 		auto castedData = std::static_pointer_cast<EFPItemPlacementRotation>(data);
-		UpdateCursorRotation(castedData->MouseOffset);
+		UpdateCursorRotation(castedData->RotationOffset);
 		break;
 	}
 	}

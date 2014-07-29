@@ -1,5 +1,6 @@
 #include <Daedalus.h>
-#include <Utilities/DataStructures.h>
+#include "Matrix4D.h"
+#include <Utilities/Algebra/Algebra3D.h>
 
 namespace utils {
 	/**
@@ -8,7 +9,7 @@ namespace utils {
 	 * characters 'x', 'y', or 'z'.
 	 */
 	Matrix4D<> CreateRotation(const double angle, const Axis axis) {
-		double radAngle = angle * utils::MATH_PI/180;
+		double radAngle = angle * MATH_PI/180;
 		switch (axis) {
 			case AXIS_X:
 				return Matrix4D<>(

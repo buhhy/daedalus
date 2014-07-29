@@ -112,7 +112,7 @@ void APlayerCharacter::Tick(float delta) {
 
 		if (bPlacingItem) {
 			EventBusRef->BroadcastEvent(
-				EventDataPtr(new EFPItemPlacementRotation(MouseHoldOffset)));
+				EventDataPtr(new EFPItemPlacementRotation(MouseHoldOffset * 3.0)));
 		}
 	}
 

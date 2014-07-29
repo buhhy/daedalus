@@ -3,7 +3,7 @@
 #include "GameFramework/Actor.h"
 #include "GeneratedMeshComponent.h"
 
-#include <Actors/Items/ItemFactory.h>
+#include <Actors/Items/Item.h>
 #include <Controllers/DDGameState.h>
 #include <Models/Terrain/ChunkData.h>
 #include <Models/Terrain/TerrainDataStructures.h>
@@ -35,11 +35,10 @@ public:
 private:
 	ChunkDataSet ChunkNeighbourData;
 	terrain::ChunkDataPtr CurrentChunkData;
-	terrain::TerrainGeneratorParameters TerrainGenParams;
+	const terrain::TerrainGeneratorParameters * TerrainGenParams;
 	utils::TensorResizable3D<bool> SolidTerrain;
 	Uint64 ItemIdCounter;                            // Used to store the minimum unique ID
 
-	const UItemFactory * ItemFactory;
 
 
 	inline ADDGameState * GetGameState() { return GetWorld()->GetGameState<ADDGameState>(); }
@@ -58,9 +57,7 @@ public:
 	UPROPERTY(Category = Items, VisibleAnywhere)
 		TArray<FItemPtrPair> PlacedItems;
 
-	void InitializeChunk(
-		const terrain::TerrainGeneratorParameters & params,
-		const UItemFactory * itemFactory);
+	void InitializeChunk(const terrain::TerrainGeneratorParameters * params);
 	void SetChunkData(const ChunkDataSet & chunkData);
 	AItem * CreateItem(const items::ItemDataPtr & itemData, const bool preserveId = false);
 	

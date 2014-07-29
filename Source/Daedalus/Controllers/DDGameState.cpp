@@ -8,11 +8,11 @@
 ADDGameState::ADDGameState(const class FPostConstructInitializeProperties& PCIP) :
 	Super(PCIP),
 	Seed(12345678),
-	TerrainGenParams({
+	TerrainGenParams(
 		16,              // Number of grid cells along a single axis
 		Seed,            // Seed
 		16 * 50          // Size of the chunk in real units along a single axis (cm)
-	}),
+	),
 	BiomeGenParams({
 		32,              // Number of grid cells along a single axis
 		Seed,            // Seed

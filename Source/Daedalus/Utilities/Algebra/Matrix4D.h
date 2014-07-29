@@ -41,6 +41,23 @@ namespace utils {
 		const T * operator [] (size_t row) const { return Values + row * 4; }
 		T * operator [] (size_t row) { return Values + row * 4; }
 
+		const T & Get(const Uint32 column, const Uint32 row) const {
+			return Values[row * 4 + column];
+		}
+		T & Get(const Uint32 column, const Uint32 row) {
+			return Values[row * 4 + column];
+		}
+		
+		void GetBasis(Vector3D<T> & x, Vector3D<T> & y, Vector3D<T> & z) const {
+			x.Reset(Get(0, 0), Get(0, 1), Get(0, 2));
+			y.Reset(Get(1, 0), Get(1, 1), Get(1, 2));
+			z.Reset(Get(2, 0), Get(2, 1), Get(2, 2));
+		}
+
+		Vector3D<T> GetTranslationVector() const {
+			return { Get(3, 0), Get(3, 1), Get(3, 2) };
+		}
+
 		Matrix4D<T> & operator = (const Matrix4D<T> & other) {
 			// Assignment swap principle
 			T Temp[16];
@@ -57,7 +74,7 @@ namespace utils {
 	};
 
 	Matrix4D<> CreateRotation(const double angle,  const Axis axis);
-	Matrix4D<> CreateRotation(const Vector3D<> & x,  const Vector3D<> & y,  const Vector3D<> & z);
+	Matrix4D<> CreateRotation(const Vector3D<> & x, const Vector3D<> & y, const Vector3D<> & z);
 	Matrix4D<> CreateTranslation(const Vector3D<> & displacement);
 	Matrix4D<> CreateScaling(const Vector3D<> & scale);
 }

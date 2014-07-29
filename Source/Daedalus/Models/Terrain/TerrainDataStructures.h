@@ -9,9 +9,18 @@ namespace terrain {
 	using ChunkPositionVector = std::pair<ChunkOffsetVector, utils::Point3D>;
 
 	struct TerrainGeneratorParameters {
-		Uint16 GridCellCount;       // Number of grid cells along a single edge of the cube
-		Int64 Seed;
-		double ChunkScale;          // Maps chunk grid to real world coordinates
+		const Uint16 GridCellCount;       // Number of grid cells along a single edge of the cube
+		const Int64 Seed;
+		const double ChunkScale;          // Converts [0, 1] coordinates real world coordinates
+		const double ChunkGridUnitSize;   // Size of each grid unit in CM
+
+		TerrainGeneratorParameters(
+			const Uint16 cellCount,
+			const Int64 seed,
+			const double chunkSize
+		) : GridCellCount(cellCount), Seed(seed),
+			ChunkScale(chunkSize), ChunkGridUnitSize(chunkSize / cellCount)
+		{}
 
 		/*
 		 Chunk coordinates uses a integer vector portion to indicate which chunk a point belongs,
