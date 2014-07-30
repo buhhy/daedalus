@@ -84,12 +84,25 @@ void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 	GenerateChunkMesh();
 }
 
+bool AChunk::IsOccupiedAt(const terrain::ChunkGridIndexVector & gridIndex) const {
+	if (SolidTerrain.Get(gridIndex.X, gridIndex.Y, gridIndex.Z)) {
+		return true;
+	} else {
+		// Check items to make sure nothing occupies this location. Perhaps using an octree
+		// might be wise here.
+	}
+	return false;
+}
+
 AItem * AChunk::CreateItem(const items::ItemDataPtr & itemData, const bool preserveId) {
-	if (!preserveId)
-		itemData->ItemId = ItemIdCounter++;
-	itemData->bIsPlaced = true;
-	CurrentChunkData->PlacedItems.push_back(itemData);
-	return SpawnItem(itemData);
+	if (!IsOccupiedAt(TerrainGenParams->GetChunkGridIndicies(itemData->Position.second))) {
+		if (!preserveId)
+			itemData->ItemId = ItemIdCounter++;
+		itemData->bIsPlaced = true;
+		CurrentChunkData->PlacedItems.push_back(itemData);
+		return SpawnItem(itemData);
+	}
+	return NULL;
 }
 
 void AChunk::GenerateChunkMesh() {
@@ -178,7 +191,7 @@ bool AChunk::TerrainIntersection(
 	for (Uint16 i = 0; fvt.IsValid(); i++) {
 		const auto & current = fvt.GetCurrentCell();
 		if (current.IsBoundedBy(0, TerrainGenParams->GridCellCount)) {
-			found = SolidTerrain.Get(current.X, current.Y, current.Z);
+			found = IsOccupiedAt(current.Cast<Uint16>());
 			if (found)
 				break;
 		}

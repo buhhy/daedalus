@@ -17,7 +17,7 @@ class AItem : public AActor {
 	GENERATED_UCLASS_BODY()
 protected:
 	items::ItemDataPtr ItemData;
-	utils::Matrix4D<> TranslationMatrix;
+	utils::Vector3D<> TranslationVector;
 	utils::Matrix4D<> RotationMatrix;
 
 	const terrain::TerrainGeneratorParameters * GenParams;

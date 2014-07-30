@@ -22,20 +22,20 @@ void AItem::AssertInitialized() const {
 
 void AItem::AdjustRotationMatrix() {
 	AssertInitialized();
-	RotationMatrix = ItemData->GetRotationMatrix(GenParams->ChunkGridUnitSize);
+	RotationMatrix = ItemData->GetRotationMatrix();
 }
 
 void AItem::AdjustPositionMatrix() {
 	AssertInitialized();
-	TranslationMatrix = CreateTranslation(GenParams->ToRealInnerCoordinates(ItemData->Position));
+	TranslationVector = GenParams->ToRealInnerCoordinates(ItemData->Position);
 }
 
 void AItem::ApplyTransform() {
-	const auto aggMat = TranslationMatrix * RotationMatrix;
 	Vector3D<> x, y, z;
-	aggMat.GetBasis(x, y, z);
+	RotationMatrix.GetBasis(x, y, z);
 	auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(x), ToFVector(z));
-	const auto trans = aggMat.GetTranslationVector();
+	const auto trans = TranslationVector +
+		RotationMatrix.GetTranslationVector() * GenParams->ChunkGridUnitSize;
 	MeshComponent->SetRelativeLocationAndRotation(ToFVector(trans), fRotMat.Rotator());
 }
 

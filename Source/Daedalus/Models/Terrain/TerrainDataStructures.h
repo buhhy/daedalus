@@ -76,9 +76,9 @@ namespace terrain {
 		 */
 		const ChunkGridIndexVector GetChunkGridIndicies(const utils::Point3D & position) const {
 			return {
-				Uint16(position.X * GridCellCount),
-				Uint16(position.Y * GridCellCount),
-				Uint16(position.Z * GridCellCount)
+				Uint16(utils::EFloor(position.X * GridCellCount)),
+				Uint16(utils::EFloor(position.Y * GridCellCount)),
+				Uint16(utils::EFloor(position.Z * GridCellCount))
 			};
 		}
 
@@ -87,9 +87,9 @@ namespace terrain {
 		 */
 		const ChunkPositionVector ToChunkCoordinates(const utils::Point3D & point) const {
 			const auto offset = ChunkOffsetVector(
-				(Int64) std::floor(point.X / ChunkScale),
-				(Int64) std::floor(point.Y / ChunkScale),
-				(Int64) std::floor(point.Z / ChunkScale));
+				(Int64) utils::EFloor(point.X / ChunkScale),
+				(Int64) utils::EFloor(point.Y / ChunkScale),
+				(Int64) utils::EFloor(point.Z / ChunkScale));
 			const auto position = utils::Point3D(
 				point.X / ChunkScale - offset.X,
 				point.Y / ChunkScale - offset.Y,

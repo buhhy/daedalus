@@ -41,8 +41,7 @@ private:
 	Uint64 ItemIdCounter;                            // Used to store the minimum unique ID
 
 
-
-	inline ADDGameState * GetGameState() { return GetWorld()->GetGameState<ADDGameState>(); }
+	bool IsOccupiedAt(const terrain::ChunkGridIndexVector & gridIndex) const;
 	void GenerateChunkMesh();
 	AItem * SpawnItem(const items::ItemDataPtr & itemData);
 	items::ItemDataPtr RemoveItem(const items::ItemDataPtr & itemData);

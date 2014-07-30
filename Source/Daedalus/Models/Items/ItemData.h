@@ -26,7 +26,7 @@ namespace items {
 	 */
 	struct ItemDataTemplate {
 		ItemType Type;
-		utils::Vector3D<> Size;
+		utils::Vector3D<> Size;  // Size in grid cells
 		utils::Point3D Pivot;    // Position of pivot in grid cells
 		ItemRotation RotationInterval;
 		std::string MeshName;
@@ -56,6 +56,8 @@ namespace items {
 	struct ItemData {
 	private:
 		ItemRotation Rotation;
+		utils::AxisAlignedBoundingBox3D OriginBounds;
+
 	public:
 		Uint64 ItemId;
 		terrain::ChunkPositionVector Position;
@@ -75,7 +77,8 @@ namespace items {
 			Rotation(rotation),
 			bIsPlaced(isPlaced),
 			Size(tmp.Size),
-			Template(tmp)
+			Template(tmp),
+			OriginBounds(0, tmp.Size)
 		{}
 
 		const ItemRotation & GetRotation() const { return Rotation; }
@@ -85,18 +88,15 @@ namespace items {
 			this->Rotation.Bound(Template.RotationInterval);
 		}
 		
-		utils::Matrix4D<> GetRotationMatrix(const double chunkGridUnitScale) const {
+		utils::Matrix4D<> GetRotationMatrix() const {
 			const double yawV = 360 * (double) Rotation.Yaw / Template.RotationInterval.Yaw;
 			const double pitchV = 360 * (double) Rotation.Pitch / Template.RotationInterval.Pitch;
-			
-			//const auto translation = Template.Pivot * chunkGridUnitScale;
-			const auto translation = utils::Point3D(25, 25, 0);
 
 			return
-				utils::CreateTranslation(translation) *
+				utils::CreateTranslation(Template.Pivot) *
 				utils::CreateRotation(yawV, utils::AXIS_Z) *
 				utils::CreateRotation(pitchV, utils::AXIS_X) *
-				utils::CreateTranslation(-translation);
+				utils::CreateTranslation(-Template.Pivot);
 		}
 	};
 
