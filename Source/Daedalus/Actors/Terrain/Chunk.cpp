@@ -161,89 +161,35 @@ void AChunk::GenerateChunkMesh() {
 }
 
 bool AChunk::TerrainIntersection(
-	ChunkGridIndexVector & result,
+	Vector3D<Int64> & collisionIndex,
+	Vector3D<Int64> & precollisionIndex,
 	const Ray3D & ray,
 	const double maxDistance
 ) const {
-	// Algorithm from here: http://www.cse.yorku.ca/~amana/research/grid.pdf
-	result.Reset(0, 0, 0);
+	FastVoxelTraversalIterator fvt(
+		TerrainGenParams->ChunkGridUnitSize, 0, TerrainGenParams->GridCellCount,
+		{ ray.Origin * TerrainGenParams->ChunkScale, ray.Direction }, maxDistance);
 
-	/*const Point3D adjustedOrigin =
-		TerrainGenParams->ToChunkCoordinates(ray.Origin, CurrentChunkData->ChunkOffset).second;*/
-	
-	const Point3D adjustedOrigin = ray.Origin;
-	const auto gcc = TerrainGenParams->GridCellCount;
+	const auto & x = fvt.GetCurrentCell();
 
-	const AxisAlignedBoundingBox3D boundingBox({ 0, 0, 0 }, { 0.9999999, 0.9999999, 0.9999999 });
+	bool found = false;
+	Vector3D<Int64> zv(0);
 
-	// Make sure the ray intersects the bounding box.
-	Point3D entryPoint;
-	double tEntry;
-	const double tCheckRadius = maxDistance / TerrainGenParams->ChunkScale;
-	const bool doesEnter = boundingBox.FindIntersection(
-		Ray3D(adjustedOrigin, ray.Direction), &entryPoint, &tEntry);
+	for (Uint16 i = 0; fvt.IsValid(); i++) {
+		const auto & current = fvt.GetCurrentCell();
+		if (current.IsBoundedBy(0, TerrainGenParams->GridCellCount)) {
+			found = SolidTerrain.Get(current.X, current.Y, current.Z);
+			if (found)
+				break;
+		}
 
-	// If the ray doesn't enter the chunk within the maximum allowed t-value, then return false.
-	if (!doesEnter || tEntry > tCheckRadius || tEntry < 0)
-		return false;
-
-	assert(!entryPoint.IsBoundedBy(0, 1) && "AChunk::SolidIntersection: Invalid entry point");
-
-	ChunkGridIndexVector currentCell = TerrainGenParams->GetChunkGridIndicies(entryPoint);
-	const Vector3D<Int8> step(
-		Sign(ray.Direction.X),
-		Sign(ray.Direction.Y),
-		Sign(ray.Direction.Z));
-
-	Vector3D<double> tMax(std::numeric_limits<double>::infinity());
-	Vector3D<double> tDelta(0);
-
-	// Initialize the current t value and the per-cell t deltas.
-	for (Uint8 i = 0; i < 3; i++) {
-		if (step[i] < 0)
-			tMax[i] = (currentCell[i] / (double) gcc - entryPoint[i]) / ray.Direction[i];
-		else if (step[i] > 0)
-			tMax[i] = ((currentCell[i] + 1) / (double) gcc - entryPoint[i]) / ray.Direction[i];
-		tDelta[i] = (1.0 / gcc) / std::abs(ray.Direction[i]);
+		fvt.Next();
 	}
 
-	bool isFound = false;
+	if (found) {
+		collisionIndex = fvt.GetCurrentCell();
+		precollisionIndex = fvt.GetPreviousCell();
+	}
 
-	do {
-		if (tMax.X < tMax.Y) {
-			if (tMax.X < tMax.Z) {
-				if ((signed) currentCell.X < -step.X || currentCell.X + step.X >= gcc)
-					break; // Not found.
-				currentCell.X += step.X;
-				tMax.X += tDelta.X;
-			} else {
-				if ((signed) currentCell.Z < -step.Z || currentCell.Z + step.Z >= gcc)
-					break; // Not found.
-				currentCell.Z += step.Z;
-				tMax.Z += tDelta.Z;
-			}
-		} else {
-			if (tMax.Y < tMax.Z) {
-				if ((signed) currentCell.Y < -step.Y || currentCell.Y + step.Y >= gcc)
-					break; // Not found.
-				currentCell.Y += step.Y;
-				tMax.Y += tDelta.Y;
-			} else {
-				if ((signed) currentCell.Z < -step.Z || currentCell.Z + step.Z >= gcc)
-					break; // Not found.
-				currentCell.Z += step.Z;
-				tMax.Z += tDelta.Z;
-			}
-		}
-		// Target is out of range
-		if (tMax.X > tCheckRadius && tMax.Y > tCheckRadius && tMax.Z > tCheckRadius)
-			break;
-		// Stop when a solid block of terrain is found.
-		isFound = SolidTerrain.Get(currentCell.X, currentCell.Y, currentCell.Z);
-	} while (!isFound);
-
-	if (isFound)
-		result = currentCell;
-
-	return isFound;
+	return found;
 }

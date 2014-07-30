@@ -30,6 +30,10 @@ namespace utils {
 			MinPoint(min), MaxPoint(max)
 		{}
 
+		/**
+		 * This method WILL introduce floating point error into the intersection point. Make sure
+		 * to do floating-point comparisons using epsilon.
+		 */
 		bool FindIntersection(
 			const Ray3D & ray, Point3D * intersectPoint = NULL, double * tValue = NULL) const;
 	};

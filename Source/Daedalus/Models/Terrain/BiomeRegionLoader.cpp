@@ -474,7 +474,7 @@ namespace terrain {
 			}
 
 			assert(!"BiomeRegionLoader::FindContainingBiomeTriangle: Point should always resolve to a valid Delaunay triangle in either the current region or a neighbouring region, but it does not.");
-			throw utils::StringException("BiomeRegionLoader::FindContainingBiomeTriangle: Point should always resolve to a valid Delaunay triangle in either the current region or a neighbouring region, but it does not.");
+			throw StringException("BiomeRegionLoader::FindContainingBiomeTriangle: Point should always resolve to a valid Delaunay triangle in either the current region or a neighbouring region, but it does not.");
 		}
 	}
 }

@@ -36,6 +36,20 @@ namespace utils {
 			return true;
 		}
 
+		bool IsBoundedBy(
+			const Vector3D<T> & min, const Vector3D<T> & max,
+			const bool isMinIncluded = true,
+			const bool isMaxIncluded = false
+		) const {
+			if (isMinIncluded && (X < min.X || Y < min.Z || Z < min.Z) ||
+				!isMinIncluded && (X <= min.X || Y <= min.Y || Z <= min.Z)) return false;
+			
+			if (isMaxIncluded && (X > max.X || Y > max.Y || Z > max.Z) ||
+				!isMaxIncluded && (X >= max.X || Y >= max.Y || Z >= max.Z)) return false;
+
+			return true;
+		}
+
 		/**
 		 * Dot product.
 		 */

@@ -8,6 +8,7 @@
 #include <Models/Terrain/ChunkData.h>
 #include <Models/Terrain/TerrainDataStructures.h>
 #include <Utilities/Algebra/Algebra3D.h>
+#include <Utilities/FastVoxelTraversal.h>
 
 #include <utility>
 
@@ -62,11 +63,13 @@ public:
 	AItem * CreateItem(const items::ItemDataPtr & itemData, const bool preserveId = false);
 	
 	/**
-	 * @param ray The origin of the ray should be in chunk coordinates, the
+	 * @param ray The origin of the ray should be in [0, 1] chunk inner coordinates, the
 	 *            direction should be normal.
 	 * @param maxDistance Maximum number of grid cells to search for solid blocks.
 	 */
 	bool TerrainIntersection(
-		terrain::ChunkGridIndexVector & result,
-		const utils::Ray3D & ray, const double maxDistance) const;
+		utils::Vector3D<Int64> & collisionIndex,
+		utils::Vector3D<Int64> & precollisionIndex,
+		const utils::Ray3D & ray,
+		const double maxDistance) const;
 };

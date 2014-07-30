@@ -2,7 +2,9 @@
 
 #include <Utilities/Algebra/Vector3D.h>
 
+#include <cassert>
 #include <vector>
+#include <sstream>
 
 namespace utils {
 	template<typename T>
@@ -12,6 +14,27 @@ namespace utils {
 		size_t Width;       // X
 		size_t Depth;       // Y
 		size_t Height;      // Z
+
+		inline void CheckBounded(const size_t w, const size_t d, const size_t h) const {
+			if (w < 0 && w >= Width) {
+				std::stringstream ss;
+				ss << "Tensor3DBase::CheckBounded: Width `" << w <<
+					"` is out of bounds [0, " << Width << ").";
+				throw StringException(ss.str());
+			}
+			if (h < 0 && h >= Height) {
+				std::stringstream ss;
+				ss << "Tensor3DBase::CheckBounded: Height `" << h <<
+					"` is out of bounds [0, " << Height << ").";
+				throw StringException(ss.str());
+			}
+			if (d < 0 && d >= Depth) {
+				std::stringstream ss;
+				ss << "Tensor3DBase::CheckBounded: Depth `" << d <<
+					"` is out of bounds [0, " << Depth << ").";
+				throw StringException(ss.str());
+			}
+		}
 
 	public:
 		Tensor3DBase() : Tensor3DBase(0, 0, 0) {}
@@ -51,14 +74,17 @@ namespace utils {
 		{}
 
 		const T & Get(const size_t & x, const size_t & y, const size_t & z) const {
+			CheckBounded(x, y, z);
 			return this->Data[(x * this->Width + y) * this->Height + z];
 		}
 
 		T & Get(const size_t & x, const size_t & y, const size_t & z) {
+			CheckBounded(x, y, z);
 			return this->Data[(x * this->Width + y) * this->Height + z];
 		}
 
 		void Set(const size_t & x, const size_t & y, const size_t & z, const T & value) {
+			CheckBounded(x, y, z);
 			this->Data[(x * this->Width + y) * this->Height + z] = value;
 		}
 
@@ -86,10 +112,12 @@ namespace utils {
 		{}
 
 		bool Get(const size_t & x, const size_t & y, const size_t & z) const {
+			CheckBounded(x, y, z);
 			return this->Data[(x * this->Width + y) * this->Height + z];
 		}
 
 		void Set(const size_t & x, const size_t & y, const size_t & z, const bool value) {
+			CheckBounded(x, y, z);
 			this->Data[(x * this->Width + y) * this->Height + z] = value;
 		}
 

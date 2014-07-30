@@ -2,6 +2,7 @@
 #include "ChunkManager.h"
 
 #include <Models/Terrain/ChunkLoader.h>
+#include <Utilities/FastVoxelTraversal.h>
 
 using namespace utils;
 using namespace events;
@@ -48,8 +49,9 @@ void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 
 	// Once the player leaves an area, the chunks are cleared
 	for (auto chunkKey = LocalCache.begin(); chunkKey != LocalCache.end(); ) {
-		if (chunkKey->first.X > toX || chunkKey->first.Y > toY || chunkKey->first.Z > toZ ||
-			chunkKey->first.X < fromX || chunkKey->first.Y < fromY || chunkKey->first.Z < fromZ) {
+		if (chunkKey->first.X > toX || chunkKey->first.Y > toY ||
+				chunkKey->first.Z > toZ || chunkKey->first.X < fromX ||
+				chunkKey->first.Y < fromY || chunkKey->first.Z < fromZ) {
 			chunkKey->second->Destroy();
 			chunkKey = LocalCache.erase(chunkKey);
 		} else {
@@ -108,17 +110,43 @@ void AChunkManager::UpdateItemPosition(AItem * item, const ChunkPositionVector &
 }
 
 void AChunkManager::UpdateCursorPosition(const Ray3D & viewpoint) {
-	// Get player's current chunk location
-	auto playerChunkPos = GenParams->ToChunkCoordinates(viewpoint.Origin);
-	auto chunk = GetChunkAt(playerChunkPos.first);
-	ChunkGridIndexVector indexVec;
-	bool foundIntersect = chunk->TerrainIntersection(
-		indexVec, { playerChunkPos.second, viewpoint.Direction }, TerrainInteractionDistance);
+	FastVoxelTraversalIterator fvt(GenParams->ChunkScale, viewpoint, TerrainInteractionDistance);
+
+	bool foundIntersect = false;
+	Vector3D<Int64> chunkPosition = fvt.GetCurrentCell();
+	Vector3D<Int64> foundPosition, prefoundPosition;
+
+	// Search through adjacent chunks
+	while (fvt.IsValid()) {
+		// Get current chunk location
+		const auto chunkPos = GenParams->ToChunkCoordinates(viewpoint.Origin, chunkPosition);
+		auto chunk = GetChunkAt(chunkPos.first);
+		foundIntersect = chunk->TerrainIntersection(
+			foundPosition, prefoundPosition,
+			{ chunkPos.second, viewpoint.Direction },
+			TerrainInteractionDistance);
+
+		if (foundIntersect)
+			break;
+
+		fvt.Next();
+		chunkPosition = fvt.GetCurrentCell();
+	}
+
 	if (foundIntersect) {
-		indexVec.Z += 1;
+		const Int32 gcc = GenParams->GridCellCount;
+		const Vector3D<Int64> offset(
+			std::floor((double) prefoundPosition.X / gcc),
+			std::floor((double) prefoundPosition.Y / gcc),
+			std::floor((double) prefoundPosition.Z / gcc));
+		const ChunkGridIndexVector itemPosition(
+			prefoundPosition.X - offset.X * gcc,
+			prefoundPosition.Y - offset.Y * gcc,
+			prefoundPosition.Z - offset.Z * gcc);
 		UpdateItemPosition(
 			CurrentCursor,
-			ChunkPositionVector(playerChunkPos.first, GenParams->ToInnerVirtualPosition(indexVec)));
+			ChunkPositionVector(
+				chunkPosition + offset, GenParams->ToInnerVirtualPosition(itemPosition)));
 		CurrentCursor->SetActorHiddenInGame(false);
 		// Found an intersection at the current chunk position.
 	} else {

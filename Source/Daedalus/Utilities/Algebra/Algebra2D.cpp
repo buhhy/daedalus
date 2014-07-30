@@ -2,8 +2,6 @@
 #include <Utilities/DataStructures.h>
 #include "Algebra2D.h"
 
-#include <math.h>
-
 namespace utils {
 	Circle2D CalculateCircumcircle(
 		const Vector2D<> & A,
