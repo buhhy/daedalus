@@ -181,7 +181,7 @@ bool AChunk::TerrainIntersection(
 ) const {
 	FastVoxelTraversalIterator fvt(
 		TerrainGenParams->ChunkGridUnitSize, 0, TerrainGenParams->GridCellCount,
-		{ ray.Origin * TerrainGenParams->ChunkScale, ray.Direction }, maxDistance);
+		{ TerrainGenParams->ToRealInnerCoordinates(ray.Origin), ray.Direction }, maxDistance);
 
 	const auto & x = fvt.GetCurrentCell();
 

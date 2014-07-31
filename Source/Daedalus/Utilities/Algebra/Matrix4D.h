@@ -65,6 +65,14 @@ namespace utils {
 			for (size_t i = 0; i < 16; i++) Values[i] = Temp[i];
 			return *this;
 		}
+
+		Matrix4D Transpose() const {
+			return Matrix4D<T>(
+				Values[0], Values[4], Values[8], Values[12],
+				Values[1], Values[5], Values[9], Values[13],
+				Values[2], Values[6], Values[10], Values[14],
+				Values[3], Values[7], Values[11], Values[15]);
+		}
 	};
 
 	enum Axis {

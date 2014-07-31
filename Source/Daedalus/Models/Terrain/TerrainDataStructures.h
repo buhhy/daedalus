@@ -11,8 +11,8 @@ namespace terrain {
 	struct TerrainGeneratorParameters {
 		const Uint16 GridCellCount;       // Number of grid cells along a single edge of the cube
 		const Int64 Seed;
-		const double ChunkScale;          // Converts [0, 1] coordinates real world coordinates
-		const double ChunkGridUnitSize;   // Size of each grid unit in CM
+		const double ChunkScale;          // Size of each chunk in centimetres
+		const double ChunkGridUnitSize;   // Size of each grid unit in centimetres
 
 		TerrainGeneratorParameters(
 			const Uint16 cellCount,
@@ -40,34 +40,30 @@ namespace terrain {
 		}
 
 		const utils::Point3D ToRealInnerCoordinates(const utils::Point3D & virtualPos) const {
-			return virtualPos * ChunkScale;
+			return virtualPos * ChunkGridUnitSize;
 		}
 
 		/**
 		 * Retrieves the inner position of the chunk position vector in real world coordinates.
 		 */
 		const utils::Point3D ToRealInnerCoordinates(const ChunkPositionVector & position) const {
-			return position.second * ChunkScale;
+			return position.second * ChunkGridUnitSize;
 		}
 
 		/**
 		 */
 		const utils::Point3D ToRealInnerCoordinates(const ChunkGridIndexVector & point) const {
 			return {
-				ChunkScale * (double) point.X / GridCellCount,
-				ChunkScale * (double) point.Y / GridCellCount,
-				ChunkScale * (double) point.Z / GridCellCount
+				ChunkGridUnitSize * (double) point.X / GridCellCount,
+				ChunkGridUnitSize * (double) point.Y / GridCellCount,
+				ChunkGridUnitSize * (double) point.Z / GridCellCount
 			};
 		}
 
 		/**
 		 */
 		const utils::Point3D ToInnerVirtualPosition(const ChunkGridIndexVector & v) const {
-			return {
-				(double) v.X / GridCellCount,
-				(double) v.Y / GridCellCount,
-				(double) v.Z / GridCellCount
-			};
+			return v.Cast<double>();
 		}
 
 		/**
@@ -76,9 +72,9 @@ namespace terrain {
 		 */
 		const ChunkGridIndexVector GetChunkGridIndicies(const utils::Point3D & position) const {
 			return {
-				Uint16(utils::EFloor(position.X * GridCellCount)),
-				Uint16(utils::EFloor(position.Y * GridCellCount)),
-				Uint16(utils::EFloor(position.Z * GridCellCount))
+				Uint16(utils::EFloor(position.X)),
+				Uint16(utils::EFloor(position.Y)),
+				Uint16(utils::EFloor(position.Z))
 			};
 		}
 
@@ -91,9 +87,9 @@ namespace terrain {
 				(Int64) utils::EFloor(point.Y / ChunkScale),
 				(Int64) utils::EFloor(point.Z / ChunkScale));
 			const auto position = utils::Point3D(
-				point.X / ChunkScale - offset.X,
-				point.Y / ChunkScale - offset.Y,
-				point.Z / ChunkScale - offset.Z);
+				GridCellCount * (point.X / ChunkScale - offset.X),
+				GridCellCount * (point.Y / ChunkScale - offset.Y),
+				GridCellCount * (point.Z / ChunkScale - offset.Z));
 			return ChunkPositionVector(offset, position);
 		}
 
@@ -106,9 +102,9 @@ namespace terrain {
 		) const {
 			auto vec = ToChunkCoordinates(position);
 			return ChunkPositionVector(anchor, {
-				vec.first.X - anchor.X + vec.second.X,
-				vec.first.Y - anchor.Y + vec.second.Y,
-				vec.first.Z - anchor.Z + vec.second.Z
+				GridCellCount * (vec.first.X - anchor.X) + vec.second.X,
+				GridCellCount * (vec.first.Y - anchor.Y) + vec.second.Y,
+				GridCellCount * (vec.first.Z - anchor.Z) + vec.second.Z
 			});
 		}
 	};

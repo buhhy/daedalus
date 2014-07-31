@@ -27,15 +27,15 @@ void AItem::AdjustRotationMatrix() {
 
 void AItem::AdjustPositionMatrix() {
 	AssertInitialized();
-	TranslationVector = GenParams->ToRealInnerCoordinates(ItemData->Position);
+	TranslationVector = ItemData->Position.second;
 }
 
 void AItem::ApplyTransform() {
 	Vector3D<> x, y, z;
 	RotationMatrix.GetBasis(x, y, z);
 	auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(x), ToFVector(z));
-	const auto trans = TranslationVector +
-		RotationMatrix.GetTranslationVector() * GenParams->ChunkGridUnitSize;
+	const auto trans = GenParams->ToRealInnerCoordinates(TranslationVector +
+		RotationMatrix.GetTranslationVector());
 	MeshComponent->SetRelativeLocationAndRotation(ToFVector(trans), fRotMat.Rotator());
 }
 
