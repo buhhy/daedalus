@@ -37,7 +37,7 @@ AItem * AChunk::SpawnItem(const ItemDataPtr & itemData) {
 		itemData->ItemId);
 	auto actor = GetWorld()->SpawnActor<AItem>(
 		AItem::StaticClass(),
-		ToFVector(TerrainGenParams->ToRealInnerCoordinates(itemData->Position)),
+		ToFVector(TerrainGenParams->ToRealChunkCoordSpace(itemData->Position.second)),
 		FRotator(0, 0, 0), params);
 	PlacedItems.Add({ itemData->ItemId, actor });
 	actor->Initialize(itemData);
@@ -95,7 +95,7 @@ bool AChunk::IsOccupiedAt(const terrain::ChunkGridIndexVector & gridIndex) const
 }
 
 AItem * AChunk::CreateItem(const items::ItemDataPtr & itemData, const bool preserveId) {
-	if (!IsOccupiedAt(TerrainGenParams->GetChunkGridIndicies(itemData->Position.second))) {
+	if (!IsOccupiedAt(TerrainGenParams->ToGridCoordSpace(itemData->Position.second))) {
 		if (!preserveId)
 			itemData->ItemId = ItemIdCounter++;
 		itemData->bIsPlaced = true;
@@ -180,8 +180,8 @@ bool AChunk::TerrainIntersection(
 	const double maxDistance
 ) const {
 	FastVoxelTraversalIterator fvt(
-		TerrainGenParams->ChunkGridUnitSize, 0, TerrainGenParams->GridCellCount,
-		{ TerrainGenParams->ToRealInnerCoordinates(ray.Origin), ray.Direction }, maxDistance);
+		1.0, 0, TerrainGenParams->GridCellCount,
+		ray, maxDistance / TerrainGenParams->ChunkGridUnitSize);
 
 	const auto & x = fvt.GetCurrentCell();
 

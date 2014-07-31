@@ -34,7 +34,7 @@ void AItem::ApplyTransform() {
 	Vector3D<> x, y, z;
 	RotationMatrix.GetBasis(x, y, z);
 	auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(x), ToFVector(z));
-	const auto trans = GenParams->ToRealInnerCoordinates(TranslationVector +
+	const auto trans = GenParams->ToRealChunkCoordSpace(TranslationVector +
 		RotationMatrix.GetTranslationVector());
 	MeshComponent->SetRelativeLocationAndRotation(ToFVector(trans), fRotMat.Rotator());
 }

@@ -60,7 +60,7 @@ void ABiomeRegionManager::ReloadRegionAt(const terrain::BiomeRegionOffsetVector 
 	auto genParams = chunkLoader->GetGeneratorParameters();
 	auto data = chunkLoader->GetBiomeRegionAt(offset);
 	auto position = ToFVector(
-		genParams.ToRealCoordinates(data->GetBiomeRegionOffset()), RenderHeight);
+		genParams.ToRealCoordSpace(data->GetBiomeRegionOffset()), RenderHeight);
 	FRotator defaultRotation(0, 0, 0);
 	FActorSpawnParameters defaultParameters;
 

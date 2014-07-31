@@ -28,49 +28,29 @@ namespace terrain {
 		 chunk itself. This helps to preserve accuracy at higher chunk positions.
 		 */
 
-		const utils::Point3D ToRealCoordinates(const ChunkOffsetVector & offset) const {
+		const utils::Point3D ToRealCoordSpace(const ChunkOffsetVector & offset) const {
 			return { offset.X * ChunkScale, offset.Y * ChunkScale, offset.Z * ChunkScale };
 		}
 
 		/**
 		 * Converts the entire chunk position vector into real world coordinates.
 		 */
-		const utils::Point3D ToRealCoordinates(const ChunkPositionVector & position) const {
-			return ToRealCoordinates(position.first) + ToRealInnerCoordinates(position);
+		const utils::Point3D ToRealCoordSpace(const ChunkPositionVector & position) const {
+			return ToRealCoordSpace(position.first) + ToRealChunkCoordSpace(position.second);
 		}
-
-		const utils::Point3D ToRealInnerCoordinates(const utils::Point3D & virtualPos) const {
-			return virtualPos * ChunkGridUnitSize;
-		}
-
+		
 		/**
 		 * Retrieves the inner position of the chunk position vector in real world coordinates.
 		 */
-		const utils::Point3D ToRealInnerCoordinates(const ChunkPositionVector & position) const {
-			return position.second * ChunkGridUnitSize;
-		}
-
-		/**
-		 */
-		const utils::Point3D ToRealInnerCoordinates(const ChunkGridIndexVector & point) const {
-			return {
-				ChunkGridUnitSize * (double) point.X / GridCellCount,
-				ChunkGridUnitSize * (double) point.Y / GridCellCount,
-				ChunkGridUnitSize * (double) point.Z / GridCellCount
-			};
-		}
-
-		/**
-		 */
-		const utils::Point3D ToInnerVirtualPosition(const ChunkGridIndexVector & v) const {
-			return v.Cast<double>();
+		const utils::Point3D ToRealChunkCoordSpace(const utils::Point3D & virtualPos) const {
+			return virtualPos * ChunkGridUnitSize;
 		}
 
 		/**
 		 * @param position Chunk inner position vector between [0, 1].
 		 * @return The inner grid indices of the given position point.
 		 */
-		const ChunkGridIndexVector GetChunkGridIndicies(const utils::Point3D & position) const {
+		const ChunkGridIndexVector ToGridCoordSpace(const utils::Point3D & position) const {
 			return {
 				Uint16(utils::EFloor(position.X)),
 				Uint16(utils::EFloor(position.Y)),
@@ -125,7 +105,7 @@ namespace terrain {
 		Uint16 MaxPointsPerCell;
 		double BiomeScale;          // Maps biome grid to real world coordinates
 
-		inline const utils::Vector2D<> ToRealCoordinates(
+		inline const utils::Vector2D<> ToRealCoordSpace(
 			const BiomeRegionOffsetVector & offset
 		) const {
 			return utils::Vector2D<>(offset.X * BiomeScale, offset.Y * BiomeScale);

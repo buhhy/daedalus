@@ -91,7 +91,7 @@ AChunk * AChunkManager::GetChunkAt(const ChunkOffsetVector & point) {
 				}
 			}
 		}
-		auto position = ToFVector(GenParams->ToRealCoordinates(point));
+		auto position = ToFVector(GenParams->ToRealCoordSpace(point));
 
 		//UE_LOG(LogTemp, Error, TEXT("Placing chunk at %f %f %f"), position.X, position.Y, position.Z)
 		AChunk * newChunk = GetWorld()->SpawnActor<AChunk>(
@@ -139,14 +139,14 @@ void AChunkManager::UpdateCursorPosition(const Ray3D & viewpoint) {
 			std::floor((double) prefoundPosition.X / gcc),
 			std::floor((double) prefoundPosition.Y / gcc),
 			std::floor((double) prefoundPosition.Z / gcc));
-		const ChunkGridIndexVector itemPosition(
+		const Point3D itemPosition(
 			prefoundPosition.X - offset.X * gcc,
 			prefoundPosition.Y - offset.Y * gcc,
 			prefoundPosition.Z - offset.Z * gcc);
 		UpdateItemPosition(
 			CurrentCursor,
 			ChunkPositionVector(
-				chunkPosition + offset, GenParams->ToInnerVirtualPosition(itemPosition)));
+				chunkPosition + offset, itemPosition));
 		CurrentCursor->SetActorHiddenInGame(false);
 		// Found an intersection at the current chunk position.
 	} else {

@@ -29,7 +29,7 @@ namespace terrain {
 
 	ChunkDataPtr ChunkLoader::GenerateMissingChunk(const ChunkOffsetVector & offset) {
 		const auto & props = BRLoader->GetGeneratorParameters();
-		const auto point = TerrainGenParams.ToRealCoordinates(offset).Truncate();
+		const auto point = TerrainGenParams.ToRealCoordSpace(offset).Truncate();
 		const auto biomeTri = BRLoader->FindContainingBiomeTriangle(point);
 		const auto regionPos = props.ToBiomeRegionCoordinates(point);
 		const UVWVector uvw = biomeTri.InterpolatePoint(regionPos);
