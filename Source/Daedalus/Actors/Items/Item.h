@@ -17,8 +17,6 @@ class AItem : public AActor {
 	GENERATED_UCLASS_BODY()
 protected:
 	items::ItemDataPtr ItemData;
-	utils::Vector3D<> TranslationVector;
-	utils::Matrix4D<> RotationMatrix;
 
 	const terrain::TerrainGeneratorParameters * GenParams;
 
@@ -35,8 +33,6 @@ protected:
 
 	void AssertInitialized() const;
 	void LoadMesh(const std::string & meshName);
-	void AdjustRotationMatrix();
-	void AdjustPositionMatrix();
 	void ApplyTransform();
 
 public:

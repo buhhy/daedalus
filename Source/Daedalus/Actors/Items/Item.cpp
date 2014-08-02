@@ -20,22 +20,11 @@ void AItem::AssertInitialized() const {
 	assert(ItemData != NULL && "AItem::AssertInitialized: Class has not been initialized");
 }
 
-void AItem::AdjustRotationMatrix() {
-	AssertInitialized();
-	RotationMatrix = ItemData->GetRotationMatrix();
-}
-
-void AItem::AdjustPositionMatrix() {
-	AssertInitialized();
-	TranslationVector = ItemData->Position.second;
-}
-
 void AItem::ApplyTransform() {
-	Vector3D<> x, y, z;
-	RotationMatrix.GetBasis(x, y, z);
-	auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(x), ToFVector(z));
-	const auto trans = GenParams->ToRealChunkCoordSpace(TranslationVector +
-		RotationMatrix.GetTranslationVector());
+	const auto transform = ItemData->GetPositionMatrix();
+	Basis3D basis = GetBasisFrom(transform);
+	auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(basis.XVector), ToFVector(basis.ZVector));
+	const auto trans = GenParams->ToRealChunkCoordSpace(GetTranslationVectorFrom(transform));
 	MeshComponent->SetRelativeLocationAndRotation(ToFVector(trans), fRotMat.Rotator());
 }
 
@@ -50,21 +39,17 @@ void AItem::Initialize(const ItemDataPtr & data) {
 	GenParams = &GetWorld()->GetGameState<ADDGameState>()->ChunkLoader->GetGeneratorParameters();;
 	ItemData = data;
 	LoadMesh(data->Template.MeshName);
-	AdjustPositionMatrix();
-	AdjustRotationMatrix();
 	ApplyTransform();
 }
 
 void AItem::SetPosition(const terrain::ChunkPositionVector & position) {
 	AssertInitialized();
 	ItemData->Position = position;
-	AdjustPositionMatrix();
 	ApplyTransform();
 }
 
 void AItem::SetRotation(const ItemRotation & rotation) {
 	AssertInitialized();
 	ItemData->SetRotation(rotation);
-	AdjustRotationMatrix();
 	ApplyTransform();
 }

@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "AlgebraTests.h"
 #include "Algebra2DTests.h"
 #include "Algebra3DTests.h"
 #include "DelaunayTests.h"

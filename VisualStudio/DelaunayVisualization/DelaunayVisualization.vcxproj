@@ -73,12 +73,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\Daedalus\Controllers\EventBus\EventBus.cpp" />
-    <ClCompile Include="..\..\Source\Daedalus\Controllers\EventBus\EventListener.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Models\Terrain\BiomeRegionData.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Models\Terrain\BiomeRegionLoader.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra2D.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra3D.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\DataStructures2D.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\DataStructures3D.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Matrix4D.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\Delaunay.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\DelaunayDatastructures.cpp" />

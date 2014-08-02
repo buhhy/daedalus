@@ -30,6 +30,9 @@
     <ClInclude Include="..\..\Source\DaedalusTest\Engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\DaedalusTest\AlgebraTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\Delaunay.cpp">
@@ -59,14 +62,20 @@
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra3D.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\DaedalusTest\Main.cpp">
-      <Filter>Dependencies</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Matrix4D.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\DataStructures2D.cpp">
       <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\DataStructures3D.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\DaedalusTest\Main.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

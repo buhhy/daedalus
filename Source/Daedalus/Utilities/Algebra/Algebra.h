@@ -15,14 +15,34 @@ namespace utils {
 	 * Relevant article: http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
 	 */
 	inline Int64 ECeil(const double value, const double maxDiff = DOUBLE_EPSILON) {
-		return std::ceil(value - maxDiff);
+		return Int64(std::ceil(value - maxDiff) + maxDiff * Sign(value));
 	}
 
 	inline Int64 EFloor(const double value, const double maxDiff = DOUBLE_EPSILON) {
-		return std::floor(value + maxDiff);
+		return Int64(std::floor(value + maxDiff) + maxDiff * Sign(value));
 	}
 
-	bool ECompare(
+	bool EEq(
+		const double v1, const double v2,
+		const double maxDiff = DOUBLE_EPSILON,
+		const double maxRelDiff = DOUBLE_EPSILON);
+
+	bool EGTE(
+		const double v1, const double v2,
+		const double maxDiff = DOUBLE_EPSILON,
+		const double maxRelDiff = DOUBLE_EPSILON);
+
+	bool EGT(
+		const double v1, const double v2,
+		const double maxDiff = DOUBLE_EPSILON,
+		const double maxRelDiff = DOUBLE_EPSILON);
+
+	bool ELTE(
+		const double v1, const double v2,
+		const double maxDiff = DOUBLE_EPSILON,
+		const double maxRelDiff = DOUBLE_EPSILON);
+
+	bool ELT(
 		const double v1, const double v2,
 		const double maxDiff = DOUBLE_EPSILON,
 		const double maxRelDiff = DOUBLE_EPSILON);

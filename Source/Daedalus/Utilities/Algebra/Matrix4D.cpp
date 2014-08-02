@@ -3,11 +3,6 @@
 #include <Utilities/Algebra/Algebra3D.h>
 
 namespace utils {
-	/**
-	 * Return a matrix to represent a counterclockwise rotation of "angle"
-	 * degrees around the axis "axis", where "axis" is one of the
-	 * characters 'x', 'y', or 'z'.
-	 */
 	Matrix4D<> CreateRotation(const double angle, const Axis axis) {
 		double radAngle = angle * MATH_PI/180;
 		switch (axis) {
@@ -34,9 +29,6 @@ namespace utils {
 		}
 	}
 
-	/**
-	 * Returns a rotation matrix built around the provided basis XYZ vectors.
-	 */
 	Matrix4D<> CreateRotation(const Vector3D<> & x,  const Vector3D<> & y,  const Vector3D<> & z) {
 		return Matrix4D<>(
 			x.X, y.X, z.X, 0,
@@ -45,7 +37,6 @@ namespace utils {
 			0, 0, 0, 1);
 	}
 
-	// Return a matrix to represent a displacement of the given vector.
 	Matrix4D<> CreateTranslation(const Vector3D<> & displacement) {
 		return Matrix4D<>(
 			1., 0, 0, displacement.X,
@@ -54,12 +45,23 @@ namespace utils {
 			0, 0, 0, 1.);
 	}
 
-	// Return a matrix to represent a nonuniform scale with the given factors.
 	Matrix4D<> CreateScaling(const Vector3D<> & scale) {
 		return Matrix4D<>(
 			scale.X, 0, 0, 0,
 			0, scale.Y, 0, 0,
 			0, 0, scale.Z, 0,
 			0, 0, 0, 1.);
+	}
+	
+		
+	Basis3D GetBasisFrom(const Matrix4D<> & mat) {
+		return Basis3D(
+			Vector3D<>(mat.Get(0, 0), mat.Get(0, 1), mat.Get(0, 2)),
+			Vector3D<>(mat.Get(1, 0), mat.Get(1, 1), mat.Get(1, 2)),
+			Vector3D<>(mat.Get(2, 0), mat.Get(2, 1), mat.Get(2, 2)));
+	}
+
+	Vector3D<> GetTranslationVectorFrom(const Matrix4D<> & mat) {
+		return { mat.Get(3, 0), mat.Get(3, 1), mat.Get(3, 2) };
 	}
 }

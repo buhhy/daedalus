@@ -39,9 +39,6 @@
     <ClCompile Include="..\..\Source\Daedalus\Controllers\EventBus\EventBus.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\Daedalus\Controllers\EventBus\EventListener.cpp">
-      <Filter>Dependencies</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Source\DelaunayVisualization\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -61,6 +58,12 @@
       <Filter>Dependencies</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Matrix4D.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\DataStructures3D.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
   </ItemGroup>

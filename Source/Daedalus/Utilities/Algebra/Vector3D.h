@@ -2,8 +2,9 @@
 
 #include <Utilities/Algebra/Vector2D.h>
 #include <Utilities/Algebra/Algebra.h>
-#include <functional>
 #include <cassert>
+#include <functional>
+#include <sstream>
 
 namespace utils {
 	template <typename T>
@@ -78,9 +79,11 @@ namespace utils {
 		inline bool IsNormal() const { return std::abs(Length2() - 1) <= FLOAT_ERROR; }
 
 		inline Vector3D<> Normalize() const {
-			double length = Length();
-			return Vector3D<>(
-				(double) X / length, (double) Y / length, (double) Z / length);
+			const double length2 = Length2();
+			if (EEq(length2, 1))
+				return Vector3D<>(X, Y, Z);
+			const double length = std::sqrt(length2);
+			return Vector3D<>((double) X / length, (double) Y / length, (double) Z / length);
 		}
 
 		inline Vector3D<T> & operator = (const Vector3D<T> & other) {
@@ -102,7 +105,10 @@ namespace utils {
 			case 0: return X;
 			case 1: return Y;
 			case 2: return Z;
-			default: assert(!"Vector3D::[]: Invalid index value");
+			default:
+				std::stringstream ss;
+				ss << "Vector3D::[]: Invalid index value `" << index << "`.";
+				throw StringException(ss.str());
 			}
 		}
 
@@ -111,7 +117,10 @@ namespace utils {
 			case 0: return X;
 			case 1: return Y;
 			case 2: return Z;
-			default: assert(!"Vector3D::[]: Invalid index value");
+			default:
+				std::stringstream ss;
+				ss << "Vector3D::[]: Invalid index value `" << index << "`.";
+				throw StringException(ss.str());
 			}
 		}
 

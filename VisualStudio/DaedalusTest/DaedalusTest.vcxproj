@@ -13,14 +13,17 @@
   <ItemGroup>
     <ClInclude Include="..\..\Source\DaedalusTest\Algebra2DTests.h" />
     <ClInclude Include="..\..\Source\DaedalusTest\Algebra3DTests.h" />
+    <ClInclude Include="..\..\Source\DaedalusTest\AlgebraTests.h" />
     <ClInclude Include="..\..\Source\DaedalusTest\DelaunayTests.h" />
     <ClInclude Include="..\..\Source\DaedalusTest\Engine.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\DaedalusTest\Main.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra2D.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Algebra3D.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\DataStructures2D.cpp" />
+    <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\DataStructures3D.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Algebra\Matrix4D.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\Delaunay.cpp" />
     <ClCompile Include="..\..\Source\Daedalus\Utilities\Graph\DelaunayDatastructures.cpp" />

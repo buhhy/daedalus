@@ -90,6 +90,15 @@ bool AChunk::IsOccupiedAt(const terrain::ChunkGridIndexVector & gridIndex) const
 	} else {
 		// Check items to make sure nothing occupies this location. Perhaps using an octree
 		// might be wise here.
+		// TODO: make this work for arbitrarily placed items
+		const AxisAlignedBoundingBox3D bb(
+			Point3D(gridIndex.X, gridIndex.Y, gridIndex.Z),
+			Point3D(gridIndex.X + 1, gridIndex.Y + 1, gridIndex.Z + 1));
+		for (const auto & item : CurrentChunkData->PlacedItems) {
+			const OrientedBoundingBox3D obb(0., item->Size, item->GetPositionMatrix());
+			if (bb.FindIntersection(obb, false))
+				return true;
+		}
 	}
 	return false;
 }

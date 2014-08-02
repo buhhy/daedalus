@@ -98,6 +98,10 @@ namespace items {
 				utils::CreateRotation(pitchV, utils::AXIS_X) *
 				utils::CreateTranslation(-Template.Pivot);
 		}
+
+		utils::Matrix4D<> GetPositionMatrix() const {
+			return utils::CreateTranslation(Position.second) * GetRotationMatrix();
+		}
 	};
 
 	using ItemDataPtr = std::shared_ptr<ItemData>;
