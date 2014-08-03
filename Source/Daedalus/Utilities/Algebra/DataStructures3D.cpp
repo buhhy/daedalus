@@ -116,6 +116,8 @@ namespace utils {
 		const AxisAlignedBoundingBox3D & box,
 		const bool isInclusive
 	) const {
+		// Algorithm based on this paper:
+		// http://www.geometrictools.com/Documentation/DynamicCollisionDetection.pdf
 		const auto compare = [&] (const double r1, const double r2) {
 			return isInclusive && EGT(r1, r2) || !isInclusive && EGTE(r1, r2);
 		};
@@ -126,7 +128,6 @@ namespace utils {
 		// Cross(thisBasis[i], thatExtents[j]) directions.
 		const double cutoff = 1.0 - DOUBLE_RADIAN_EPSILON;
 		bool existsParallelPair = false;
-		Uint8 i;
 
 		// Convenience variables.
 		const Basis3D thisBasis = GetBasis();
@@ -137,160 +138,152 @@ namespace utils {
 		// Compute difference of box centers, centreDiff = C1-C0.
 		Vector3D<> centreDiff = box.GetCentre() - GetCentre();
 
-		double C[3][3];     // matrix C = A^T B, c_{ij} = Dot(A_i,B_j)
+		double C[3][3];     // matrix C = A^T B, c_{ij} = Dot(thisBasis_i, otherBasis_j)
 		double AbsC[3][3];  // |c_{ij}|
-		double AD[3];       // Dot(A_i,centreDiff)
-		double r0, r1, r;   // interval radii and distance between centers
-		double r01;         // = R0 + R1
+		double AD[3];       // Dot(thisBasis_i, centreDiff)
+		double thisRadius, thatRadius, radiusDiff; // interval radii and distance between centers
+		double radiusSum;         // = thisRadius + thatRadius
 
 		// axis C0+t*A0
-		for (i = 0; i < 3; ++i) {
-			C[0][i] = thisBasis[0].Dot(otherBasis[i]);
+		for (Uint8 i = 0; i < 3; ++i) {
+			C[0][i] = thisBasis.XVector.Dot(otherBasis[i]);
 			AbsC[0][i] = std::abs(C[0][i]);
 			if (AbsC[0][i] > cutoff)
 				existsParallelPair = true;
 		}
 	
-		AD[0] = thisBasis[0].Dot(centreDiff);
-		r = std::abs(AD[0]);
-		r1 = thatExtents[0]*AbsC[0][0] + thatExtents[1]*AbsC[0][1] + thatExtents[2]*AbsC[0][2];
-		r01 = thisExtents[0] + r1;
-		if (compare(r, r01))
+		AD[0] = thisBasis.XVector.Dot(centreDiff);
+		radiusDiff = std::abs(AD[0]);
+		thatRadius = thatExtents[0]*AbsC[0][0] + thatExtents[1]*AbsC[0][1] + thatExtents[2]*AbsC[0][2];
+		radiusSum = thisExtents[0] + thatRadius;
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// axis C0+t*A1
-		for (i = 0; i < 3; ++i)
-		{
-			C[1][i] = thisBasis[1].Dot(otherBasis[i]);
+		for (Uint8 i = 0; i < 3; ++i) {
+			C[1][i] = thisBasis.YVector.Dot(otherBasis[i]);
 			AbsC[1][i] = std::abs(C[1][i]);
 			if (AbsC[1][i] > cutoff)
-			{
 				existsParallelPair = true;
-			}
 		}
-		AD[1] = thisBasis[1].Dot(centreDiff);
-		r = std::abs(AD[1]);
-		r1 = thatExtents[0]*AbsC[1][0] + thatExtents[1]*AbsC[1][1] + thatExtents[2]*AbsC[1][2];
-		r01 = thisExtents[1] + r1;
-		if (compare(r, r01))
+		AD[1] = thisBasis.YVector.Dot(centreDiff);
+		radiusDiff = std::abs(AD[1]);
+		thatRadius = thatExtents[0]*AbsC[1][0] + thatExtents[1]*AbsC[1][1] + thatExtents[2]*AbsC[1][2];
+		radiusSum = thisExtents[1] + thatRadius;
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// axis C0+t*A2
-		for (i = 0; i < 3; ++i)
-		{
-			C[2][i] = thisBasis[2].Dot(otherBasis[i]);
+		for (Uint8 i = 0; i < 3; ++i) {
+			C[2][i] = thisBasis.ZVector.Dot(otherBasis[i]);
 			AbsC[2][i] = std::abs(C[2][i]);
 			if (AbsC[2][i] > cutoff)
-			{
 				existsParallelPair = true;
-			}
 		}
-		AD[2] = thisBasis[2].Dot(centreDiff);
-		r = std::abs(AD[2]);
-		r1 = thatExtents[0]*AbsC[2][0] + thatExtents[1]*AbsC[2][1] + thatExtents[2]*AbsC[2][2];
-		r01 = thisExtents[2] + r1;
-		if (compare(r, r01))
+		AD[2] = thisBasis.ZVector.Dot(centreDiff);
+		radiusDiff = std::abs(AD[2]);
+		thatRadius = thatExtents[0]*AbsC[2][0] + thatExtents[1]*AbsC[2][1] + thatExtents[2]*AbsC[2][2];
+		radiusSum = thisExtents[2] + thatRadius;
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// axis C0+t*B0
-		r = std::abs(otherBasis[0].Dot(centreDiff));
-		r0 = thisExtents[0]*AbsC[0][0] + thisExtents[1]*AbsC[1][0] + thisExtents[2]*AbsC[2][0];
-		r01 = r0 + thatExtents[0];
-		if (compare(r, r01))
+		radiusDiff = std::abs(otherBasis.XVector.Dot(centreDiff));
+		thisRadius = thisExtents[0]*AbsC[0][0] + thisExtents[1]*AbsC[1][0] + thisExtents[2]*AbsC[2][0];
+		radiusSum = thisRadius + thatExtents[0];
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// axis C0+t*B1
-		r = std::abs(otherBasis[1].Dot(centreDiff));
-		r0 = thisExtents[0]*AbsC[0][1] + thisExtents[1]*AbsC[1][1] + thisExtents[2]*AbsC[2][1];
-		r01 = r0 + thatExtents[1];
-		if (compare(r, r01))
+		radiusDiff = std::abs(otherBasis.YVector.Dot(centreDiff));
+		thisRadius = thisExtents[0]*AbsC[0][1] + thisExtents[1]*AbsC[1][1] + thisExtents[2]*AbsC[2][1];
+		radiusSum = thisRadius + thatExtents[1];
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// axis C0+t*B2
-		r = std::abs(otherBasis[2].Dot(centreDiff));
-		r0 = thisExtents[0]*AbsC[0][2] + thisExtents[1]*AbsC[1][2] + thisExtents[2]*AbsC[2][2];
-		r01 = r0 + thatExtents[2];
-		if (compare(r, r01))
+		radiusDiff = std::abs(otherBasis.ZVector.Dot(centreDiff));
+		thisRadius = thisExtents[0]*AbsC[0][2] + thisExtents[1]*AbsC[1][2] + thisExtents[2]*AbsC[2][2];
+		radiusSum = thisRadius + thatExtents[2];
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// At least one pair of box axes was parallel, so the separation is
 		// effectively in 2D where checking the "edge" normals is sufficient for
 		// the separation of the boxes.
 		if (existsParallelPair)
-		{
 			return true;
-		}
 
 		// axis C0+t*A0xB0
-		r = std::abs(AD[2]*C[1][0] - AD[1]*C[2][0]);
-		r0 = thisExtents[1]*AbsC[2][0] + thisExtents[2]*AbsC[1][0];
-		r1 = thatExtents[1]*AbsC[0][2] + thatExtents[2]*AbsC[0][1];
-		r01 = r0 + r1;
-		if (compare(r, r01))
+		radiusDiff = std::abs(AD[2]*C[1][0] - AD[1]*C[2][0]);
+		thisRadius = thisExtents[1]*AbsC[2][0] + thisExtents[2]*AbsC[1][0];
+		thatRadius = thatExtents[1]*AbsC[0][2] + thatExtents[2]*AbsC[0][1];
+		radiusSum = thisRadius + thatRadius;
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// axis C0+t*A0xB1
-		r = std::abs(AD[2]*C[1][1] - AD[1]*C[2][1]);
-		r0 = thisExtents[1]*AbsC[2][1] + thisExtents[2]*AbsC[1][1];
-		r1 = thatExtents[0]*AbsC[0][2] + thatExtents[2]*AbsC[0][0];
-		r01 = r0 + r1;
-		if (compare(r, r01))
+		radiusDiff = std::abs(AD[2]*C[1][1] - AD[1]*C[2][1]);
+		thisRadius = thisExtents[1]*AbsC[2][1] + thisExtents[2]*AbsC[1][1];
+		thatRadius = thatExtents[0]*AbsC[0][2] + thatExtents[2]*AbsC[0][0];
+		radiusSum = thisRadius + thatRadius;
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// axis C0+t*A0xB2
-		r = std::abs(AD[2]*C[1][2] - AD[1]*C[2][2]);
-		r0 = thisExtents[1]*AbsC[2][2] + thisExtents[2]*AbsC[1][2];
-		r1 = thatExtents[0]*AbsC[0][1] + thatExtents[1]*AbsC[0][0];
-		r01 = r0 + r1;
-		if (compare(r, r01))
+		radiusDiff = std::abs(AD[2]*C[1][2] - AD[1]*C[2][2]);
+		thisRadius = thisExtents[1]*AbsC[2][2] + thisExtents[2]*AbsC[1][2];
+		thatRadius = thatExtents[0]*AbsC[0][1] + thatExtents[1]*AbsC[0][0];
+		radiusSum = thisRadius + thatRadius;
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// axis C0+t*A1xB0
-		r = std::abs(AD[0]*C[2][0] - AD[2]*C[0][0]);
-		r0 = thisExtents[0]*AbsC[2][0] + thisExtents[2]*AbsC[0][0];
-		r1 = thatExtents[1]*AbsC[1][2] + thatExtents[2]*AbsC[1][1];
-		r01 = r0 + r1;
-		if (compare(r, r01))
+		radiusDiff = std::abs(AD[0]*C[2][0] - AD[2]*C[0][0]);
+		thisRadius = thisExtents[0]*AbsC[2][0] + thisExtents[2]*AbsC[0][0];
+		thatRadius = thatExtents[1]*AbsC[1][2] + thatExtents[2]*AbsC[1][1];
+		radiusSum = thisRadius + thatRadius;
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// axis C0+t*A1xB1
-		r = std::abs(AD[0]*C[2][1] - AD[2]*C[0][1]);
-		r0 = thisExtents[0]*AbsC[2][1] + thisExtents[2]*AbsC[0][1];
-		r1 = thatExtents[0]*AbsC[1][2] + thatExtents[2]*AbsC[1][0];
-		r01 = r0 + r1;
-		if (compare(r, r01))
+		radiusDiff = std::abs(AD[0]*C[2][1] - AD[2]*C[0][1]);
+		thisRadius = thisExtents[0]*AbsC[2][1] + thisExtents[2]*AbsC[0][1];
+		thatRadius = thatExtents[0]*AbsC[1][2] + thatExtents[2]*AbsC[1][0];
+		radiusSum = thisRadius + thatRadius;
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// axis C0+t*A1xB2
-		r = std::abs(AD[0]*C[2][2] - AD[2]*C[0][2]);
-		r0 = thisExtents[0]*AbsC[2][2] + thisExtents[2]*AbsC[0][2];
-		r1 = thatExtents[0]*AbsC[1][1] + thatExtents[1]*AbsC[1][0];
-		r01 = r0 + r1;
-		if (compare(r, r01))
+		radiusDiff = std::abs(AD[0]*C[2][2] - AD[2]*C[0][2]);
+		thisRadius = thisExtents[0]*AbsC[2][2] + thisExtents[2]*AbsC[0][2];
+		thatRadius = thatExtents[0]*AbsC[1][1] + thatExtents[1]*AbsC[1][0];
+		radiusSum = thisRadius + thatRadius;
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// axis C0+t*A2xB0
-		r = std::abs(AD[1]*C[0][0] - AD[0]*C[1][0]);
-		r0 = thisExtents[0]*AbsC[1][0] + thisExtents[1]*AbsC[0][0];
-		r1 = thatExtents[1]*AbsC[2][2] + thatExtents[2]*AbsC[2][1];
-		r01 = r0 + r1;
-		if (compare(r, r01))
+		radiusDiff = std::abs(AD[1]*C[0][0] - AD[0]*C[1][0]);
+		thisRadius = thisExtents[0]*AbsC[1][0] + thisExtents[1]*AbsC[0][0];
+		thatRadius = thatExtents[1]*AbsC[2][2] + thatExtents[2]*AbsC[2][1];
+		radiusSum = thisRadius + thatRadius;
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// axis C0+t*A2xB1
-		r = std::abs(AD[1]*C[0][1] - AD[0]*C[1][1]);
-		r0 = thisExtents[0]*AbsC[1][1] + thisExtents[1]*AbsC[0][1];
-		r1 = thatExtents[0]*AbsC[2][2] + thatExtents[2]*AbsC[2][0];
-		r01 = r0 + r1;
-		if (compare(r, r01))
+		radiusDiff = std::abs(AD[1]*C[0][1] - AD[0]*C[1][1]);
+		thisRadius = thisExtents[0]*AbsC[1][1] + thisExtents[1]*AbsC[0][1];
+		thatRadius = thatExtents[0]*AbsC[2][2] + thatExtents[2]*AbsC[2][0];
+		radiusSum = thisRadius + thatRadius;
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		// axis C0+t*A2xB2
-		r = std::abs(AD[1]*C[0][2] - AD[0]*C[1][2]);
-		r0 = thisExtents[0]*AbsC[1][2] + thisExtents[1]*AbsC[0][2];
-		r1 = thatExtents[0]*AbsC[2][1] + thatExtents[1]*AbsC[2][0];
-		r01 = r0 + r1;
-		if (compare(r, r01))
+		radiusDiff = std::abs(AD[1]*C[0][2] - AD[0]*C[1][2]);
+		thisRadius = thisExtents[0]*AbsC[1][2] + thisExtents[1]*AbsC[0][2];
+		thatRadius = thatExtents[0]*AbsC[2][1] + thatExtents[1]*AbsC[2][0];
+		radiusSum = thisRadius + thatRadius;
+		if (compare(radiusDiff, radiusSum))
 			return false;
 
 		return true;
