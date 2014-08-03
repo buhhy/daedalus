@@ -18,6 +18,14 @@ APlayerCharacter::APlayerCharacter(const class FPostConstructInitializePropertie
 	movement->AirControl = 0.4;
 }
 
+utils::Ray3D APlayerCharacter::GetViewRay() const {
+	FVector pos;
+	FRotator dir;
+		
+	GetActorEyesViewPoint(pos, dir);
+	return Ray3D(ToVector3D(pos), ToVector3D(dir.Vector()));
+}
+
 void APlayerCharacter::MoveForward(float amount) {
 	if (Controller != NULL && FMath::Abs(amount) > FLOAT_ERROR) {
 		FRotator rotator = Controller->GetControlRotation();
@@ -66,13 +74,13 @@ void APlayerCharacter::BeginPlaceItem() {
 	// TODO: handle inventory logic
 	bPlacingItem = true;
 	MouseHoldOffset.Reset(0, 0);
-	EventBusRef->BroadcastEvent(EventDataPtr(new EFPItemPlacementBegin()));
+	EventBusRef->BroadcastEvent(EventDataPtr(new EFPItemPlacementBegin(GetViewRay())));
 }
 
 void APlayerCharacter::FinalizePlaceItem() {
 	bPlacingItem = false;
 	MouseHoldOffset.Reset(0, 0);
-	EventBusRef->BroadcastEvent(EventDataPtr(new EFPItemPlacementEnd()));
+	EventBusRef->BroadcastEvent(EventDataPtr(new EFPItemPlacementEnd(GetViewRay())));
 }
 
 void APlayerCharacter::BeginPlay() {
@@ -108,7 +116,7 @@ void APlayerCharacter::Tick(float delta) {
 		
 		GetActorEyesViewPoint(pos, dir);
 		EventBusRef->BroadcastEvent(
-			EventDataPtr(new EViewPosition(ToVector3D(pos), ToVector3D(dir.Vector()))));
+			EventDataPtr(new EViewPosition(GetViewRay())));
 
 		if (bPlacingItem) {
 			EventBusRef->BroadcastEvent(

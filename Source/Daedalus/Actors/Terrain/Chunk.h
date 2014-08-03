@@ -30,8 +30,8 @@ UCLASS()
 class AChunk : public AActor {
 	GENERATED_UCLASS_BODY()
 public:
-	// (0, 0) is the root chunk data for this actor, the others are neighbours for tiling
-	using ChunkDataSet = utils::TensorFixed3D<terrain::ChunkDataPtr, 2>;
+	// (1, 1) is the root chunk data for this actor, the others are neighbours for tiling
+	using ChunkDataSet = utils::TensorFixed3D<terrain::ChunkDataPtr, 3>;
 
 private:
 	ChunkDataSet ChunkNeighbourData;

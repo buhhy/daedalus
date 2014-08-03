@@ -82,11 +82,12 @@ AChunk * AChunkManager::GetChunkAt(const ChunkOffsetVector & point) {
 		return LocalCache.at(point);
 	} else {
 		auto data = AChunk::ChunkDataSet();
-		for (Uint8 x = 0; x < data.GetWidth(); x++) {
-			for (Uint8 y = 0; y < data.GetDepth(); y++) {
-				for (Uint8 z = 0; z < data.GetHeight(); z++) {
+		Uint8 w = data.GetWidth(), d = data.GetDepth(), h = data.GetHeight();
+		for (Uint8 x = 0; x < w; x++) {
+			for (Uint8 y = 0; y < d; y++) {
+				for (Uint8 z = 0; z < h; z++) {
 					data.Set(x, y, z, chunkLoader->GetChunkAt({
-						point.X + x, point.Y + y, point.Z + z
+						point.X + x - w / 2, point.Y + y - d / 2, point.Z + z - h / 2
 					}));
 				}
 			}
@@ -172,6 +173,7 @@ void AChunkManager::PlaceItem() {
 		auto chunk = GetChunkAt(cursorItemData->Position.first);
 		auto newItemData = ItemDataPtr(new ItemData(*cursorItemData));
 		chunk->CreateItem(newItemData);
+		CurrentCursor->SetRotation(ItemRotation(0, 0));
 	}
 }
 
@@ -190,7 +192,7 @@ void AChunkManager::HandleEvent(const EventDataPtr & data) {
 	switch (data->Type) {
 	case E_ViewPosition: {
 		auto castedData = std::static_pointer_cast<EViewPosition>(data);
-		UpdateCursorPosition(Ray3D(castedData->ViewOrigin, castedData->ViewDirection));
+		UpdateCursorPosition(castedData->ViewRay);
 		break;
 	}
 	case E_PlayerPosition: {
@@ -200,14 +202,16 @@ void AChunkManager::HandleEvent(const EventDataPtr & data) {
 		break;
 	}
 	case E_FPItemPlacementBegin: {
-		//auto castedData = std::static_pointer_cast<EFPItemPlacementBegin>(data);
 		// TODO: visual effect for beginning item placement
+		auto castedData = std::static_pointer_cast<EFPItemPlacementBegin>(data);
+		UpdateCursorPosition(castedData->ViewRay);
 		break;
 	}
 	case E_FPItemPlacementEnd: {
 		auto castedData = std::static_pointer_cast<EFPItemPlacementEnd>(data);
 		if (!castedData->bIsCancelled)
 			PlaceItem();
+		UpdateCursorPosition(castedData->ViewRay);
 		break;
 	}
 	case E_FPItemPlacementRotation: {

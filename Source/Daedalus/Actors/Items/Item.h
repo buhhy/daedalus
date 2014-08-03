@@ -44,4 +44,5 @@ public:
 	void Initialize(const items::ItemDataPtr & data);
 	void SetPosition(const terrain::ChunkPositionVector & position);
 	void SetRotation(const items::ItemRotation & rotation);
+	void AddRotation(const items::ItemRotation & rotation);
 };

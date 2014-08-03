@@ -53,3 +53,9 @@ void AItem::SetRotation(const ItemRotation & rotation) {
 	ItemData->SetRotation(rotation);
 	ApplyTransform();
 }
+
+void AItem::AddRotation(const ItemRotation & rotation) {
+	AssertInitialized();
+	ItemData->AddRotation(rotation);
+	ApplyTransform();
+}

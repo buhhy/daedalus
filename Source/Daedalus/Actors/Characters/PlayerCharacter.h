@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Controllers/EventBus/EventBus.h>
+#include <Utilities/Algebra/Algebra3D.h>
 
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
@@ -21,6 +22,8 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent * InputComponent) override;
 	virtual void Tick(float delta) override;
+
+	utils::Ray3D GetViewRay() const;
 
 public:
 	UPROPERTY(VisibleAnywhere, Category = State)

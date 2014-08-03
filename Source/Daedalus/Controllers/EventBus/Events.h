@@ -30,14 +30,15 @@ namespace events {
 	};
 
 	struct EViewPosition : public EventData {
-		const utils::Point3D ViewOrigin;
-		const utils::Vector3D<double> ViewDirection;
+		const utils::Ray3D ViewRay;
 
 		EViewPosition(
 			const utils::Point3D & origin,
 			const utils::Vector3D<double> & viewDir
-		) : EventData(E_ViewPosition), ViewOrigin(origin), ViewDirection(viewDir)
+		) : EventData(E_ViewPosition), ViewRay(origin, viewDir)
 		{}
+
+		EViewPosition(const utils::Ray3D & ray) : EventData(E_ViewPosition), ViewRay(ray) {}
 	};
 
 	struct EBiomeRegionUpdate : public EventData {
@@ -51,15 +52,21 @@ namespace events {
 
 	// Events related to item placement from the first person perspective.
 	struct EFPItemPlacementBegin : public EventData {
+		const utils::Ray3D ViewRay;
+
 		// TODO: probably need some form of player identification here
-		EFPItemPlacementBegin() : EventData(E_FPItemPlacementBegin) {}
+		EFPItemPlacementBegin(const utils::Ray3D & ray) :
+			EventData(E_FPItemPlacementBegin), ViewRay(ray)
+		{}
 	};
 
 	struct EFPItemPlacementEnd : public EventData {
+		const utils::Ray3D ViewRay;
+
 		// TODO: probably need some form of player identification here
 		const bool bIsCancelled;
-		EFPItemPlacementEnd(const bool isCancelled = false) :
-			EventData(E_FPItemPlacementEnd), bIsCancelled(isCancelled)
+		EFPItemPlacementEnd(const utils::Ray3D & ray, const bool isCancelled = false) :
+			EventData(E_FPItemPlacementEnd), ViewRay(ray), bIsCancelled(isCancelled)
 		{}
 	};
 

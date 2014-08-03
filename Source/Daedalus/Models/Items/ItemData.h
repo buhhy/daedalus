@@ -13,9 +13,15 @@ namespace items {
 	struct ItemRotation {
 		Uint8 Yaw, Pitch;
 		ItemRotation(const Uint8 yaw, const Uint8 pitch) : Yaw(yaw), Pitch(pitch) {}
+
 		void Bound(const ItemRotation & bound) {
 			Yaw %= bound.Yaw;
 			Pitch %= bound.Pitch;
+		}
+
+		void Add(const ItemRotation & rotation) {
+			Yaw += rotation.Yaw;
+			Pitch += rotation.Pitch;
 		}
 	};
 
@@ -85,6 +91,11 @@ namespace items {
 
 		void SetRotation(const ItemRotation & rotation) {
 			this->Rotation = rotation;
+			this->Rotation.Bound(Template.RotationInterval);
+		}
+
+		void AddRotation(const ItemRotation & rotation) {
+			this->Rotation.Add(rotation);
 			this->Rotation.Bound(Template.RotationInterval);
 		}
 		

@@ -75,7 +75,7 @@ void AChunk::InitializeChunk(const TerrainGeneratorParameters * params) {
 
 void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 	ChunkNeighbourData = chunkData;
-	CurrentChunkData = chunkData.Get(0, 0, 0);
+	CurrentChunkData = chunkData.Get(1, 1, 1);
 	// Make sure the item ID counter is at least 1 larger than the current largest ID
 	for (const auto & itemData : CurrentChunkData->PlacedItems) {
 		if (itemData->ItemId >= ItemIdCounter)
@@ -117,23 +117,25 @@ AItem * AChunk::CreateItem(const items::ItemDataPtr & itemData, const bool prese
 void AChunk::GenerateChunkMesh() {
 	auto material = UMaterialInstanceDynamic::Create((UMaterial *) TestMaterial, this);
 
-	Uint32 size = TerrainGenParams->GridCellCount;
+	Uint32 cellCount = TerrainGenParams->GridCellCount;
 
-	double scale = TerrainGenParams->ChunkScale / size;
+	double scale = TerrainGenParams->ChunkScale / cellCount;
 
 	std::vector<Triangle3D> tempTris;
 	Vector3D<double> displacementVector;
 
 	GridCell gridCell;
-	Tensor3D<float> densityDataPoints(size + 1);
+	Tensor3D<float> densityDataPoints(cellCount + 1);
 	
 	// Populate the density data
-	for (Uint32 x = 0; x < size + 1; x++) {
-		for (Uint32 y = 0; y < size + 1; y++) {
-			for (Uint32 z = 0; z < size + 1; z++) {
-				ChunkDataPtr mainData = ChunkNeighbourData.Get(x / size, y / size, z / size);
+	for (Uint32 x = 0; x < cellCount + 1; x++) {
+		for (Uint32 y = 0; y < cellCount + 1; y++) {
+			for (Uint32 z = 0; z < cellCount + 1; z++) {
+				ChunkDataPtr mainData =
+					ChunkNeighbourData.Get(x / cellCount + 1, y / cellCount + 1, z / cellCount + 1);
 				densityDataPoints.Set(
-					x, y, z, mainData->DensityData.Get(x % size, y % size, z % size));
+					x, y, z, mainData->DensityData.Get(
+						x % cellCount, y % cellCount, z % cellCount));
 			}
 		}
 	}
@@ -141,9 +143,9 @@ void AChunk::GenerateChunkMesh() {
 	std::vector<Triangle3D> triangles;
 
 	// Build the mesh
-	for (Uint32 x = 0; x < size; x++) {
-		for (Uint32 y = 0; y < size; y++) {
-			for (Uint32 z = 0; z < size; z++) {
+	for (Uint32 x = 0; x < cellCount; x++) {
+		for (Uint32 y = 0; y < cellCount; y++) {
+			for (Uint32 z = 0; z < cellCount; z++) {
 				gridCell.Initialize(
 					densityDataPoints.Get(x, y, z),
 					densityDataPoints.Get(x, y, z + 1),
