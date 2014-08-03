@@ -85,17 +85,19 @@ void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 }
 
 bool AChunk::IsOccupiedAt(const terrain::ChunkGridIndexVector & gridIndex) const {
+	// TODO: handle player collisions somehow
 	if (SolidTerrain.Get(gridIndex.X, gridIndex.Y, gridIndex.Z)) {
 		return true;
 	} else {
 		// Check items to make sure nothing occupies this location. Perhaps using an octree
 		// might be wise here.
 		// TODO: make this work for arbitrarily placed items
+		const double inset = 0.01; // Accounts for rounding errors
 		const AxisAlignedBoundingBox3D bb(
-			Point3D(gridIndex.X, gridIndex.Y, gridIndex.Z),
-			Point3D(gridIndex.X + 1, gridIndex.Y + 1, gridIndex.Z + 1));
+			Point3D(gridIndex.X + inset, gridIndex.Y + inset, gridIndex.Z + inset),
+			Point3D(gridIndex.X + 1 - inset, gridIndex.Y + 1 - inset, gridIndex.Z + 1 - inset));
 		for (const auto & item : CurrentChunkData->PlacedItems) {
-			const OrientedBoundingBox3D obb(0., item->Size, item->GetPositionMatrix());
+			const OrientedBoundingBox3D obb(inset, item->Size - inset, item->GetPositionMatrix());
 			if (bb.FindIntersection(obb, false))
 				return true;
 		}
