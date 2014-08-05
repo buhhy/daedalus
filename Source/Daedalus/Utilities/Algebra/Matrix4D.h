@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vector3D.h"
+#include <Utilities/Algebra/Vector3D.h>
 
 namespace utils {
 	template <typename T = double>
@@ -30,7 +30,7 @@ namespace utils {
 		}
 
 		inline void Set(const Uint32 column, const Uint32 row, const T value) {
-			Values[row * 4 + column] = T;
+			Values[row * 4 + column] = value;
 		}
 	
 	public:

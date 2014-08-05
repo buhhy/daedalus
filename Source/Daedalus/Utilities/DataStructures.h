@@ -1,9 +1,6 @@
 #pragma once
 
 #include <Utilities/Integers.h>
-#include <Utilities/Algebra/Vector3D.h>
-#include <Utilities/Algebra/Vector4D.h>
-#include <Utilities/Algebra/Matrix4D.h>
 
 #include <vector>
 #include <memory>
@@ -46,40 +43,6 @@ namespace utils {
 		const T & operator () () const {
 			if (HasValue) return *Opt;
 			throw StringException("Option::Get: Trying to get value from <None>");
-		}
-	};
-
-	// TODO: make actual colour class
-	using Colour = Vector3D<Uint8>;
-
-	// TODO: get rid of this
-	struct GridCell {
-		float values[8];
-		Vector3D<> points[8];
-
-		void Initialize(
-			const float blf, const float tlf,
-			const float blb, const float tlb,
-			const float brf, const float trf,
-			const float brb, const float trb
-		) {
-			values[0] = blf; values[1] = brf; values[2] = brb; values[3] = blb;
-			values[4] = tlf; values[5] = trf; values[6] = trb; values[7] = tlb;
-			points[0] = Vector3D<>(0, 0, 0);
-			points[1] = Vector3D<>(1, 0, 0);
-			points[2] = Vector3D<>(1, 1, 0);
-			points[3] = Vector3D<>(0, 1, 0);
-			points[4] = Vector3D<>(0, 0, 1);
-			points[5] = Vector3D<>(1, 0, 1);
-			points[6] = Vector3D<>(1, 1, 1);
-			points[7] = Vector3D<>(0, 1, 1);
-		}
-
-		inline float Sum() const {
-			float sum = 0;
-			for (Uint8 i = 0; i < 8; i++)
-				sum += values[i];
-			return sum;
 		}
 	};
 }

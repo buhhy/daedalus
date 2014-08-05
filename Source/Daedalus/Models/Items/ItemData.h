@@ -106,3 +106,12 @@ namespace items {
 
 	using ItemDataPtr = std::shared_ptr<ItemData>;
 }
+
+namespace std {
+	template <> struct hash<items::ItemType> {
+		size_t operator()(const items::ItemType & tp) const {
+			return std::hash<long>()(tp);
+		}
+	};
+}
+
