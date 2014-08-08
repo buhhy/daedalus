@@ -47,6 +47,9 @@ private:
 	void PlaceItem();
 	void SetUpDefaultCursor();
 
+	terrain::TerrainRaytraceResult Raytrace(
+		const utils::Ray3D & viewpoint, const double maxDist);
+
 public:
 	virtual void HandleEvent(const events::EventDataPtr & data) override;
 	virtual void BeginPlay() override;

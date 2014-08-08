@@ -110,47 +110,25 @@ void AChunkManager::UpdateItemPosition(AItem * item, const ChunkPositionVector &
 }
 
 void AChunkManager::UpdateCursorPosition(const Ray3D & viewpoint) {
-	FastVoxelTraversalIterator fvt(GenParams->ChunkScale, viewpoint, TerrainInteractionDistance);
+	const auto foundResult = Raytrace(viewpoint, TerrainInteractionDistance);
 
-	bool foundIntersect = false;
-	Vector3D<Int64> chunkPosition = fvt.GetCurrentCell();
-	Vector3D<Int64> foundPosition, prefoundPosition;
-
-	// Search through adjacent chunks
-	while (fvt.IsValid()) {
-		// Get current chunk location
-		const auto chunkPos = GenParams->ToChunkCoordinates(viewpoint.Origin, chunkPosition);
-		auto chunk = GetChunkAt(chunkPos.first);
-		foundIntersect = chunk->TerrainIntersection(
-			foundPosition, prefoundPosition,
-			{ chunkPos.second, viewpoint.Direction },
-			TerrainInteractionDistance);
-
-		if (foundIntersect)
-			break;
-
-		fvt.Next();
-		chunkPosition = fvt.GetCurrentCell();
-	}
-
-	if (foundIntersect) {
+	if (foundResult.Type == E_Terrain || foundResult.Type == E_PlacedItem) {
 		const Int32 gcc = GenParams->GridCellCount;
+		const double x = foundResult.EntryPosition.second.X;
+		const double y = foundResult.EntryPosition.second.Y;
+		const double z = foundResult.EntryPosition.second.Z;
 		const Vector3D<Int64> offset(
-			std::floor((double) prefoundPosition.X / gcc),
-			std::floor((double) prefoundPosition.Y / gcc),
-			std::floor((double) prefoundPosition.Z / gcc));
+			std::floor(x / gcc),
+			std::floor(y / gcc),
+			std::floor(z / gcc));
 		const Point3D itemPosition(
-			prefoundPosition.X - offset.X * gcc,
-			prefoundPosition.Y - offset.Y * gcc,
-			prefoundPosition.Z - offset.Z * gcc);
-		UpdateItemPosition(
-			CurrentCursor,
-			ChunkPositionVector(
-				chunkPosition + offset, itemPosition));
+			x - offset.X * gcc,
+			y - offset.Y * gcc,
+			z - offset.Z * gcc);
+		UpdateItemPosition(CurrentCursor, ChunkPositionVector(
+			foundResult.EntryPosition.first + offset, itemPosition));
 		CurrentCursor->SetActorHiddenInGame(false);
-		// Found an intersection at the current chunk position.
 	} else {
-		// If no intersections are found, we need to search adjacent chunks.
 		CurrentCursor->SetActorHiddenInGame(true);
 	}
 }
@@ -163,6 +141,35 @@ void AChunkManager::UpdateCursorRotation(const Point2D & rotationOffset) {
 			rotationOffset.Y / 360.0 * data->Template.RotationInterval.Pitch);
 		CurrentCursor->SetRotation(rot);
 	}
+}
+
+TerrainRaytraceResult AChunkManager::Raytrace(
+	const utils::Ray3D & viewpoint,
+	const double maxDist
+) {
+	FastVoxelTraversalIterator fvt(GenParams->ChunkScale, viewpoint, maxDist);
+
+	bool foundIntersect = false;
+	Vector3D<Int64> chunkPosition = fvt.GetCurrentCell();
+
+	// Search through adjacent chunks
+	while (fvt.IsValid()) {
+		// Get current chunk location
+		const auto chunkPos = GenParams->ToChunkCoordinates(viewpoint.Origin, chunkPosition);
+		auto chunk = GetChunkAt(chunkPos.first);
+		const auto result = chunk->Raytrace(
+			Ray3D(chunkPos.second, viewpoint.Direction),
+			TerrainInteractionDistance);
+
+		if (result.Type != E_None)
+			return result;
+
+		// If no intersections are found, we need to search adjacent chunks.
+		fvt.Next();
+		chunkPosition = fvt.GetCurrentCell();
+	}
+
+	return TerrainRaytraceResult();
 }
 
 void AChunkManager::PlaceItem() {

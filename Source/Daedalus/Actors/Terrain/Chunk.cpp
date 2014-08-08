@@ -7,6 +7,29 @@
 
 #include <cmath>
 
+namespace terrain {
+	TerrainRaytraceResult::TerrainRaytraceResult(
+		const TerrainRaytraceResultType type,
+		AActor * const actor,
+		const ChunkPositionVector & pos
+	) : Type(type), Result(actor), EntryPosition(pos)
+	{}
+
+	TerrainRaytraceResult::TerrainRaytraceResult(
+		AChunk * const chunk, const ChunkPositionVector & pos
+	) : TerrainRaytraceResult(E_Terrain, chunk, pos)
+	{}
+
+	TerrainRaytraceResult::TerrainRaytraceResult(
+		AItem * const item, const ChunkPositionVector & pos
+	) : TerrainRaytraceResult(E_PlacedItem, item, pos)
+	{}
+
+	TerrainRaytraceResult::TerrainRaytraceResult() :
+		TerrainRaytraceResult(E_None, NULL, { 0, 0 })
+	{}
+}
+
 using namespace utils;
 using namespace terrain;
 using namespace items;
@@ -84,9 +107,11 @@ void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 	GenerateChunkMesh();
 }
 
-bool AChunk::IsOccupiedAt(const terrain::ChunkGridIndexVector & gridIndex) const {
+TerrainRaytraceResultType AChunk::IsOccupiedAt(AActor *& result, const ChunkGridIndexVector & gridIndex) {
+	result = NULL;
 	if (SolidTerrain.Get(gridIndex.X, gridIndex.Y, gridIndex.Z)) {
-		return true;
+		result = this;
+		return E_Terrain;
 	} else {
 		// Check items to make sure nothing occupies this location. Perhaps using an octree
 		// might be wise here.
@@ -94,17 +119,21 @@ bool AChunk::IsOccupiedAt(const terrain::ChunkGridIndexVector & gridIndex) const
 		const AxisAlignedBoundingBox3D bb(
 			Point3D(gridIndex.X, gridIndex.Y, gridIndex.Z),
 			Point3D(gridIndex.X + 1, gridIndex.Y + 1, gridIndex.Z + 1));
-		for (const auto & item : CurrentChunkData->PlacedItems) {
-			const OrientedBoundingBox3D obb(0., item->Size, item->GetPositionMatrix());
-			if (bb.FindIntersection(obb, false))
-				return true;
+		for (const auto & item : PlacedItems) {
+			const auto & itemData = item.ItemActor->GetItemData();
+			const OrientedBoundingBox3D obb(0., itemData->Size, itemData->GetPositionMatrix());
+			if (bb.FindIntersection(obb, false)) {
+				result = item.ItemActor;
+				return E_PlacedItem;
+			}
 		}
 	}
-	return false;
+	return E_None;
 }
 
 AItem * AChunk::CreateItem(const items::ItemDataPtr & itemData, const bool preserveId) {
-	if (!IsOccupiedAt(TerrainGenParams->ToGridCoordSpace(itemData->Position.second))) {
+	AActor * result;
+	if (IsOccupiedAt(result, TerrainGenParams->ToGridCoordSpace(itemData->Position.second)) == E_None) {
 		if (!preserveId)
 			itemData->ItemId = ItemIdCounter++;
 		itemData->bIsPlaced = true;
@@ -182,36 +211,29 @@ void AChunk::GenerateChunkMesh() {
 	}
 }
 
-bool AChunk::TerrainIntersection(
-	Vector3D<Int64> & collisionIndex,
-	Vector3D<Int64> & precollisionIndex,
-	const Ray3D & ray,
-	const double maxDistance
-) const {
+TerrainRaytraceResult AChunk::Raytrace(const Ray3D & ray, const double maxDistance) {
 	FastVoxelTraversalIterator fvt(
 		1.0, 0, TerrainGenParams->GridCellCount,
 		ray, maxDistance / TerrainGenParams->ChunkGridUnitSize);
 
-	const auto & x = fvt.GetCurrentCell();
-
-	bool found = false;
-	Vector3D<Int64> zv(0);
+	TerrainRaytraceResultType foundType = E_None;
+	AActor * foundResult = NULL;
 
 	for (Uint16 i = 0; fvt.IsValid(); i++) {
 		const auto & current = fvt.GetCurrentCell();
 		if (current.IsBoundedBy(0, TerrainGenParams->GridCellCount)) {
-			found = IsOccupiedAt(current.Cast<Uint16>());
-			if (found)
-				break;
+			foundType = IsOccupiedAt(foundResult, current.Cast<Uint16>());
+			if (foundType != E_None) {
+				const auto & collisionIndex = fvt.GetCurrentCell();
+				const auto & precollisionIndex = fvt.GetPreviousCell();
+				return TerrainRaytraceResult(
+					foundType, foundResult,
+					ChunkPositionVector(CurrentChunkData->ChunkOffset, precollisionIndex.Cast<double>()));
+			}
 		}
 
 		fvt.Next();
 	}
 
-	if (found) {
-		collisionIndex = fvt.GetCurrentCell();
-		precollisionIndex = fvt.GetPreviousCell();
-	}
-
-	return found;
+	return TerrainRaytraceResult();
 }

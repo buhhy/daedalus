@@ -14,6 +14,29 @@
 
 #include "Chunk.generated.h"
 
+class AChunk;
+
+namespace terrain {
+	enum TerrainRaytraceResultType {
+		E_None,
+		E_Character,
+		E_Terrain,
+		E_PlacedItem
+	};
+
+	struct TerrainRaytraceResult {
+		const TerrainRaytraceResultType Type;
+		AActor * const Result;
+		const ChunkPositionVector EntryPosition;
+
+		TerrainRaytraceResult(
+			const TerrainRaytraceResultType Type, AActor * const actor, const ChunkPositionVector & pos);
+		TerrainRaytraceResult(AChunk * const chunk, const ChunkPositionVector & pos);
+		TerrainRaytraceResult(AItem * const item, const ChunkPositionVector & pos);
+		TerrainRaytraceResult();
+	};
+}
+
 USTRUCT()
 struct FItemPtrPair {
 	GENERATED_USTRUCT_BODY()
@@ -41,7 +64,8 @@ private:
 	Uint64 ItemIdCounter;                            // Used to store the minimum unique ID
 
 
-	bool IsOccupiedAt(const terrain::ChunkGridIndexVector & gridIndex) const;
+	terrain::TerrainRaytraceResultType IsOccupiedAt(
+		AActor *& result, const terrain::ChunkGridIndexVector & gridIndex);
 	void GenerateChunkMesh();
 	AItem * SpawnItem(const items::ItemDataPtr & itemData);
 	items::ItemDataPtr RemoveItem(const items::ItemDataPtr & itemData);
@@ -62,13 +86,9 @@ public:
 	AItem * CreateItem(const items::ItemDataPtr & itemData, const bool preserveId = false);
 	
 	/**
-	 * @param ray The origin of the ray should be in [0, 1] chunk inner coordinates, the
+	 * @param ray The origin of the ray should be in chunk inner coordinates, the
 	 *            direction should be normal.
 	 * @param maxDistance Maximum number of grid cells to search for solid blocks.
 	 */
-	bool TerrainIntersection(
-		utils::Vector3D<Int64> & collisionIndex,
-		utils::Vector3D<Int64> & precollisionIndex,
-		const utils::Ray3D & ray,
-		const double maxDistance) const;
+	terrain::TerrainRaytraceResult Raytrace(const utils::Ray3D & ray, const double maxDistance);
 };
