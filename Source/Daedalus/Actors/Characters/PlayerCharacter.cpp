@@ -7,15 +7,64 @@
 
 using namespace utils;
 using namespace events;
+using namespace items;
+using namespace terrain;
 
 APlayerCharacter::APlayerCharacter(const class FPostConstructInitializeProperties& PCIP) :
 	Super(PCIP), bHoldingJump(false), MouseHoldOffset(0, 0),
-	PositionSecondCount(0), ViewSecondCount(0)
+	PositionSecondCount(0), ViewSecondCount(0), TerrainInteractionDistance(250),
+	ItemDataFactory(new items::ItemDataFactory())
 {
 	auto & movement = this->CharacterMovement;
 	movement->SetWalkableFloorAngle(60.0);
 	movement->JumpZVelocity = 400;
 	movement->AirControl = 0.4;
+}
+
+void APlayerCharacter::SetUpItemCursor() {
+	const FRotator defaultRotator(0, 0, 0);
+	auto params = FActorSpawnParameters();
+	params.Name = TEXT("ItemPlacementGhostCursor");
+	auto itemData = ItemDataFactory->BuildItemData(I_Chest);
+	ItemCursorRef = GetWorld()->SpawnActor<AItem>(
+		AItem::StaticClass(), { 0, 0, 0 }, { 0, 0, 0 }, params);
+	ItemCursorRef->Initialize(itemData);
+	ItemCursorRef->SetActorEnableCollision(false);
+	ItemCursorRef->SetActorHiddenInGame(true);
+	ItemCursorRef->AttachRootComponentToActor(this);
+}
+
+void APlayerCharacter::UpdateItemCursor(const Ray3D & viewpoint) {
+	const auto foundResult =
+		ChunkManagerRef->Raytrace(viewpoint, TerrainInteractionDistance);
+
+	if (foundResult.Type == E_Terrain || foundResult.Type == E_PlacedItem) {
+//		const Int32 gcc = GenParams->GridCellCount;
+//		const double x = foundResult.EntryPosition.second.X;
+//		const double y = foundResult.EntryPosition.second.Y;
+//		const double z = foundResult.EntryPosition.second.Z;
+//		const Vector3D<Int64> offset(
+//			std::floor(x / gcc),
+//			std::floor(y / gcc),
+//			std::floor(z / gcc));
+//		const Point3D itemPosition(
+//			x - offset.X * gcc,
+//			y - offset.Y * gcc,
+//			z - offset.Z * gcc);
+//		UpdateItemPosition(CurrentCursor, ChunkPositionVector(
+//			foundResult.EntryPosition.first + offset, itemPosition));
+
+		const auto viewGridVec = TerrainParams->ToChunkCoordinates(viewpoint.Origin);
+		const auto offsetPos =
+			TerrainParams->ToRealCoordSpace(foundResult.EntryPosition.first - viewGridVec.first) +
+			TerrainParams->ToRealChunkCoordSpace(foundResult.EntryPosition.second - viewGridVec.second);
+
+		TerrainParams->ToRealCoordSpace(foundResult.EntryPosition);
+		ItemCursorRef->SetPosition(offsetPos);
+		ItemCursorRef->SetActorHiddenInGame(false);
+	} else {
+		ItemCursorRef->SetActorHiddenInGame(true);
+	}
 }
 
 void APlayerCharacter::MoveForward(float amount) {
@@ -80,7 +129,12 @@ void APlayerCharacter::BeginPlay() {
 
 	if (GEngine)
 		GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Green, TEXT("Using standard game character."));
+
 	EventBusRef = GetWorld()->GetGameState<ADDGameState>()->EventBus;
+	ChunkManagerRef = *(TActorIterator<AChunkManager>(GetWorld())); // There should always be a chunk manager
+	TerrainParams = &ChunkLoaderRef->GetGeneratorParameters();
+
+	SetUpItemCursor();
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent * InputComponent) {
@@ -107,13 +161,17 @@ void APlayerCharacter::Tick(float delta) {
 		FRotator dir;
 		
 		GetActorEyesViewPoint(pos, dir);
-		EventBusRef->BroadcastEvent(
-			EventDataPtr(new EViewPosition(ToVector3D(pos), ToVector3D(dir.Vector()))));
+		
+		UpdateItemCursor(Ray3D(ToVector3D(pos), ToVector3D(dir.Vector())));
 
-		if (bPlacingItem) {
-			EventBusRef->BroadcastEvent(
-				EventDataPtr(new EFPItemPlacementRotation(MouseHoldOffset * 3.0)));
-		}
+//		EventBusRef->BroadcastEvent(
+//			EventDataPtr(new EViewPosition(ToVector3D(pos), ToVector3D(dir.Vector()))));
+//
+//
+//		if (bPlacingItem) {
+//			EventBusRef->BroadcastEvent(
+//				EventDataPtr(new EFPItemPlacementRotation(MouseHoldOffset * 3.0)));
+//		}
 	}
 
 	// Tick once every half-second

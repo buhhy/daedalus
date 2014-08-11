@@ -5,6 +5,7 @@
 #include <Models/Terrain/BiomeRegionLoader.h>
 #include <Utilities/Algebra/Algebra3D.h>
 
+#include <memory>
 #include <unordered_map>
 
 namespace terrain {
@@ -50,4 +51,6 @@ namespace terrain {
 		const TerrainGeneratorParameters & GetGeneratorParameters() const;
 		ChunkDataPtr GetChunkAt(const ChunkOffsetVector & offset);
 	};
+
+	using ChunkLoaderPtr = std::shared_ptr<ChunkLoader>;
 }

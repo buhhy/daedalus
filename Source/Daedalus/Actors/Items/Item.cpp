@@ -24,19 +24,18 @@ void AItem::ApplyTransform() {
 	const auto transform = ItemData->GetPositionMatrix();
 	Basis3D basis = GetBasisFrom(transform);
 	auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(basis.XVector), ToFVector(basis.ZVector));
-	const auto trans = GenParams->ToRealChunkCoordSpace(GetTranslationVectorFrom(transform));
+	const auto trans = TerrainParams->ToRealChunkCoordSpace(GetTranslationVectorFrom(transform));
 	MeshComponent->SetRelativeLocationAndRotation(ToFVector(trans), fRotMat.Rotator());
 }
 
 void AItem::LoadMesh(const std::string & meshName) {
 	auto path = "StaticMesh'/Game/" + meshName + "'";
-	MeshComponent->SetStaticMesh(FindStaticMesh(*FString(path.c_str())));
+	MeshComponent->SetStaticMesh(FindStaticMesh(path));
 	MeshComponent->SetMobility(EComponentMobility::Movable);
 	this->RootComponent = MeshComponent;
 }
 
 void AItem::Initialize(const ItemDataPtr & data) {
-	GenParams = &GetWorld()->GetGameState<ADDGameState>()->ChunkLoader->GetGeneratorParameters();;
 	ItemData = data;
 	LoadMesh(data->Template.MeshName);
 	ApplyTransform();
@@ -52,4 +51,8 @@ void AItem::SetRotation(const ItemRotation & rotation) {
 	AssertInitialized();
 	ItemData->SetRotation(rotation);
 	ApplyTransform();
+}
+
+void AItem::BeginPlay() {
+	TerrainParams = &GetWorld()->GetGameState<ADDGameState>()->ChunkLoader->GetGeneratorParameters();
 }

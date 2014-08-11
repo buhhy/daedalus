@@ -31,13 +31,12 @@ void AChunkManager::SetUpDefaultCursor() {
 void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 	ChunkOffsetVector offset;
 	FRotator defaultRotation(0, 0, 0);
-	auto genParams = GetGameState()->ChunkLoader->GetGeneratorParameters();
 	
 	FActorSpawnParameters defaultParameters;
 	defaultParameters.Owner = this;
 
 	// Get player's current chunk location
-	auto playerChunkPos = genParams.ToChunkCoordinates(playerPosition);
+	auto playerChunkPos = GenParams->ToChunkCoordinates(playerPosition);
 
 	Int64 fromX = playerChunkPos.first.X - RenderDistance;
 	Int64 fromY = playerChunkPos.first.Y - RenderDistance;
@@ -71,8 +70,6 @@ void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 }
 
 AChunk * AChunkManager::GetChunkAt(const ChunkOffsetVector & point) {
-	auto chunkLoader = GetGameState()->ChunkLoader;
-	
 	FRotator defaultRotation(0, 0, 0);
 	FActorSpawnParameters defaultParameters;
 	defaultParameters.Owner = this;
@@ -85,7 +82,7 @@ AChunk * AChunkManager::GetChunkAt(const ChunkOffsetVector & point) {
 		for (Uint8 x = 0; x < data.GetWidth(); x++) {
 			for (Uint8 y = 0; y < data.GetDepth(); y++) {
 				for (Uint8 z = 0; z < data.GetHeight(); z++) {
-					data.Set(x, y, z, chunkLoader->GetChunkAt({
+					data.Set(x, y, z, ChunkLoaderRef->GetChunkAt({
 						point.X + x, point.Y + y, point.Z + z
 					}));
 				}
@@ -98,6 +95,7 @@ AChunk * AChunkManager::GetChunkAt(const ChunkOffsetVector & point) {
 			AChunk::StaticClass(), position, defaultRotation, defaultParameters);
 		newChunk->InitializeChunk(GenParams);
 		newChunk->SetChunkData(data);
+		newChunk->AttachRootComponentToActor(this);
 		LocalCache.insert({ point, newChunk });
 		return newChunk;
 	}
@@ -184,13 +182,17 @@ void AChunkManager::PlaceItem() {
 
 void AChunkManager::BeginPlay() {
 	Super::BeginPlay();
-	GenParams = &GetGameState()->ChunkLoader->GetGeneratorParameters();
+
+	ChunkLoaderRef = GetGameState()->ChunkLoader;
+	GenParams = &ChunkLoaderRef->GetGeneratorParameters();
+	EventBusRef = GetGameState()->EventBus;
+
 	SetUpDefaultCursor();
-	GetGameState()->EventBus->AddListener(E_PlayerPosition, this);
-	GetGameState()->EventBus->AddListener(E_ViewPosition, this);
-	GetGameState()->EventBus->AddListener(E_FPItemPlacementBegin, this);
-	GetGameState()->EventBus->AddListener(E_FPItemPlacementEnd, this);
-	GetGameState()->EventBus->AddListener(E_FPItemPlacementRotation, this);
+	EventBusRef->AddListener(E_PlayerPosition, this);
+	EventBusRef->AddListener(E_ViewPosition, this);
+	EventBusRef->AddListener(E_FPItemPlacementBegin, this);
+	EventBusRef->AddListener(E_FPItemPlacementEnd, this);
+	EventBusRef->AddListener(E_FPItemPlacementRotation, this);
 }
 
 void AChunkManager::HandleEvent(const EventDataPtr & data) {
