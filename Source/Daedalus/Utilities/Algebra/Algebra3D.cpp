@@ -1,5 +1,4 @@
 #include <Daedalus.h>
-#include <Utilities/Algebra/DataStructures3D.h>
 #include "Algebra3D.h"
 
 namespace utils {

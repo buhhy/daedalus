@@ -8,7 +8,7 @@ namespace terrain {
 	ChunkLoader::~ChunkLoader() {
 		LoadedChunkCache.empty();
 	}
-	
+
 	bool ChunkLoader::IsChunkGenerated(const ChunkOffsetVector & offset) const {
 		// TODO: implement some form of tracking which chunks have been generated
 		return LoadedChunkCache.find(offset) != LoadedChunkCache.end();

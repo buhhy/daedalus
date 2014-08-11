@@ -3,6 +3,7 @@
 #include <Utilities/Integers.h>
 #include <Utilities/Constants.h>
 
+#include <cmath>
 #include <algorithm>
 #include <functional>
 

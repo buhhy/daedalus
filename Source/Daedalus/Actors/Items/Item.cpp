@@ -8,9 +8,7 @@
 using namespace items;
 using namespace utils;
 
-AItem::AItem(const class FPostConstructInitializeProperties & PCIP)
-	: Super(PCIP)
-{
+AItem::AItem(const class FPostConstructInitializeProperties & PCIP) : Super(PCIP) {
 	MeshComponent = PCIP.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("StaticMesh"));
 
 	//MeshComponent->SetStaticMesh(GetMesh());
@@ -24,19 +22,21 @@ void AItem::ApplyTransform() {
 	const auto transform = ItemData->GetPositionMatrix();
 	Basis3D basis = GetBasisFrom(transform);
 	auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(basis.XVector), ToFVector(basis.ZVector));
-	const auto trans = GenParams->ToRealChunkCoordSpace(GetTranslationVectorFrom(transform));
+	const auto trans = TerrainParams->ToRealCoordSpace(GetTranslationVectorFrom(transform));
 	MeshComponent->SetRelativeLocationAndRotation(ToFVector(trans), fRotMat.Rotator());
 }
 
 void AItem::LoadMesh(const std::string & meshName) {
 	auto path = "StaticMesh'/Game/" + meshName + "'";
-	MeshComponent->SetStaticMesh(FindStaticMesh(*FString(path.c_str())));
+	MeshComponent->SetStaticMesh(FindStaticMesh(path));
 	MeshComponent->SetMobility(EComponentMobility::Movable);
 	this->RootComponent = MeshComponent;
 }
 
 void AItem::Initialize(const ItemDataPtr & data) {
-	GenParams = &GetWorld()->GetGameState<ADDGameState>()->ChunkLoader->GetGeneratorParameters();;
+	if (TerrainParams == NULL)
+		TerrainParams =
+			&GetWorld()->GetGameState<ADDGameState>()->ChunkLoader->GetGeneratorParameters();
 	ItemData = data;
 	LoadMesh(data->Template.MeshName);
 	ApplyTransform();
@@ -44,7 +44,7 @@ void AItem::Initialize(const ItemDataPtr & data) {
 
 void AItem::SetPosition(const terrain::ChunkPositionVector & position) {
 	AssertInitialized();
-	ItemData->Position = position;
+	ItemData->Position = TerrainParams->Normalize(position);
 	ApplyTransform();
 }
 

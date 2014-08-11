@@ -31,13 +31,12 @@ void AChunkManager::SetUpDefaultCursor() {
 void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 	ChunkOffsetVector offset;
 	FRotator defaultRotation(0, 0, 0);
-	auto genParams = GetGameState()->ChunkLoader->GetGeneratorParameters();
 	
 	FActorSpawnParameters defaultParameters;
 	defaultParameters.Owner = this;
 
 	// Get player's current chunk location
-	auto playerChunkPos = genParams.ToChunkCoordinates(playerPosition);
+	auto playerChunkPos = GenParams->ToGridCoordSpace(playerPosition);
 
 	Int64 fromX = playerChunkPos.first.X - RenderDistance;
 	Int64 fromY = playerChunkPos.first.Y - RenderDistance;
@@ -71,8 +70,6 @@ void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 }
 
 AChunk * AChunkManager::GetChunkAt(const ChunkOffsetVector & point) {
-	auto chunkLoader = GetGameState()->ChunkLoader;
-	
 	FRotator defaultRotation(0, 0, 0);
 	FActorSpawnParameters defaultParameters;
 	defaultParameters.Owner = this;
@@ -86,7 +83,7 @@ AChunk * AChunkManager::GetChunkAt(const ChunkOffsetVector & point) {
 		for (Uint8 x = 0; x < w; x++) {
 			for (Uint8 y = 0; y < d; y++) {
 				for (Uint8 z = 0; z < h; z++) {
-					data.Set(x, y, z, chunkLoader->GetChunkAt({
+					data.Set(x, y, z, ChunkLoaderRef->GetChunkAt({
 						point.X + x - w / 2, point.Y + y - d / 2, point.Z + z - h / 2
 					}));
 				}
@@ -99,6 +96,7 @@ AChunk * AChunkManager::GetChunkAt(const ChunkOffsetVector & point) {
 			AChunk::StaticClass(), position, defaultRotation, defaultParameters);
 		newChunk->InitializeChunk(GenParams);
 		newChunk->SetChunkData(data);
+		newChunk->AttachRootComponentToActor(this);
 		LocalCache.insert({ point, newChunk });
 		return newChunk;
 	}
@@ -111,47 +109,25 @@ void AChunkManager::UpdateItemPosition(AItem * item, const ChunkPositionVector &
 }
 
 void AChunkManager::UpdateCursorPosition(const Ray3D & viewpoint) {
-	FastVoxelTraversalIterator fvt(GenParams->ChunkScale, viewpoint, TerrainInteractionDistance);
+	const auto foundResult = Raytrace(viewpoint, TerrainInteractionDistance);
 
-	bool foundIntersect = false;
-	Vector3D<Int64> chunkPosition = fvt.GetCurrentCell();
-	Vector3D<Int64> foundPosition, prefoundPosition;
-
-	// Search through adjacent chunks
-	while (fvt.IsValid()) {
-		// Get current chunk location
-		const auto chunkPos = GenParams->ToChunkCoordinates(viewpoint.Origin, chunkPosition);
-		auto chunk = GetChunkAt(chunkPos.first);
-		foundIntersect = chunk->TerrainIntersection(
-			foundPosition, prefoundPosition,
-			{ chunkPos.second, viewpoint.Direction },
-			TerrainInteractionDistance);
-
-		if (foundIntersect)
-			break;
-
-		fvt.Next();
-		chunkPosition = fvt.GetCurrentCell();
-	}
-
-	if (foundIntersect) {
+	if (foundResult.Type == E_Terrain || foundResult.Type == E_PlacedItem) {
 		const Int32 gcc = GenParams->GridCellCount;
+		const double x = foundResult.EntryPosition.second.X;
+		const double y = foundResult.EntryPosition.second.Y;
+		const double z = foundResult.EntryPosition.second.Z;
 		const Vector3D<Int64> offset(
-			std::floor((double) prefoundPosition.X / gcc),
-			std::floor((double) prefoundPosition.Y / gcc),
-			std::floor((double) prefoundPosition.Z / gcc));
+			std::floor(x / gcc),
+			std::floor(y / gcc),
+			std::floor(z / gcc));
 		const Point3D itemPosition(
-			prefoundPosition.X - offset.X * gcc,
-			prefoundPosition.Y - offset.Y * gcc,
-			prefoundPosition.Z - offset.Z * gcc);
-		UpdateItemPosition(
-			CurrentCursor,
-			ChunkPositionVector(
-				chunkPosition + offset, itemPosition));
+			x - offset.X * gcc,
+			y - offset.Y * gcc,
+			z - offset.Z * gcc);
+		UpdateItemPosition(CurrentCursor, ChunkPositionVector(
+			foundResult.EntryPosition.first + offset, itemPosition));
 		CurrentCursor->SetActorHiddenInGame(false);
-		// Found an intersection at the current chunk position.
 	} else {
-		// If no intersections are found, we need to search adjacent chunks.
 		CurrentCursor->SetActorHiddenInGame(true);
 	}
 }
@@ -164,6 +140,35 @@ void AChunkManager::UpdateCursorRotation(const Point2D & rotationOffset) {
 			rotationOffset.Y / 360.0 * data->Template.RotationInterval.Pitch);
 		CurrentCursor->SetRotation(rot);
 	}
+}
+
+TerrainRaytraceResult AChunkManager::Raytrace(
+	const utils::Ray3D & viewpoint,
+	const double maxDist
+) {
+	FastVoxelTraversalIterator fvt(GenParams->ChunkScale, viewpoint, maxDist);
+
+	bool foundIntersect = false;
+	Vector3D<Int64> chunkPosition = fvt.GetCurrentCell();
+
+	// Search through adjacent chunks
+	while (fvt.IsValid()) {
+		// Get current chunk location
+		const auto chunkPos = GenParams->ToGridCoordSpace(viewpoint.Origin, chunkPosition);
+		auto chunk = GetChunkAt(chunkPos.first);
+		const auto result = chunk->Raytrace(
+			Ray3D(chunkPos.second, viewpoint.Direction),
+			TerrainInteractionDistance);
+
+		if (result.Type != E_None)
+			return result;
+
+		// If no intersections are found, we need to search adjacent chunks.
+		fvt.Next();
+		chunkPosition = fvt.GetCurrentCell();
+	}
+
+	return TerrainRaytraceResult();
 }
 
 void AChunkManager::PlaceItem() {
@@ -179,13 +184,17 @@ void AChunkManager::PlaceItem() {
 
 void AChunkManager::BeginPlay() {
 	Super::BeginPlay();
-	GenParams = &GetGameState()->ChunkLoader->GetGeneratorParameters();
+
+	ChunkLoaderRef = GetGameState()->ChunkLoader;
+	GenParams = &ChunkLoaderRef->GetGeneratorParameters();
+	EventBusRef = GetGameState()->EventBus;
+
 	SetUpDefaultCursor();
-	GetGameState()->EventBus->AddListener(E_PlayerPosition, this);
-	GetGameState()->EventBus->AddListener(E_ViewPosition, this);
-	GetGameState()->EventBus->AddListener(E_FPItemPlacementBegin, this);
-	GetGameState()->EventBus->AddListener(E_FPItemPlacementEnd, this);
-	GetGameState()->EventBus->AddListener(E_FPItemPlacementRotation, this);
+	EventBusRef->AddListener(E_PlayerPosition, this);
+	EventBusRef->AddListener(E_ViewPosition, this);
+	EventBusRef->AddListener(E_FPItemPlacementBegin, this);
+	EventBusRef->AddListener(E_FPItemPlacementEnd, this);
+	EventBusRef->AddListener(E_FPItemPlacementRotation, this);
 }
 
 void AChunkManager::HandleEvent(const EventDataPtr & data) {

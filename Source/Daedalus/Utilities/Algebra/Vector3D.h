@@ -1,7 +1,9 @@
 #pragma once
 
+#include <Utilities/DataStructures.h>
 #include <Utilities/Algebra/Vector2D.h>
 #include <Utilities/Algebra/Algebra.h>
+
 #include <cassert>
 #include <functional>
 #include <sstream>

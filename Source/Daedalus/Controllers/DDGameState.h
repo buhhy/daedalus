@@ -23,7 +23,7 @@ private:
 	const terrain::BiomeGeneratorParameters BiomeGenParams;
 
 public:
-	std::shared_ptr<events::EventBus> EventBus;
-	std::shared_ptr<terrain::ChunkLoader> ChunkLoader;
+	events::EventBusPtr EventBus;
+	terrain::ChunkLoaderPtr ChunkLoader;
 	std::shared_ptr<terrain::BiomeRegionLoader> BiomeRegionLoader;
 };

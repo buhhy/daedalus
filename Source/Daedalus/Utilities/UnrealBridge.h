@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Engine.h"
-#include <Utilities/DataStructures.h>
+#include <Utilities/Algebra/DataStructures3D.h>
 
 namespace utils {
 	inline Vector2D<> ToVector2D(const FVector & fv) { return Vector2D<>(fv.X, fv.Y); }

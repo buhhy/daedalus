@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utilities/DataStructures.h>
+#include <Utilities/Algebra/Algebra2D.h>
 
 namespace utils {
 	// TODO: split into component 2D, 3D, 4D generator classes

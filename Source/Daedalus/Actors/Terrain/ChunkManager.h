@@ -24,17 +24,18 @@ class AChunkManager : public AActor, public EventListener {
 
 private:
 	using ChunkCache = std::unordered_map<terrain::ChunkOffsetVector, AChunk *>;
-	
-	const terrain::TerrainGeneratorParameters * GenParams;
+
 	AItem * DefaultCursor;                            // Default cursor item
 	AItem * CurrentCursor;                            // Item actor held as the cursor
 	ChunkCache LocalCache;
 
 	const Uint64 RenderDistance;                      // Specified in number of chunks
 	const float TerrainInteractionDistance;           // Specified in centimetres
-	//const float ItemRotationNotch;                    // How far the mouse must move 
 
 	items::ItemDataFactoryPtr ItemDataFactory;
+	const terrain::TerrainGeneratorParameters * GenParams;
+	events::EventBusPtr EventBusRef;
+	terrain::ChunkLoaderPtr ChunkLoaderRef;
 
 	
 
@@ -50,5 +51,8 @@ private:
 public:
 	virtual void HandleEvent(const events::EventDataPtr & data) override;
 	virtual void BeginPlay() override;
+
+	terrain::TerrainRaytraceResult Raytrace(
+		const utils::Ray3D & viewpoint, const double maxDist);
 
 };

@@ -28,40 +28,28 @@ namespace terrain {
 		 chunk itself. This helps to preserve accuracy at higher chunk positions.
 		 */
 
-		const utils::Point3D ToRealCoordSpace(const ChunkOffsetVector & offset) const {
+		utils::Point3D ToRealCoordSpace(const ChunkOffsetVector & offset) const {
 			return { offset.X * ChunkScale, offset.Y * ChunkScale, offset.Z * ChunkScale };
 		}
 
 		/**
 		 * Converts the entire chunk position vector into real world coordinates.
 		 */
-		const utils::Point3D ToRealCoordSpace(const ChunkPositionVector & position) const {
-			return ToRealCoordSpace(position.first) + ToRealChunkCoordSpace(position.second);
+		utils::Point3D ToRealCoordSpace(const ChunkPositionVector & position) const {
+			return ToRealCoordSpace(position.first) + ToRealCoordSpace(position.second);
 		}
 		
 		/**
 		 * Retrieves the inner position of the chunk position vector in real world coordinates.
 		 */
-		const utils::Point3D ToRealChunkCoordSpace(const utils::Point3D & virtualPos) const {
+		utils::Point3D ToRealCoordSpace(const utils::Point3D & virtualPos) const {
 			return virtualPos * ChunkGridUnitSize;
-		}
-
-		/**
-		 * @param position Chunk inner position vector between [0, 1].
-		 * @return The inner grid indices of the given position point.
-		 */
-		const ChunkGridIndexVector ToGridCoordSpace(const utils::Point3D & position) const {
-			return {
-				Uint16(utils::EFloor(position.X)),
-				Uint16(utils::EFloor(position.Y)),
-				Uint16(utils::EFloor(position.Z))
-			};
 		}
 
 		/**
 		 * Converts real world coordinates to chunk coordinates.
 		 */
-		const ChunkPositionVector ToChunkCoordinates(const utils::Point3D & point) const {
+		ChunkPositionVector ToGridCoordSpace(const utils::Point3D & point) const {
 			const auto offset = ChunkOffsetVector(
 				(Int64) utils::EFloor(point.X / ChunkScale),
 				(Int64) utils::EFloor(point.Y / ChunkScale),
@@ -76,16 +64,36 @@ namespace terrain {
 		/**
 		 * Converts real world coordinates to chunk coordinates.
 		 */
-		const ChunkPositionVector ToChunkCoordinates(
+		ChunkPositionVector ToGridCoordSpace(
 			const utils::Point3D & position,
 			const ChunkOffsetVector & anchor
 		) const {
-			auto vec = ToChunkCoordinates(position);
+			auto vec = ToGridCoordSpace(position);
 			return ChunkPositionVector(anchor, {
 				GridCellCount * (vec.first.X - anchor.X) + vec.second.X,
 				GridCellCount * (vec.first.Y - anchor.Y) + vec.second.Y,
 				GridCellCount * (vec.first.Z - anchor.Z) + vec.second.Z
 			});
+		}
+
+		/**
+		 * Ensures the provided position vector has an inner position of [0, GridCellCount).
+		 */
+		ChunkPositionVector Normalize(const ChunkPositionVector & vect) const {
+			if (vect.second.IsBoundedBy(-DBL_EPSILON, GridCellCount - DBL_EPSILON))
+				return vect;
+			const double x = vect.second.X;
+			const double y = vect.second.Y;
+			const double z = vect.second.Z;
+			const utils::Vector3D<Int64> offset(
+				utils::EFloor(x / GridCellCount),
+				utils::EFloor(y / GridCellCount),
+				utils::EFloor(z / GridCellCount));
+			const utils::Point3D itemPosition(
+				x - offset.X * GridCellCount,
+				y - offset.Y * GridCellCount,
+				z - offset.Z * GridCellCount);
+			return ChunkPositionVector(vect.first + offset, itemPosition);
 		}
 	};
 
@@ -105,13 +113,13 @@ namespace terrain {
 		Uint16 MaxPointsPerCell;
 		double BiomeScale;          // Maps biome grid to real world coordinates
 
-		inline const utils::Vector2D<> ToRealCoordSpace(
+		inline utils::Vector2D<> ToRealCoordSpace(
 			const BiomeRegionOffsetVector & offset
 		) const {
 			return utils::Vector2D<>(offset.X * BiomeScale, offset.Y * BiomeScale);
 		}
 
-		inline const BiomePositionVector ToBiomeRegionCoordinates(
+		inline BiomePositionVector ToBiomeRegionCoordinates(
 			const utils::Vector2D<> & point
 		) const {
 			const auto offset = BiomeRegionOffsetVector(
