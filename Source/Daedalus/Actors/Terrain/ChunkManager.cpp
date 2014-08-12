@@ -11,8 +11,7 @@ using namespace items;
 
 // TODO: pull out the item factory and data factory into a more global class
 AChunkManager::AChunkManager(const class FPostConstructInitializeProperties & PCIP) :
-	Super(PCIP), RenderDistance(1), TerrainInteractionDistance(250),
-	ItemDataFactory(new items::ItemDataFactory())
+	Super(PCIP), RenderDistance(1)
 {}
 
 void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
@@ -103,9 +102,7 @@ TerrainRaytraceResult AChunkManager::Raytrace(
 		// Get current chunk location
 		const auto chunkPos = GenParams->ToGridCoordSpace(viewpoint.Origin, chunkPosition);
 		auto chunk = GetChunkAt(chunkPos.first);
-		const auto result = chunk->Raytrace(
-			Ray3D(chunkPos.second, viewpoint.Direction),
-			TerrainInteractionDistance);
+		const auto result = chunk->Raytrace(Ray3D(chunkPos.second, viewpoint.Direction), maxDist);
 
 		if (result.Type != E_None)
 			return result;

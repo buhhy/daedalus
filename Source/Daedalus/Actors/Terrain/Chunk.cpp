@@ -107,12 +107,12 @@ void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 	GenerateChunkMesh();
 }
 
-TerrainRaytraceResultType AChunk::IsOccupiedAt(AActor *& result, const ChunkGridIndexVector & gridIndex) {
+TerrainRaytraceResult AChunk::FindIntersection(const ChunkGridIndexVector & gridIndex) {
+	const Point3D position(gridIndex.X, gridIndex.Y, gridIndex.Z);
 	// TODO: handle player collisions somehow
-	result = NULL;
 	if (SolidTerrain.Get(gridIndex.X, gridIndex.Y, gridIndex.Z)) {
-		result = this;
-		return E_Terrain;
+		return TerrainRaytraceResult(
+			this, ChunkPositionVector(CurrentChunkData->ChunkOffset, position));
 	} else {
 		// Check items to make sure nothing occupies this location. Perhaps using an octree
 		// might be wise here.
@@ -125,22 +125,21 @@ TerrainRaytraceResultType AChunk::IsOccupiedAt(AActor *& result, const ChunkGrid
 			const auto & itemData = item.ItemActor->GetItemData();
 			const OrientedBoundingBox3D obb(0., itemData->Size, itemData->GetPositionMatrix());
 			if (bb.FindIntersection(obb, false)) {
-				result = item.ItemActor;
-				return E_PlacedItem;
+				return TerrainRaytraceResult(
+					item.ItemActor, ChunkPositionVector(CurrentChunkData->ChunkOffset, position));
 			}
 		}
 	}
-	return E_None;
+	return TerrainRaytraceResult();
 }
 
 AItem * AChunk::CreateItem(const items::ItemDataPtr & itemData, const bool preserveId) {
-	AActor * result;
 	const auto & position = itemData->Position.second;
 	ChunkGridIndexVector vec(
 		Uint16(utils::EFloor(position.X)),
 		Uint16(utils::EFloor(position.Y)),
 		Uint16(utils::EFloor(position.Z)));
-	if (IsOccupiedAt(result, vec) == E_None) {
+	if (FindIntersection(vec).Type == E_None) {
 		if (!preserveId)
 			itemData->ItemId = ItemIdCounter++;
 		itemData->bIsPlaced = true;
@@ -226,17 +225,16 @@ TerrainRaytraceResult AChunk::Raytrace(const Ray3D & ray, const double maxDistan
 		ray, maxDistance / TerrainGenParams->ChunkGridUnitSize);
 
 	TerrainRaytraceResultType foundType = E_None;
-	AActor * foundResult = NULL;
 
 	for (Uint16 i = 0; fvt.IsValid(); i++) {
 		const auto & current = fvt.GetCurrentCell();
 		if (current.IsBoundedBy(0, TerrainGenParams->GridCellCount)) {
-			foundType = IsOccupiedAt(foundResult, current.Cast<Uint16>());
-			if (foundType != E_None) {
+			const auto found = FindIntersection(current.Cast<Uint16>());
+			if (found.Type != E_None) {
 				const auto & collisionIndex = fvt.GetCurrentCell();
 				const auto & precollisionIndex = fvt.GetPreviousCell();
 				return TerrainRaytraceResult(
-					foundType, foundResult,
+					found.Type, found.Result,
 					ChunkPositionVector(CurrentChunkData->ChunkOffset, precollisionIndex.Cast<double>()));
 			}
 		}

@@ -7,7 +7,8 @@
 
 namespace items {
 	enum ItemType {
-		I_Chest
+		I_Chest,
+		I_Sofa
 	};
 
 	struct ItemRotation {
@@ -85,6 +86,10 @@ namespace items {
 			Size(tmp.Size),
 			Template(tmp),
 			OriginBounds(0, tmp.Size)
+		{}
+
+		ItemData(const ItemDataTemplate & tmp) :
+			ItemData(0, terrain::ChunkPositionVector(0, 0), ItemRotation(0, 0), false, tmp)
 		{}
 
 		const ItemRotation & GetRotation() const { return Rotation; }

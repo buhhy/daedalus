@@ -33,7 +33,7 @@ void APlayerCharacter::SetUpItemCursor() {
 	const FRotator defaultRotator(0, 0, 0);
 	auto params = FActorSpawnParameters();
 	params.Name = TEXT("ItemPlacementGhostCursor");
-	CurrentHeldItem = ItemDataFactory->BuildItemData(I_Chest);
+	CurrentHeldItem = ItemDataFactory->BuildItemData(I_Sofa);
 	ItemCursorRef = GetWorld()->SpawnActor<AItemCursor>(
 		AItemCursor::StaticClass(), { 0, 0, 0 }, { 0, 0, 0 }, params);
 	ItemCursorRef->Initialize(CurrentHeldItem);

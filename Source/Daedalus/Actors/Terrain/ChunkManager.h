@@ -28,9 +28,7 @@ private:
 	ChunkCache LocalCache;
 
 	const Uint64 RenderDistance;                      // Specified in number of chunks
-	const float TerrainInteractionDistance;           // Specified in centimetres
 
-	items::ItemDataFactoryPtr ItemDataFactory;
 	const terrain::TerrainGeneratorParameters * GenParams;
 	events::EventBusPtr EventBusRef;
 	terrain::ChunkLoaderPtr ChunkLoaderRef;

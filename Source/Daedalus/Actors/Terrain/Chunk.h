@@ -64,8 +64,8 @@ private:
 	Uint64 ItemIdCounter;                            // Used to store the minimum unique ID
 
 
-	terrain::TerrainRaytraceResultType IsOccupiedAt(
-		AActor *& result, const terrain::ChunkGridIndexVector & gridIndex);
+	terrain::TerrainRaytraceResult FindIntersection(
+		const terrain::ChunkGridIndexVector & gridIndex);
 	void GenerateChunkMesh();
 	AItem * SpawnItem(const items::ItemDataPtr & itemData);
 	items::ItemDataPtr RemoveItem(const items::ItemDataPtr & itemData);
