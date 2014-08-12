@@ -59,6 +59,28 @@ namespace utils {
 			double length = Length();
 			return Vector2D<>((double) X / length, (double) Y / length);
 		}
+
+		inline T & operator [] (const Uint64 index) {
+			switch (index) {
+			case 0: return X;
+			case 1: return Y;
+			default:
+				std::stringstream ss;
+				ss << "Vector2D::[]: Invalid index value `" << index << "`.";
+				throw StringException(ss.str());
+			}
+		}
+
+		inline const T & operator [] (const Uint64 index) const {
+			switch (index) {
+			case 0: return X;
+			case 1: return Y;
+			default:
+				std::stringstream ss;
+				ss << "Vector2D::[]: Invalid index value `" << index << "`.";
+				throw StringException(ss.str());
+			}
+		}
 	};
 }
 

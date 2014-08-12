@@ -21,15 +21,20 @@ private:
 	float PositionSecondCount;
 	float ViewSecondCount;
 
-	const terrain::TerrainGeneratorParameters * TerrainParams;
-	utils::Point2D MouseHoldOffset;
-	events::EventBusPtr EventBusRef;
+	items::ItemDataPtr CurrentHeldItem;
+	// Each mouse movement increments this counter, when this is larger than 1, the cursor is
+	// updated and this counter is decremented to the fractional component.
+	utils::Vector2D<float> MouseHoldOffset;
 	items::ItemDataFactoryPtr ItemDataFactory;
+	
+	events::EventBusPtr EventBusRef;
+	const terrain::TerrainGeneratorParameters * TerrainParams;
 
 
 
 	void SetUpItemCursor();
 	void UpdateItemCursor(const utils::Ray3D & viewpoint);
+	void UpdateItemCursorRotation();
 
 protected:
 	virtual void BeginPlay() override;
@@ -47,7 +52,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = State)
 		bool bHoldingJump;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = State)
-		bool bPlacingItem;
+		bool bRotatingItem;
 
 
 
@@ -57,7 +62,8 @@ public:
 	UFUNCTION() void LookRight(float amount);
 	UFUNCTION() void HoldJump();
 	UFUNCTION() void ReleaseJump();
-	UFUNCTION() void BeginPlaceItem();
-	UFUNCTION() void FinalizePlaceItem();
+	UFUNCTION() void BeginRotation();
+	UFUNCTION() void EndRotation();
+	UFUNCTION() void PlaceItem();
 };
 

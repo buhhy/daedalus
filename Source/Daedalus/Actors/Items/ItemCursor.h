@@ -9,7 +9,8 @@
 #include "ItemCursor.generated.h"
 
 /**
- * 
+ * The item cursor is an extended item object that acts as the ghost cursor for the player when
+ * placing items. It snaps to the grid and is placed like a normal item.
  */
 UCLASS()
 class AItemCursor : public AItem {

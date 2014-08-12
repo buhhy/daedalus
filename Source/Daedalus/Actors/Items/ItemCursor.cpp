@@ -29,8 +29,9 @@ void AItemCursor::ApplyTransform() {
 	// The player character naturally has a Z-rotation for looking around, we need to rotate the
 	// item location and rotation by the inverse of that Z-rotation to ensure correct placement.
 	const auto invPlayerRot = PlayerRotation.Inverse();
-	MeshComponent->SetRelativeLocation(invPlayerRot.TransformVector(ToFVector(trans)));
-	MeshComponent->SetRelativeRotation((invPlayerRot * fRotMat).Rotator());
+	MeshComponent->SetRelativeLocationAndRotation(
+		invPlayerRot.TransformVector(ToFVector(trans)),
+		(invPlayerRot * fRotMat).Rotator());
 }
 
 void AItemCursor::SetPlayerTransform(const Point3D & position, const FMatrix & rotation) {

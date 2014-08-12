@@ -9,9 +9,9 @@ namespace events {
 	enum EventType {
 		E_PlayerPosition,
 		E_ViewPosition,
-		E_FPItemPlacementBegin,
-		E_FPItemPlacementEnd,
-		E_FPItemPlacementRotation,
+		//E_FPItemPlacementBegin,
+		//E_FPItemPlacementEnd,
+		//E_FPItemPlacementRotation,
 		E_BiomeRegionUpdate
 	};
 
@@ -50,33 +50,33 @@ namespace events {
 		{}
 	};
 
-	// Events related to item placement from the first person perspective.
-	struct EFPItemPlacementBegin : public EventData {
-		const utils::Ray3D ViewRay;
+	//// Events related to item placement from the first person perspective.
+	//struct EFPItemPlacementBegin : public EventData {
+	//	const utils::Ray3D ViewRay;
 
-		// TODO: probably need some form of player identification here
-		EFPItemPlacementBegin(const utils::Ray3D & ray) :
-			EventData(E_FPItemPlacementBegin), ViewRay(ray)
-		{}
-	};
+	//	// TODO: probably need some form of player identification here
+	//	EFPItemPlacementBegin(const utils::Ray3D & ray) :
+	//		EventData(E_FPItemPlacementBegin), ViewRay(ray)
+	//	{}
+	//};
 
-	struct EFPItemPlacementEnd : public EventData {
-		const utils::Ray3D ViewRay;
+	//struct EFPItemPlacementEnd : public EventData {
+	//	const utils::Ray3D ViewRay;
 
-		// TODO: probably need some form of player identification here
-		const bool bIsCancelled;
-		EFPItemPlacementEnd(const utils::Ray3D & ray, const bool isCancelled = false) :
-			EventData(E_FPItemPlacementEnd), ViewRay(ray), bIsCancelled(isCancelled)
-		{}
-	};
+	//	// TODO: probably need some form of player identification here
+	//	const bool bIsCancelled;
+	//	EFPItemPlacementEnd(const utils::Ray3D & ray, const bool isCancelled = false) :
+	//		EventData(E_FPItemPlacementEnd), ViewRay(ray), bIsCancelled(isCancelled)
+	//	{}
+	//};
 
-	struct EFPItemPlacementRotation : public EventData {
-		// TODO: probably need some form of player identification here
-		const utils::Point2D RotationOffset;
-		EFPItemPlacementRotation(const utils::Point2D & mouseOffset) :
-			EventData(E_FPItemPlacementRotation), RotationOffset(mouseOffset)
-		{}
-	};
+	//struct EFPItemPlacementRotation : public EventData {
+	//	// TODO: probably need some form of player identification here
+	//	const utils::Point2D RotationOffset;
+	//	EFPItemPlacementRotation(const utils::Point2D & mouseOffset) :
+	//		EventData(E_FPItemPlacementRotation), RotationOffset(mouseOffset)
+	//	{}
+	//};
 
 	using EventDataPtr = std::shared_ptr<EventData>;
 }

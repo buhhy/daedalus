@@ -15,19 +15,6 @@ AChunkManager::AChunkManager(const class FPostConstructInitializeProperties & PC
 	ItemDataFactory(new items::ItemDataFactory())
 {}
 
-void AChunkManager::SetUpDefaultCursor() {
-	const FRotator defaultRotator(0, 0, 0);
-	auto params = FActorSpawnParameters();
-	params.Name = TEXT("DummyCursor");
-	auto itemData = ItemDataFactory->BuildItemData(I_Chest);
-	DefaultCursor = GetWorld()->SpawnActor<AItem>(
-		AItem::StaticClass(), { 0, 0, 0 }, { 0, 0, 0 }, params);
-	DefaultCursor->Initialize(itemData);
-	DefaultCursor->SetActorEnableCollision(false);
-	CurrentCursor = DefaultCursor;
-	CurrentCursor->SetActorHiddenInGame(true);
-}
-
 void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 	ChunkOffsetVector offset;
 	FRotator defaultRotation(0, 0, 0);
@@ -102,46 +89,6 @@ AChunk * AChunkManager::GetChunkAt(const ChunkOffsetVector & point) {
 	}
 }
 
-void AChunkManager::UpdateItemPosition(AItem * item, const ChunkPositionVector & position) {
-	auto chunk = GetChunkAt(position.first);
-	item->AttachRootComponentToActor(chunk);
-	item->SetPosition(position);
-}
-
-void AChunkManager::UpdateCursorPosition(const Ray3D & viewpoint) {
-	const auto foundResult = Raytrace(viewpoint, TerrainInteractionDistance);
-
-	if (foundResult.Type == E_Terrain || foundResult.Type == E_PlacedItem) {
-		const Int32 gcc = GenParams->GridCellCount;
-		const double x = foundResult.EntryPosition.second.X;
-		const double y = foundResult.EntryPosition.second.Y;
-		const double z = foundResult.EntryPosition.second.Z;
-		const Vector3D<Int64> offset(
-			std::floor(x / gcc),
-			std::floor(y / gcc),
-			std::floor(z / gcc));
-		const Point3D itemPosition(
-			x - offset.X * gcc,
-			y - offset.Y * gcc,
-			z - offset.Z * gcc);
-		UpdateItemPosition(CurrentCursor, ChunkPositionVector(
-			foundResult.EntryPosition.first + offset, itemPosition));
-		CurrentCursor->SetActorHiddenInGame(false);
-	} else {
-		CurrentCursor->SetActorHiddenInGame(true);
-	}
-}
-
-void AChunkManager::UpdateCursorRotation(const Point2D & rotationOffset) {
-	if (CurrentCursor) {
-		const auto & data = CurrentCursor->GetItemData();
-		ItemRotation rot(
-			rotationOffset.X / 360.0 * data->Template.RotationInterval.Yaw,
-			rotationOffset.Y / 360.0 * data->Template.RotationInterval.Pitch);
-		CurrentCursor->SetRotation(rot);
-	}
-}
-
 TerrainRaytraceResult AChunkManager::Raytrace(
 	const utils::Ray3D & viewpoint,
 	const double maxDist
@@ -171,15 +118,9 @@ TerrainRaytraceResult AChunkManager::Raytrace(
 	return TerrainRaytraceResult();
 }
 
-void AChunkManager::PlaceItem() {
-	// TODO: visual effect for finalizing or cancelling item placement
-	if (CurrentCursor && !CurrentCursor->bHidden) {
-		auto & cursorItemData = CurrentCursor->GetItemData();
-		auto chunk = GetChunkAt(cursorItemData->Position.first);
-		auto newItemData = ItemDataPtr(new ItemData(*cursorItemData));
-		chunk->CreateItem(newItemData);
-		CurrentCursor->SetRotation(ItemRotation(0, 0));
-	}
+AItem * AChunkManager::PlaceItem(const items::ItemDataPtr & data) {
+	auto chunk = GetChunkAt(data->Position.first);
+	return chunk->CreateItem(data);
 }
 
 void AChunkManager::BeginPlay() {
@@ -189,43 +130,16 @@ void AChunkManager::BeginPlay() {
 	GenParams = &ChunkLoaderRef->GetGeneratorParameters();
 	EventBusRef = GetGameState()->EventBus;
 
-	SetUpDefaultCursor();
 	EventBusRef->AddListener(E_PlayerPosition, this);
 	EventBusRef->AddListener(E_ViewPosition, this);
-	EventBusRef->AddListener(E_FPItemPlacementBegin, this);
-	EventBusRef->AddListener(E_FPItemPlacementEnd, this);
-	EventBusRef->AddListener(E_FPItemPlacementRotation, this);
 }
 
 void AChunkManager::HandleEvent(const EventDataPtr & data) {
 	switch (data->Type) {
-	case E_ViewPosition: {
-		auto castedData = std::static_pointer_cast<EViewPosition>(data);
-		UpdateCursorPosition(castedData->ViewRay);
-		break;
-	}
 	case E_PlayerPosition: {
 		auto castedData = std::static_pointer_cast<EPlayerPosition>(data);
 		//UE_LOG(LogTemp, Warning, TEXT("Player position: %f %f %f"), position.X, position.Y, position.Z);
 		UpdateChunksAt(castedData->Position);
-		break;
-	}
-	case E_FPItemPlacementBegin: {
-		// TODO: visual effect for beginning item placement
-		auto castedData = std::static_pointer_cast<EFPItemPlacementBegin>(data);
-		UpdateCursorPosition(castedData->ViewRay);
-		break;
-	}
-	case E_FPItemPlacementEnd: {
-		auto castedData = std::static_pointer_cast<EFPItemPlacementEnd>(data);
-		if (!castedData->bIsCancelled)
-			PlaceItem();
-		UpdateCursorPosition(castedData->ViewRay);
-		break;
-	}
-	case E_FPItemPlacementRotation: {
-		auto castedData = std::static_pointer_cast<EFPItemPlacementRotation>(data);
-		UpdateCursorRotation(castedData->RotationOffset);
 		break;
 	}
 	}

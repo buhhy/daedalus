@@ -25,8 +25,6 @@ class AChunkManager : public AActor, public EventListener {
 private:
 	using ChunkCache = std::unordered_map<terrain::ChunkOffsetVector, AChunk *>;
 
-	AItem * DefaultCursor;                            // Default cursor item
-	AItem * CurrentCursor;                            // Item actor held as the cursor
 	ChunkCache LocalCache;
 
 	const Uint64 RenderDistance;                      // Specified in number of chunks
@@ -42,11 +40,6 @@ private:
 	inline ADDGameState * GetGameState() { return GetWorld()->GetGameState<ADDGameState>(); }
 	AChunk * GetChunkAt(const terrain::ChunkOffsetVector & point);
 	void UpdateChunksAt(const utils::Vector3D<> & playerPosition);
-	void UpdateCursorPosition(const utils::Ray3D & viewpoint);
-	void UpdateCursorRotation(const utils::Point2D & mouseOffset);
-	void UpdateItemPosition(AItem * item, const terrain::ChunkPositionVector & position);
-	void PlaceItem();
-	void SetUpDefaultCursor();
 
 public:
 	virtual void HandleEvent(const events::EventDataPtr & data) override;
@@ -54,5 +47,9 @@ public:
 
 	terrain::TerrainRaytraceResult Raytrace(
 		const utils::Ray3D & viewpoint, const double maxDist);
-
+	/**
+	 * Creates a new item actor from the given item data. The item data is not duplicated, so
+	 * be sure to clone the item data before passing it in if spawning a brand new item.
+	 */
+	AItem * PlaceItem(const items::ItemDataPtr & data);
 };

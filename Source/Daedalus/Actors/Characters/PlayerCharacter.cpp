@@ -33,26 +33,57 @@ void APlayerCharacter::SetUpItemCursor() {
 	const FRotator defaultRotator(0, 0, 0);
 	auto params = FActorSpawnParameters();
 	params.Name = TEXT("ItemPlacementGhostCursor");
-	auto itemData = ItemDataFactory->BuildItemData(I_Chest);
+	CurrentHeldItem = ItemDataFactory->BuildItemData(I_Chest);
 	ItemCursorRef = GetWorld()->SpawnActor<AItemCursor>(
 		AItemCursor::StaticClass(), { 0, 0, 0 }, { 0, 0, 0 }, params);
-	ItemCursorRef->Initialize(itemData);
+	ItemCursorRef->Initialize(CurrentHeldItem);
 	ItemCursorRef->SetActorEnableCollision(false);
 	ItemCursorRef->SetActorHiddenInGame(true);
 	ItemCursorRef->AttachRootComponentToActor(this);
 }
 
 void APlayerCharacter::UpdateItemCursor(const Ray3D & viewpoint) {
-	const auto foundResult =
-		ChunkManagerRef->Raytrace(viewpoint, TerrainInteractionDistance);
+	if (CurrentHeldItem) {
+		const auto foundResult =
+			ChunkManagerRef->Raytrace(viewpoint, TerrainInteractionDistance);
 
-	if (foundResult.Type == E_Terrain || foundResult.Type == E_PlacedItem) {
-		ItemCursorRef->SetPlayerTransform(
-			ToVector3D(this->GetActorLocation()), FRotationMatrix(this->GetActorRotation()));
-		ItemCursorRef->SetPosition(foundResult.EntryPosition);
-		ItemCursorRef->SetActorHiddenInGame(false);
-	} else {
-		ItemCursorRef->SetActorHiddenInGame(true);
+		if (foundResult.Type == E_Terrain || foundResult.Type == E_PlacedItem) {
+			ItemCursorRef->SetPlayerTransform(
+				ToVector3D(this->GetActorLocation()), FRotationMatrix(this->GetActorRotation()));
+			ItemCursorRef->SetPosition(foundResult.EntryPosition);
+			ItemCursorRef->SetActorHiddenInGame(false);
+		} else {
+			ItemCursorRef->SetActorHiddenInGame(true);
+		}
+	}
+}
+
+void APlayerCharacter::UpdateItemCursorRotation() {
+	if (CurrentHeldItem) {
+		// Find out how many notches to turn
+		Vector2D<Int16> turnNotches;
+		for (Uint8 i = 0; i < 2; i++) {
+			turnNotches[i] = (Int16) MouseHoldOffset[i];
+			if (turnNotches[i] != 0)
+				MouseHoldOffset[i] -= turnNotches[i];
+		}
+
+		if (!EEq(turnNotches.Length2(), 0)) {
+			const auto yaw = CurrentHeldItem->Template.RotationInterval.Yaw;
+			const auto pitch = CurrentHeldItem->Template.RotationInterval.Pitch;
+
+			// Bind the notches, since the turn interval only accepts unsigned integers
+			while (turnNotches.X < 0)
+				turnNotches.X += yaw;
+			while (turnNotches.X < 0)
+				turnNotches.Y += pitch;
+
+			turnNotches.X %= yaw;
+			turnNotches.Y %= pitch;
+
+			ItemRotation rot(turnNotches.X, turnNotches.Y);
+			ItemCursorRef->AddRotation(rot);
+		}
 	}
 }
 
@@ -77,17 +108,21 @@ void APlayerCharacter::MoveRight(float amount) {
 }
 
 void APlayerCharacter::LookUp(float amount) {
-	if (bPlacingItem)
-		MouseHoldOffset.Y += amount;
-	else
+	if (bRotatingItem) {
+		MouseHoldOffset.Y += amount / 10.0;
+		UpdateItemCursorRotation();
+	} else {
 		AddControllerPitchInput(amount);
+	}
 }
 
 void APlayerCharacter::LookRight(float amount) {
-	if (bPlacingItem)
-		MouseHoldOffset.X += amount;
-	else
+	if (bRotatingItem) {
+		MouseHoldOffset.X += amount / 10.0;
+		UpdateItemCursorRotation();
+	} else {
 		AddControllerYawInput(amount);
+	}
 }
 
 void APlayerCharacter::HoldJump() {
@@ -100,17 +135,22 @@ void APlayerCharacter::ReleaseJump() {
 	bPressedJump = false;
 }
 
-void APlayerCharacter::BeginPlaceItem() {
+void APlayerCharacter::BeginRotation() {
 	// TODO: handle inventory logic
-	bPlacingItem = true;
+	bRotatingItem = true;
 	MouseHoldOffset.Reset(0, 0);
-	EventBusRef->BroadcastEvent(EventDataPtr(new EFPItemPlacementBegin(GetViewRay())));
+	//EventBusRef->BroadcastEvent(EventDataPtr(new EFPItemPlacementBegin(GetViewRay())));
 }
 
-void APlayerCharacter::FinalizePlaceItem() {
-	bPlacingItem = false;
+void APlayerCharacter::EndRotation() {
+	bRotatingItem = false;
 	MouseHoldOffset.Reset(0, 0);
-	EventBusRef->BroadcastEvent(EventDataPtr(new EFPItemPlacementEnd(GetViewRay())));
+	//EventBusRef->BroadcastEvent(EventDataPtr(new EFPItemPlacementEnd(GetViewRay())));
+}
+
+void APlayerCharacter::PlaceItem() {
+	if (CurrentHeldItem)
+		ChunkManagerRef->PlaceItem(ItemDataPtr(new ItemData(*CurrentHeldItem)));
 }
 
 void APlayerCharacter::BeginPlay() {
@@ -135,8 +175,9 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent * InputCo
 	InputComponent->BindAxis("LookRight", this, &APlayerCharacter::LookRight);
 	InputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::HoldJump);
 	InputComponent->BindAction("Jump", IE_Released, this, &APlayerCharacter::ReleaseJump);
-	InputComponent->BindAction("LeftMouseClick", IE_Pressed, this, &APlayerCharacter::BeginPlaceItem);
-	InputComponent->BindAction("LeftMouseClick", IE_Released, this, &APlayerCharacter::FinalizePlaceItem);
+	InputComponent->BindAction("RightMouseClick", IE_Pressed, this, &APlayerCharacter::BeginRotation);
+	InputComponent->BindAction("RightMouseClick", IE_Released, this, &APlayerCharacter::EndRotation);
+	InputComponent->BindAction("LeftMouseClick", IE_Released, this, &APlayerCharacter::PlaceItem);
 }
 
 void APlayerCharacter::Tick(float delta) {
@@ -150,14 +191,7 @@ void APlayerCharacter::Tick(float delta) {
 		
 		UpdateItemCursor(GetViewRay());
 
-//		EventBusRef->BroadcastEvent(
-//			EventDataPtr(new EViewPosition(ToVector3D(pos), ToVector3D(dir.Vector()))));
-//
-//
-//		if (bPlacingItem) {
-//			EventBusRef->BroadcastEvent(
-//				EventDataPtr(new EFPItemPlacementRotation(MouseHoldOffset * 3.0)));
-//		}
+		EventBusRef->BroadcastEvent(EventDataPtr(new EViewPosition(GetViewRay())));
 	}
 
 	// Tick once every half-second
