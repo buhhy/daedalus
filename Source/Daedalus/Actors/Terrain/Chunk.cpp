@@ -107,7 +107,7 @@ void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 	GenerateChunkMesh();
 }
 
-TerrainRaytraceResult AChunk::FindIntersection(const ChunkGridIndexVector & gridIndex) {
+TerrainRaytraceResult AChunk::FindIntersection(const AxisAlignedBoundingBox3D & bound) {
 	const Point3D position(gridIndex.X, gridIndex.Y, gridIndex.Z);
 	// TODO: handle player collisions somehow
 	if (SolidTerrain.Get(gridIndex.X, gridIndex.Y, gridIndex.Z)) {
@@ -124,7 +124,7 @@ TerrainRaytraceResult AChunk::FindIntersection(const ChunkGridIndexVector & grid
 		for (const auto & item : PlacedItems) {
 			const auto & itemData = item.ItemActor->GetItemData();
 			const OrientedBoundingBox3D obb(0., itemData->Size, itemData->GetPositionMatrix());
-			if (bb.FindIntersection(obb, false)) {
+			if (bb.FindIntersection(itemData->GetBoundingBox(), false)) {
 				return TerrainRaytraceResult(
 					item.ItemActor, ChunkPositionVector(CurrentChunkData->ChunkOffset, position));
 			}

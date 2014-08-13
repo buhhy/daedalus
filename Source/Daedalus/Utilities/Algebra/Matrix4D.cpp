@@ -52,7 +52,6 @@ namespace utils {
 			0, 0, scale.Z, 0,
 			0, 0, 0, 1.);
 	}
-	
 		
 	Basis3D GetBasisFrom(const Matrix4D<> & mat) {
 		return Basis3D(
@@ -63,5 +62,12 @@ namespace utils {
 
 	Vector3D<> GetTranslationVectorFrom(const Matrix4D<> & mat) {
 		return { mat.Get(3, 0), mat.Get(3, 1), mat.Get(3, 2) };
+	}
+
+	Matrix4D<> GetRotationMatrixFrom(const Matrix4D<> & mat) {
+		Matrix4D<> ret(mat);
+		for (Uint8 i = 0; i < 3; i++)
+			ret.Set(3, i, 0);
+		return ret;
 	}
 }

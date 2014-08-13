@@ -84,6 +84,8 @@ namespace utils {
 		return output << '(' << vec.X << ", " << vec.Y << ", " << vec.Z << ')';
 	}
 
+
+
 	/********************
 	 * Matrix4D Operators
 	 ********************/
@@ -92,10 +94,10 @@ namespace utils {
 	inline Matrix4D<T> operator * (const Matrix4D<T> & a, const Matrix4D<T> & b) {
 		Matrix4D<T> ret;
 
-		for (size_t i = 0; i < 4; ++i) {
+		for (Uint32 i = 0; i < 4; ++i) {
 			const T * row = a[i];
 
-			for (size_t j = 0; j < 4; ++j) {
+			for (Uint32 j = 0; j < 4; ++j) {
 				ret[i][j] =
 					row[0] * b[0][j] + row[1] * b[1][j] + 
 					row[2] * b[2][j] + row[3] * b[3][j];
@@ -120,6 +122,10 @@ namespace utils {
 			vec.X * mat[0][0] + vec.Y * mat[0][1] + vec.Z * mat[0][2] + mat[0][3],
 			vec.X * mat[1][0] + vec.Y * mat[1][1] + vec.Z * mat[1][2] + mat[1][3],
 			vec.X * mat[2][0] + vec.Y * mat[2][1] + vec.Z * mat[2][2] + mat[2][3]);
+	}
+	
+	inline Ray3D operator * (const Matrix4D<> & mat, const Ray3D & ray) {
+		return Ray3D(mat * ray.Origin, (GetRotationMatrixFrom(mat) * ray.Origin).Normalize());
 	}
 
 	

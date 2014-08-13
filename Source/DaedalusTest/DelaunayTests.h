@@ -50,7 +50,7 @@ protected:
 	}
 };
 
-typedef std::tuple<utils::Vector2D<int64_t>, Uint64, Uint32> DelaunayTestParam;
+typedef std::tuple<Vector2D<int64_t>, Uint64, Uint32> DelaunayTestParam;
 typedef std::pair<DelaunayTestParam, Uint8> DelaunayMultiTestParam;
 
 class DelaunayGridGraph {
@@ -58,7 +58,7 @@ protected:
 	DelaunayBuilderDAC2D Builder;
 
 	DelaunayGraphPtr ConstructGraph(
-		const utils::Vector2D<Int64> graphId, const Uint64 seed, const Uint32 gridCellCount
+		const Vector2D<Int64> graphId, const Uint64 seed, const Uint32 gridCellCount
 	) const {
 		cout << "Generated Delaunay graph with params: " <<
 			graphId << ", " << seed << ", " << gridCellCount << endl;

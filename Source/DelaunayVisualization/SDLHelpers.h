@@ -3,7 +3,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2_ttf/SDL_ttf.h>
 
-#include <Utilities/DataStructures.h>
+#include <Utilities/Algebra/Algebra2D.h>
+#include <Utilities/Algebra/Algebra3D.h>
 
 #include <iostream>
 

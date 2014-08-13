@@ -59,14 +59,25 @@ namespace utils {
 		{}
 	};
 
-	struct AxisAlignedBoundingBox3D {
-	protected:
+	struct BoundingBox3D {
+		virtual Basis3D GetBasis() const = 0;
+		virtual Vector3D<> GetExtents() const = 0;
+		virtual Vector3D<> GetCentre() const = 0;
+
+		virtual bool FindIntersection(
+			const Ray3D & ray, Point3D * intersectPoint = NULL, double * tValue = NULL) const = 0;
+
+		virtual bool FindIntersection(
+			const BoundingBox3D & box, const bool isInclusive = true) const;
+
+		virtual bool IsInside(const Point3D & point) const = 0;
+	};
+
+	struct AxisAlignedBoundingBox3D : BoundingBox3D {
 		virtual Basis3D GetBasis() const;
 		virtual Vector3D<> GetExtents() const;
 		virtual Vector3D<> GetCentre() const;
-		//virtual std::array<Point3D, 8> GetPoints() const;
 
-	public:
 		Point3D MinPoint;
 		Point3D MaxPoint;
 
@@ -78,31 +89,36 @@ namespace utils {
 		 * This method WILL introduce floating point error into the intersection point. Make sure
 		 * to do floating-point comparisons using epsilon.
 		 */
-		bool FindIntersection(
+		virtual bool FindIntersection(
 			const Ray3D & ray, Point3D * intersectPoint = NULL, double * tValue = NULL) const;
 
-		bool FindIntersection(
-			const AxisAlignedBoundingBox3D & box, const bool isInclusive = true) const;
-		
-		bool IsInside(const Point3D & point) const;
-
-
+		virtual bool IsInside(const Point3D & point) const;
 	};
 
-	struct OrientedBoundingBox3D : AxisAlignedBoundingBox3D {
-	protected:
+	struct OrientedBoundingBox3D : BoundingBox3D {
 		virtual Basis3D GetBasis() const;
+		virtual Vector3D<> GetExtents() const;
 		virtual Vector3D<> GetCentre() const;
-		//virtual std::array<Point3D, 8> GetPoints() const;
 
-	public:
+		AxisAlignedBoundingBox3D Bounds;
 		Matrix4D<> Transform;
 
 		OrientedBoundingBox3D(
 			const Point3D & min, const Point3D & max,
 			const Matrix4D<> & transform
-		) : AxisAlignedBoundingBox3D(min, max), Transform(transform)
+		) : Bounds(min, max), Transform(transform)
 		{}
+
+		virtual bool FindIntersection(
+			const Ray3D & ray, Point3D * intersectPoint = NULL, double * tValue = NULL) const;
+
+		virtual bool IsInside(const Point3D & point) const;
+
+		/**
+		 * This returns the smallest bounding box that contains the transformed oriented box.
+		 */
+		AxisAlignedBoundingBox3D GetEnclosingBox() const {
+		}
 	};
 
 
@@ -116,11 +132,11 @@ namespace utils {
 		Vector3D<> points[8];
 
 		void Initialize(
-						const float blf, const float tlf,
-						const float blb, const float tlb,
-						const float brf, const float trf,
-						const float brb, const float trb
-						) {
+			const float blf, const float tlf,
+			const float blb, const float tlb,
+			const float brf, const float trf,
+			const float brb, const float trb
+		) {
 			values[0] = blf; values[1] = brf; values[2] = brb; values[3] = blb;
 			values[4] = tlf; values[5] = trf; values[6] = trb; values[7] = tlb;
 			points[0] = Vector3D<>(0, 0, 0);

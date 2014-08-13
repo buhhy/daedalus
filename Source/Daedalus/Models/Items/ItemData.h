@@ -118,6 +118,10 @@ namespace items {
 		utils::Matrix4D<> GetPositionMatrix() const {
 			return utils::CreateTranslation(Position.second) * GetRotationMatrix();
 		}
+
+		utils::OrientedBoundingBox3D GetBoundingBox() const {
+			return utils::OrientedBoundingBox3D(utils::Point3D(0, 0, 0), Size, GetPositionMatrix());
+		}
 	};
 
 	using ItemDataPtr = std::shared_ptr<ItemData>;

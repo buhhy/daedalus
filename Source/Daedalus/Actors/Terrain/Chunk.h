@@ -64,8 +64,12 @@ private:
 	Uint64 ItemIdCounter;                            // Used to store the minimum unique ID
 
 
-	terrain::TerrainRaytraceResult FindIntersection(
-		const terrain::ChunkGridIndexVector & gridIndex);
+
+	/**
+	 * @param boundingBox Bounding box to search for intersections, the values should be in
+	 *                    grid coordinate space.
+	 */
+	terrain::TerrainRaytraceResult FindIntersection(const utils::AxisAlignedBoundingBox3D & bound);
 	void GenerateChunkMesh();
 	AItem * SpawnItem(const items::ItemDataPtr & itemData);
 	items::ItemDataPtr RemoveItem(const items::ItemDataPtr & itemData);

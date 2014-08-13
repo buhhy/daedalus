@@ -22,98 +22,9 @@ namespace utils {
 	{
 		GramSchmidt(XVector, YVector, ZVector);
 	}
-
-	bool AxisAlignedBoundingBox3D::FindIntersection(
-		const Ray3D & ray,
-		Point3D * intersectPoint,
-		double * tValue
-	) const {
-		if (intersectPoint != NULL) *intersectPoint = ray.Origin;
-		if (tValue != NULL) *tValue = 0;
-		
-		// There is an intersection if the ray originates within the bounding box.
-		if (IsInside(ray.Origin))
-			return true;
-
-		double txmin = 0;
-		double txmax = 0;
-
-		double tymin = 0;
-		double tymax = 0;
-
-		double tzmin = 0;
-		double tzmax = 0;
-
-		double divx = 1.0/ray.Direction.X;
-		if (divx > 0) {
-			txmin = (MinPoint.X - ray.Origin.X) * divx;
-			txmax = (MaxPoint.X - ray.Origin.X) * divx;
-		} else {
-			txmax = (MinPoint.X - ray.Origin.X) * divx;
-			txmin = (MaxPoint.X - ray.Origin.X) * divx;
-		}
-
-		double divy = 1.0/ray.Direction.Y;
-		if (divy > 0) {
-			tymin = (MinPoint.Y - ray.Origin.Y) * divy;
-			tymax = (MaxPoint.Y - ray.Origin.Y) * divy;
-		} else {
-			tymax = (MinPoint.Y - ray.Origin.Y) * divy;
-			tymin = (MaxPoint.Y - ray.Origin.Y) * divy;
-		}
-
-		if (txmin > tymax || txmax < tymin)
-			return false;
-
-		double tmin = std::max(txmin, tymin);
-		double tmax = std::min(txmax, tymax);
-
-		double divz = 1.0/ray.Direction.Z;
-		if (divz > 0) {
-			tzmin = (MinPoint.Z - ray.Origin.Z) * divz;
-			tzmax = (MaxPoint.Z - ray.Origin.Z) * divz;
-		} else {
-			tzmax = (MinPoint.Z - ray.Origin.Z) * divz;
-			tzmin = (MaxPoint.Z - ray.Origin.Z) * divz;
-		}
-
-		if (tmin > tzmax || tmax < tzmin)
-			return false;
-
-		tmin = std::max(tmin, tzmin);
-		tmax = std::min(tmax, tzmax);
-
-		if (tmin <= 0)
-			return false;
-
-		if (intersectPoint != NULL) *intersectPoint = ray.Origin + ray.Direction * tmin;
-		if (tValue != NULL) *tValue = tmin;
-
-		return true;
-	}
 	
-	bool AxisAlignedBoundingBox3D::IsInside(const Point3D & point) const {
-		for (int i = 0; i < 3; i++) {
-			if (point[i] < MinPoint[i] || point[i] > MaxPoint[i])
-				return false;
-		}
-		return true;
-	}
-
-	Vector3D<> AxisAlignedBoundingBox3D::GetExtents() const {
-		return (MaxPoint - MinPoint) / 2.0;
-	}
-
-	Vector3D<> AxisAlignedBoundingBox3D::GetCentre() const {
-		return (MaxPoint + MinPoint) / 2.0;
-	}
-
-	Vector3D<> OrientedBoundingBox3D::GetCentre() const {
-		return Transform * ((MaxPoint + MinPoint) / 2.0);
-	}
-	
-	bool AxisAlignedBoundingBox3D::FindIntersection(
-		const AxisAlignedBoundingBox3D & box,
+	bool BoundingBox3D::FindIntersection(
+		const BoundingBox3D & box,
 		const bool isInclusive
 	) const {
 		// Algorithm based on this paper:
@@ -288,38 +199,120 @@ namespace utils {
 
 		return true;
 	}
+
+	bool AxisAlignedBoundingBox3D::FindIntersection(
+		const Ray3D & ray,
+		Point3D * intersectPoint,
+		double * tValue
+	) const {
+		if (intersectPoint != NULL) *intersectPoint = ray.Origin;
+		if (tValue != NULL) *tValue = 0;
+		
+		// There is an intersection if the ray originates within the bounding box.
+		if (IsInside(ray.Origin))
+			return true;
+
+		double txmin = 0;
+		double txmax = 0;
+
+		double tymin = 0;
+		double tymax = 0;
+
+		double tzmin = 0;
+		double tzmax = 0;
+
+		double divx = 1.0/ray.Direction.X;
+		if (divx > 0) {
+			txmin = (MinPoint.X - ray.Origin.X) * divx;
+			txmax = (MaxPoint.X - ray.Origin.X) * divx;
+		} else {
+			txmax = (MinPoint.X - ray.Origin.X) * divx;
+			txmin = (MaxPoint.X - ray.Origin.X) * divx;
+		}
+
+		double divy = 1.0/ray.Direction.Y;
+		if (divy > 0) {
+			tymin = (MinPoint.Y - ray.Origin.Y) * divy;
+			tymax = (MaxPoint.Y - ray.Origin.Y) * divy;
+		} else {
+			tymax = (MinPoint.Y - ray.Origin.Y) * divy;
+			tymin = (MaxPoint.Y - ray.Origin.Y) * divy;
+		}
+
+		if (txmin > tymax || txmax < tymin)
+			return false;
+
+		double tmin = std::max(txmin, tymin);
+		double tmax = std::min(txmax, tymax);
+
+		double divz = 1.0/ray.Direction.Z;
+		if (divz > 0) {
+			tzmin = (MinPoint.Z - ray.Origin.Z) * divz;
+			tzmax = (MaxPoint.Z - ray.Origin.Z) * divz;
+		} else {
+			tzmax = (MinPoint.Z - ray.Origin.Z) * divz;
+			tzmin = (MaxPoint.Z - ray.Origin.Z) * divz;
+		}
+
+		if (tmin > tzmax || tmax < tzmin)
+			return false;
+
+		tmin = std::max(tmin, tzmin);
+		tmax = std::min(tmax, tzmax);
+
+		if (tmin <= 0)
+			return false;
+
+		if (intersectPoint != NULL) *intersectPoint = ray.Origin + ray.Direction * tmin;
+		if (tValue != NULL) *tValue = tmin;
+
+		return true;
+	}
+	
+	bool AxisAlignedBoundingBox3D::IsInside(const Point3D & point) const {
+		for (int i = 0; i < 3; i++) {
+			if (point[i] < MinPoint[i] || point[i] > MaxPoint[i])
+				return false;
+		}
+		return true;
+	}
+
+	Vector3D<> AxisAlignedBoundingBox3D::GetExtents() const {
+		return (MaxPoint - MinPoint) / 2.0;
+	}
+
+	Vector3D<> AxisAlignedBoundingBox3D::GetCentre() const {
+		return (MaxPoint + MinPoint) / 2.0;
+	}
 	
 	Basis3D AxisAlignedBoundingBox3D::GetBasis() const {
 		return Basis3D(Vector3D<>(1, 0, 0), Vector3D<>(0, 1, 0), Vector3D<>(0, 0, 1));
+	}
+
+	bool OrientedBoundingBox3D::FindIntersection(
+		const Ray3D & ray,
+		Point3D * intersectPoint,
+		double * tValue
+	) const {
+		return Bounds.FindIntersection(Transform.Invert() * ray, intersectPoint, tValue);
+	}
+
+	Vector3D<> OrientedBoundingBox3D::GetExtents() const {
+		Point3D extents;
+		// Account for scaling transforms
+		for (Uint8 i = 0; i < 3; i++) {
+			Point3D p = Bounds.MinPoint;
+			p[i] = Bounds.MaxPoint[i];
+			extents[i] = (Transform * (p - Bounds.MinPoint)).Length() / 2.0;
+		}
+		return extents;
+	}
+
+	Vector3D<> OrientedBoundingBox3D::GetCentre() const {
+		return Transform * ((Bounds.MaxPoint + Bounds.MinPoint) / 2.0);
 	}
 	
 	Basis3D OrientedBoundingBox3D::GetBasis() const {
 		return GetBasisFrom(Transform);
 	}
-	
-	/*std::array<Point3D, 8> AxisAlignedBoundingBox3D::GetPoints() const {
-		return {{
-			this->MinPoint,
-			{ this->MaxPoint.X, this->MinPoint.Y, this->MinPoint.Z },
-			{ this->MinPoint.X, this->MaxPoint.Y, this->MinPoint.Z },
-			{ this->MaxPoint.X, this->MaxPoint.Y, this->MinPoint.Z },
-			{ this->MinPoint.X, this->MinPoint.Y, this->MaxPoint.Z },
-			{ this->MaxPoint.X, this->MinPoint.Y, this->MaxPoint.Z },
-			{ this->MinPoint.X, this->MaxPoint.Y, this->MaxPoint.Z },
-			this->MaxPoint
-		}};
-	}
-		
-	std::array<Point3D, 8> OrientedBoundingBox3D::GetPoints() const {
-		return {{
-			Transform * this->MinPoint,
-			Transform * { this->MaxPoint.X, this->MinPoint.Y, this->MinPoint.Z },
-			Transform * { this->MinPoint.X, this->MaxPoint.Y, this->MinPoint.Z },
-			Transform * { this->MaxPoint.X, this->MaxPoint.Y, this->MinPoint.Z },
-			Transform * { this->MinPoint.X, this->MinPoint.Y, this->MaxPoint.Z },
-			Transform * { this->MaxPoint.X, this->MinPoint.Y, this->MaxPoint.Z },
-			Transform * { this->MinPoint.X, this->MaxPoint.Y, this->MaxPoint.Z },
-			Transform * this->MaxPoint
-		}};
-	}*/
 }
