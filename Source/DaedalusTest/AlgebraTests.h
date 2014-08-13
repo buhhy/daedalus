@@ -1,10 +1,14 @@
 #pragma once
 
 #include <gtest/gtest.h>
-#include <Utilities/Algebra/Algebra.h>
+#include <Utilities/Algebra/Algebra3D.h>
 #include <iostream>
 
 using namespace utils;
+
+/********************************************************************************
+ * Double epsilon tests
+ ********************************************************************************/
 
 TEST(DoubleAlgebra, PerformsCeil) {
 	ASSERT_EQ(ECeil(99.5), 100);
@@ -67,4 +71,55 @@ TEST(DoubleAlgebra, PerformsLess) {
 	ASSERT_FALSE(ELT(10000.0, 9999.999999));
 	ASSERT_FALSE(ELT(-1, -1.0001));
 	ASSERT_FALSE(ELT(-10, -15));
+}
+
+
+
+/********************************************************************************
+ * Vector3D epsilon tests
+ ********************************************************************************/
+
+TEST(Vector3DAlgebra, PerformsCeil) {
+	ASSERT_EQ(ECeil(Point3D(99.999999999)), Vector3D<Int64>(100));
+	ASSERT_EQ(ECeil(Point3D(100.000000001)), Vector3D<Int64>(100));
+	ASSERT_EQ(ECeil(Point3D(100.0001)), Vector3D<Int64>(101));
+}
+
+TEST(Vector3DAlgebra, PerformsFloor) {
+	ASSERT_EQ(EFloor(Point3D(99.999999999)), Vector3D<Int64>(100));
+	ASSERT_EQ(EFloor(Point3D(100.000000001)), Vector3D<Int64>(100));
+	ASSERT_EQ(EFloor(Point3D(99.9999)), Vector3D<Int64>(99));
+}
+
+TEST(Vector3DAlgebra, PerformsEquals) {
+	ASSERT_TRUE(EEq(Point3D(99.999999999), Point3D(100)));
+	ASSERT_FALSE(EEq(Point3D(99.99), Point3D(100)));
+}
+
+TEST(Vector3DAlgebra, PerformsGreaterEqual) {
+	ASSERT_TRUE(EGTE(Point3D(99.999999999), Point3D(100)));
+	ASSERT_TRUE(EGTE(Point3D(101), Point3D(100)));
+	ASSERT_FALSE(EGTE(Point3D(99.99), Point3D(100)));
+	ASSERT_FALSE(EGTE(Point3D(50), Point3D(100)));
+}
+
+TEST(Vector3DAlgebra, PerformsGreater) {
+	ASSERT_TRUE(EGT(Point3D(101), Point3D(100)));
+	ASSERT_FALSE(EGT(Point3D(99.999999999), Point3D(100)));
+	ASSERT_FALSE(EGT(Point3D(99.99), Point3D(100)));
+	ASSERT_FALSE(EGT(Point3D(50), Point3D(100)));
+}
+
+TEST(Vector3DAlgebra, PerformsLessEqual) {
+	ASSERT_TRUE(ELTE(Point3D(100.000000001), Point3D(100)));
+	ASSERT_TRUE(ELTE(Point3D(99), Point3D(100)));
+	ASSERT_FALSE(ELTE(Point3D(100.001), Point3D(100)));
+	ASSERT_FALSE(ELTE(Point3D(150), Point3D(100)));
+}
+
+TEST(Vector3DAlgebra, PerformsLess) {
+	ASSERT_TRUE(ELT(Point3D(99), Point3D(100)));
+	ASSERT_FALSE(ELT(Point3D(100.000000001), Point3D(100)));
+	ASSERT_FALSE(ELT(Point3D(100.001), Point3D(100)));
+	ASSERT_FALSE(ELT(Point3D(150), Point3D(100)));
 }

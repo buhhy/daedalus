@@ -7,6 +7,10 @@
 
 using namespace utils;
 
+/*************************************************************
+ * Vector3D Tests
+ *************************************************************/
+
 TEST(Vector3D, Constructors) {
 	Vector3D<> v1(Vector2D<>(0.5, 0.6), 0.7);
 	Vector3D<> v2(0.5, 0.6, 0.7);
@@ -77,16 +81,17 @@ TEST(Vector3D, Normalizes) {
 	ASSERT_TRUE(DoubleEquals(v5.Normalize().Length(), 1.0));
 }
 
+
+
+/*************************************************************
+ * Matrix Tests
+ *************************************************************/
+
 void CompareMatrix(const Matrix4D<> & matrix1, const Matrix4D<> & matrix2) {
 	for (Uint8 i = 0; i < 4; i++) {
 		for (Uint8 j = 0; j < 4; j++)
 			ASSERT_TRUE(EEq(matrix1[i][j], matrix2[i][j]));
 	}
-}
-
-void CompareVector(const Vector3D<> & vec1, const Vector3D<> & vec2) {
-	for (Uint8 i = 0; i < 3; i++)
-		ASSERT_TRUE(EEq(vec1[i], vec2[i]));
 }
 
 TEST(Matrix4D, Inverts) {
@@ -105,7 +110,8 @@ TEST(Matrix4D, Inverts) {
 
 TEST(Matrix4D, Multiply) {
 	CompareMatrix(
-		CreateRotation(40, AXIS_X) * CreateRotation(30, AXIS_X), CreateRotation(70, AXIS_X));
+		CreateRotation(40, AXIS_X) * CreateRotation(30, AXIS_X) * CreateRotation(15, AXIS_X),
+		CreateRotation(85, AXIS_X));
 	CompareMatrix(
 		CreateTranslation({ 40, 50, 60 }) * CreateTranslation({ -70, 45, -20 }),
 		CreateTranslation({ -30, 95, 40 }));
@@ -119,7 +125,80 @@ TEST(Matrix4D, TransformRay) {
 		CreateRotation(14, AXIS_X) * CreateRotation(60, AXIS_Y) * CreateScaling({ 2.0, 1.6, 1.7 });
 	const auto transformed = transform * ray;
 	ASSERT_TRUE(EEq(transformed.Direction.Length2(), 1));
-	CompareVector(transformed.Origin, transform * origin);
-	CompareVector(
-		transformed.Direction, (GetRotationMatrixFrom(transform) * direction).Normalize());
+	ASSERT_TRUE(EEq(transformed.Origin, transform * origin));
+	ASSERT_TRUE(EEq(
+		transformed.Direction, (GetRotationMatrixFrom(transform) * direction).Normalize()));
+}
+
+TEST(Matrix4D, RotationTransformX) {
+	const Point3D point(0, 1, 0);
+	const auto sqrt2 = std::sqrt(0.5);
+	ASSERT_TRUE(EEq(CreateRotation(45, AXIS_X) * point, { 0, sqrt2, sqrt2 }));
+	ASSERT_TRUE(EEq(CreateRotation(90, AXIS_X) * point, { 0, 0, 1 }));
+	ASSERT_TRUE(EEq(CreateRotation(135, AXIS_X) * point, { 0, -sqrt2, sqrt2 }));
+	ASSERT_TRUE(EEq(CreateRotation(180, AXIS_X) * point, { 0, -1, 0 }));
+	ASSERT_TRUE(EEq(CreateRotation(270, AXIS_X) * point, { 0, 0, -1 }));
+}
+
+TEST(Matrix4D, RotationTransformY) {
+	const Point3D point(1, 0, 0);
+	const auto sqrt2 = std::sqrt(0.5);
+	ASSERT_TRUE(EEq(CreateRotation(45, AXIS_Y) * point, { sqrt2, 0, -sqrt2 }));
+	ASSERT_TRUE(EEq(CreateRotation(90, AXIS_Y) * point, { 0, 0, -1 }));
+	ASSERT_TRUE(EEq(CreateRotation(135, AXIS_Y) * point, { -sqrt2, 0, -sqrt2 }));
+	ASSERT_TRUE(EEq(CreateRotation(180, AXIS_Y) * point, { -1, 0, 0 }));
+	ASSERT_TRUE(EEq(CreateRotation(270, AXIS_Y) * point, { 0, 0, 1 }));
+}
+
+TEST(Matrix4D, RotationTransformZ) {
+	const Point3D point(1, 0, 0);
+	const auto sqrt2 = std::sqrt(0.5);
+	ASSERT_TRUE(EEq(CreateRotation(45, AXIS_Z) * point, { sqrt2, sqrt2, 0 }));
+	ASSERT_TRUE(EEq(CreateRotation(90, AXIS_Z) * point, { 0, 1, 0 }));
+	ASSERT_TRUE(EEq(CreateRotation(135, AXIS_Z) * point, { -sqrt2, sqrt2, 0 }));
+	ASSERT_TRUE(EEq(CreateRotation(180, AXIS_Z) * point, { -1, 0, 0 }));
+	ASSERT_TRUE(EEq(CreateRotation(270, AXIS_Z) * point, { 0, -1, 0 }));
+}
+
+
+
+/*************************************************************
+ * Bounding Box Tests
+ *************************************************************/
+
+TEST(OrientedBoundingBox3D, GetsCorrectExtents) {
+	OrientedBoundingBox3D bb(
+		{ 5, 2, 3 }, { 8, 4, 9 },
+		CreateRotation(24, AXIS_X) * CreateRotation(52, AXIS_Y) *
+		CreateTranslation({ 24, 30, 15 }));
+	ASSERT_TRUE(EEq(bb.GetExtents(), { 1.5, 1.0, 3.0 }));
+	ASSERT_TRUE(EEq(bb.GetCentre(), bb.Transform * Vector3D<>(6.5, 3, 6)));
+}
+
+TEST(OrientedBoundingBox3D, GetsEnclosingBoundingBox1) {
+	OrientedBoundingBox3D bb({ 0, 0, 0 }, { 1, 1, 1 }, CreateRotation(45, AXIS_Z));
+	const auto box = bb.GetEnclosingBoundingBox();
+	const auto sqrt2 = std::sqrt(2);
+	ASSERT_TRUE(EEq(box.MinPoint, { -sqrt2 / 2, 0, 0 }));
+	ASSERT_TRUE(EEq(box.MaxPoint, { sqrt2 / 2, sqrt2, 1 }));
+}
+
+TEST(OrientedBoundingBox3D, GetsEnclosingBoundingBox2) {
+	OrientedBoundingBox3D bb(
+		{ 0, 0, 0 }, { 1, 1, 1 },
+		CreateTranslation({ 0, 2, 1 }) * CreateRotation(45, AXIS_Z));
+	const auto box = bb.GetEnclosingBoundingBox();
+	const auto sqrt2 = std::sqrt(2);
+	ASSERT_TRUE(EEq(box.MinPoint, { -sqrt2 / 2, 2, 1 }));
+	ASSERT_TRUE(EEq(box.MaxPoint, { sqrt2 / 2, sqrt2 + 2, 2 }));
+}
+
+TEST(OrientedBoundingBox3D, GetsEnclosingBoundingBox3) {
+	OrientedBoundingBox3D bb(
+		{ 0, 0, 0 }, { 1, 1, 1 },
+		CreateTranslation({ 0, 2, 1 }) * CreateRotation(45, AXIS_Y) * CreateRotation(45, AXIS_Z));
+	const auto box = bb.GetEnclosingBoundingBox();
+	const auto sqrt2 = std::sqrt(2);
+	ASSERT_TRUE(EEq(box.MinPoint, { -0.5, 2, 0.5 }));
+	ASSERT_TRUE(EEq(box.MaxPoint, { 0.5 + sqrt2 / 2, sqrt2 + 2, 0.5 + sqrt2 / 2 + 1 }));
 }

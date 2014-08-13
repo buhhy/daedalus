@@ -4,26 +4,29 @@
 
 namespace utils {
 	Matrix4D<> CreateRotation(const double angle, const Axis axis) {
-		double radAngle = angle * MATH_PI/180;
+		using std::sin;
+		using std::cos;
+
+		double r = angle * MATH_PI/180;
 		switch (axis) {
 			case AXIS_X:
 				return Matrix4D<>(
-					1.0, 0.0, 0.0, 0.0,
-					0.0, std::cos(radAngle), -std::sin(radAngle), 0.0,
-					0.0, std::sin(radAngle), std::cos(radAngle), 0.0,
-					0.0, 0.0, 0.0, 1.0);
+					    1.0,    0.0,     0.0,    0.0,
+					    0.0, cos(r), -sin(r),    0.0,
+					    0.0, sin(r),  cos(r),    0.0,
+					    0.0,    0.0,     0.0,    1.0);
 			case AXIS_Y:
 				return Matrix4D<>(
-					std::cos(radAngle), 0.0, std::sin(radAngle), 0.0,
-					0.0, 1.0, 0.0, 0.0,
-					-std::sin(radAngle), 0.0, std::cos(radAngle), 0.0,
-					0.0, 0.0, 0.0, 1.0);
+					 cos(r),    0.0, sin(r),    0.0,
+					    0.0,    1.0,    0.0,    0.0,
+					-sin(r),    0.0, cos(r),    0.0,
+					    0.0,    0.0,    0.0,    1.0);
 			case AXIS_Z:
 				return Matrix4D<>(
-					std::cos(radAngle), std::sin(radAngle), 0.0, 0.0,
-					-std::sin(radAngle), std::cos(radAngle), 0.0, 0.0,
-					0.0, 0.0, 1.0, 0.0,
-					0.0, 0.0, 0.0, 1.0);
+					 cos(r), -sin(r),    0.0,    0.0,
+					 sin(r), cos(r),    0.0,    0.0,
+					    0.0,    0.0,    1.0,    0.0,
+					    0.0,    0.0,    0.0,    1.0);
 			default:
 				return Matrix4D<>();
 		}
@@ -34,23 +37,23 @@ namespace utils {
 			x.X, y.X, z.X, 0,
 			x.Y, y.Y, z.Y, 0,
 			x.Z, y.Z, z.Z, 0,
-			0, 0, 0, 1);
+			  0,   0,   0, 1);
 	}
 
 	Matrix4D<> CreateTranslation(const Vector3D<> & displacement) {
 		return Matrix4D<>(
-			1., 0, 0, displacement.X,
-			0, 1., 0, displacement.Y,
-			0, 0, 1., displacement.Z,
-			0, 0, 0, 1.);
+			1.0,   0,   0, displacement.X,
+			  0, 1.0,   0, displacement.Y,
+			  0,   0, 1.0, displacement.Z,
+			  0,   0,   0, 1.0);
 	}
 
 	Matrix4D<> CreateScaling(const Vector3D<> & scale) {
 		return Matrix4D<>(
-			scale.X, 0, 0, 0,
-			0, scale.Y, 0, 0,
-			0, 0, scale.Z, 0,
-			0, 0, 0, 1.);
+			scale.X,       0,       0, 0.0,
+			      0, scale.Y,       0, 0.0,
+			      0,       0, scale.Z, 0.0,
+			      0,       0,       0, 1.0);
 	}
 		
 	Basis3D GetBasisFrom(const Matrix4D<> & mat) {

@@ -95,6 +95,10 @@ namespace terrain {
 				z - offset.Z * GridCellCount);
 			return ChunkPositionVector(vect.first + offset, itemPosition);
 		}
+
+		bool WithinGridBounds(const utils::Point3D & point) const {
+			return point.IsBoundedBy(0, GridCellCount);
+		}
 	};
 
 

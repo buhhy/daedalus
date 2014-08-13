@@ -107,26 +107,39 @@ void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 	GenerateChunkMesh();
 }
 
+bool AChunk::IsSolidAt(const utils::Point3D & point) const {
+	if (!TerrainGenParams->WithinGridBounds(point))
+		return false;
+	return SolidTerrain.Get(
+		utils::EFloor(point.X), utils::EFloor(point.Y), utils::EFloor(point.Z));
+}
+
+bool AChunk::IsSolidAt(const AxisAlignedBoundingBox3D & bound) const {
+	for (double x = bound.MinPoint.X; ELTE(x, bound.MaxPoint.X); x += 1) {
+		for (double y = bound.MinPoint.Y; ELTE(y, bound.MaxPoint.Y); y += 1) {
+			for (double z = bound.MinPoint.Z; ELTE(z, bound.MaxPoint.Z); z += 1) {
+				if (IsSolidAt(Point3D(x, y, z)))
+					return true;
+			}
+		}
+	}
+	return false;
+}
+
 TerrainRaytraceResult AChunk::FindIntersection(const AxisAlignedBoundingBox3D & bound) {
-	const Point3D position(gridIndex.X, gridIndex.Y, gridIndex.Z);
 	// TODO: handle player collisions somehow
-	if (SolidTerrain.Get(gridIndex.X, gridIndex.Y, gridIndex.Z)) {
+	if (IsSolidAt(bound)) {
 		return TerrainRaytraceResult(
-			this, ChunkPositionVector(CurrentChunkData->ChunkOffset, position));
+			this, ChunkPositionVector(CurrentChunkData->ChunkOffset, { 0, 0 }));
 	} else {
 		// Check items to make sure nothing occupies this location. Perhaps using an octree
 		// might be wise here.
-		// TODO: make this work for arbitrarily placed items
-		const double inset = 0.01; // Accounts for rounding errors
-		const AxisAlignedBoundingBox3D bb(
-			Point3D(gridIndex.X + inset, gridIndex.Y + inset, gridIndex.Z + inset),
-			Point3D(gridIndex.X + 1 - inset, gridIndex.Y + 1 - inset, gridIndex.Z + 1 - inset));
 		for (const auto & item : PlacedItems) {
 			const auto & itemData = item.ItemActor->GetItemData();
 			const OrientedBoundingBox3D obb(0., itemData->Size, itemData->GetPositionMatrix());
-			if (bb.FindIntersection(itemData->GetBoundingBox(), false)) {
+			if (bound.BoundingBoxIntersection(itemData->GetBoundingBox(), false)) {
 				return TerrainRaytraceResult(
-					item.ItemActor, ChunkPositionVector(CurrentChunkData->ChunkOffset, position));
+					item.ItemActor, ChunkPositionVector(CurrentChunkData->ChunkOffset, { 0, 0, 0 }));
 			}
 		}
 	}
@@ -135,11 +148,7 @@ TerrainRaytraceResult AChunk::FindIntersection(const AxisAlignedBoundingBox3D & 
 
 AItem * AChunk::CreateItem(const items::ItemDataPtr & itemData, const bool preserveId) {
 	const auto & position = itemData->Position.second;
-	ChunkGridIndexVector vec(
-		Uint16(utils::EFloor(position.X)),
-		Uint16(utils::EFloor(position.Y)),
-		Uint16(utils::EFloor(position.Z)));
-	if (FindIntersection(vec).Type == E_None) {
+	if (FindIntersection(itemData->GetBoundingBox().GetEnclosingBoundingBox()).Type == E_None) {
 		if (!preserveId)
 			itemData->ItemId = ItemIdCounter++;
 		itemData->bIsPlaced = true;
@@ -229,7 +238,12 @@ TerrainRaytraceResult AChunk::Raytrace(const Ray3D & ray, const double maxDistan
 	for (Uint16 i = 0; fvt.IsValid(); i++) {
 		const auto & current = fvt.GetCurrentCell();
 		if (current.IsBoundedBy(0, TerrainGenParams->GridCellCount)) {
-			const auto found = FindIntersection(current.Cast<Uint16>());
+			// TODO: make this work a single ray cast instead
+			const double inset = 0.01; // Accounts for rounding errors
+			const AxisAlignedBoundingBox3D bb(
+				Point3D(current.X + inset, current.Y + inset, current.Z + inset),
+				Point3D(current.X + 1 - inset, current.Y + 1 - inset, current.Z + 1 - inset));
+			const auto found = FindIntersection(bb);
 			if (found.Type != E_None) {
 				const auto & collisionIndex = fvt.GetCurrentCell();
 				const auto & precollisionIndex = fvt.GetPreviousCell();

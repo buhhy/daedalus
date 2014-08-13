@@ -11,10 +11,14 @@ namespace utils {
 	template <typename T>
 	inline Int8 Sign(const T value) { return (T(0) < value) - (value < T(0)); }
 
-	/**
+	template <typename T>
+	struct Vector3D;
+
+	/********************************************************************************
 	 * Custom math functions for floating point operations that account for precision issues.
 	 * Relevant article: http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
-	 */
+	 ********************************************************************************/
+
 	inline Int64 ECeil(const double value, const double maxDiff = DOUBLE_EPSILON) {
 		return Int64(std::ceil(value - maxDiff) + maxDiff * Sign(value));
 	}
@@ -45,6 +49,40 @@ namespace utils {
 
 	bool ELT(
 		const double v1, const double v2,
+		const double maxDiff = DOUBLE_EPSILON,
+		const double maxRelDiff = DOUBLE_EPSILON);
+	
+
+
+	/********************************************************************************
+	 * Custom epsilon comparison and math functions for the vector datastructures.
+	 ********************************************************************************/
+
+	Vector3D<Int64> ECeil(const Vector3D<double> & vec, const double maxDiff = DOUBLE_EPSILON);
+	Vector3D<Int64> EFloor(const Vector3D<double> & vec, const double maxDiff = DOUBLE_EPSILON);
+
+	bool EEq(
+		const Vector3D<double> v1, const Vector3D<double> v2,
+		const double maxDiff = DOUBLE_EPSILON,
+		const double maxRelDiff = DOUBLE_EPSILON);
+
+	bool EGTE(
+		const Vector3D<double> v1, const Vector3D<double> v2,
+		const double maxDiff = DOUBLE_EPSILON,
+		const double maxRelDiff = DOUBLE_EPSILON);
+
+	bool EGT(
+		const Vector3D<double> v1, const Vector3D<double> v2,
+		const double maxDiff = DOUBLE_EPSILON,
+		const double maxRelDiff = DOUBLE_EPSILON);
+
+	bool ELTE(
+		const Vector3D<double> v1, const Vector3D<double> v2,
+		const double maxDiff = DOUBLE_EPSILON,
+		const double maxRelDiff = DOUBLE_EPSILON);
+
+	bool ELT(
+		const Vector3D<double> v1, const Vector3D<double> v2,
 		const double maxDiff = DOUBLE_EPSILON,
 		const double maxRelDiff = DOUBLE_EPSILON);
 }

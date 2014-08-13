@@ -64,11 +64,11 @@ namespace utils {
 		virtual Vector3D<> GetExtents() const = 0;
 		virtual Vector3D<> GetCentre() const = 0;
 
-		virtual bool FindIntersection(
-			const Ray3D & ray, Point3D * intersectPoint = NULL, double * tValue = NULL) const = 0;
-
-		virtual bool FindIntersection(
+		virtual bool BoundingBoxIntersection(
 			const BoundingBox3D & box, const bool isInclusive = true) const;
+
+		virtual bool RayIntersection(
+			const Ray3D & ray, Point3D * intersectPoint = NULL, double * tValue = NULL) const = 0;
 
 		virtual bool IsInside(const Point3D & point) const = 0;
 	};
@@ -89,12 +89,16 @@ namespace utils {
 		 * This method WILL introduce floating point error into the intersection point. Make sure
 		 * to do floating-point comparisons using epsilon.
 		 */
-		virtual bool FindIntersection(
+		virtual bool RayIntersection(
 			const Ray3D & ray, Point3D * intersectPoint = NULL, double * tValue = NULL) const;
 
 		virtual bool IsInside(const Point3D & point) const;
 	};
 
+	/**
+	 * Scaling transforms have an undefined behaviour on this bounding box, as it introduces
+	 * shearing, which changes the bounding box to a non-box volume.
+	 */
 	struct OrientedBoundingBox3D : BoundingBox3D {
 		virtual Basis3D GetBasis() const;
 		virtual Vector3D<> GetExtents() const;
@@ -109,7 +113,7 @@ namespace utils {
 		) : Bounds(min, max), Transform(transform)
 		{}
 
-		virtual bool FindIntersection(
+		virtual bool RayIntersection(
 			const Ray3D & ray, Point3D * intersectPoint = NULL, double * tValue = NULL) const;
 
 		virtual bool IsInside(const Point3D & point) const;
@@ -117,8 +121,7 @@ namespace utils {
 		/**
 		 * This returns the smallest bounding box that contains the transformed oriented box.
 		 */
-		AxisAlignedBoundingBox3D GetEnclosingBox() const {
-		}
+		AxisAlignedBoundingBox3D GetEnclosingBoundingBox() const;
 	};
 
 

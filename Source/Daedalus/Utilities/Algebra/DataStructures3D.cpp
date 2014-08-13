@@ -22,8 +22,14 @@ namespace utils {
 	{
 		GramSchmidt(XVector, YVector, ZVector);
 	}
+
+
+
+	/********************************************************************************
+	 * Bounding box 3D
+	 ********************************************************************************/
 	
-	bool BoundingBox3D::FindIntersection(
+	bool BoundingBox3D::BoundingBoxIntersection(
 		const BoundingBox3D & box,
 		const bool isInclusive
 	) const {
@@ -200,7 +206,7 @@ namespace utils {
 		return true;
 	}
 
-	bool AxisAlignedBoundingBox3D::FindIntersection(
+	bool AxisAlignedBoundingBox3D::RayIntersection(
 		const Ray3D & ray,
 		Point3D * intersectPoint,
 		double * tValue
@@ -289,23 +295,20 @@ namespace utils {
 		return Basis3D(Vector3D<>(1, 0, 0), Vector3D<>(0, 1, 0), Vector3D<>(0, 0, 1));
 	}
 
-	bool OrientedBoundingBox3D::FindIntersection(
+	bool OrientedBoundingBox3D::RayIntersection(
 		const Ray3D & ray,
 		Point3D * intersectPoint,
 		double * tValue
 	) const {
-		return Bounds.FindIntersection(Transform.Invert() * ray, intersectPoint, tValue);
+		return Bounds.RayIntersection(Transform.Invert() * ray, intersectPoint, tValue);
+	}
+	
+	bool OrientedBoundingBox3D::IsInside(const Point3D & point) const {
+		return Bounds.IsInside(Transform.Invert() * point);
 	}
 
 	Vector3D<> OrientedBoundingBox3D::GetExtents() const {
-		Point3D extents;
-		// Account for scaling transforms
-		for (Uint8 i = 0; i < 3; i++) {
-			Point3D p = Bounds.MinPoint;
-			p[i] = Bounds.MaxPoint[i];
-			extents[i] = (Transform * (p - Bounds.MinPoint)).Length() / 2.0;
-		}
-		return extents;
+		return Bounds.GetExtents();
 	}
 
 	Vector3D<> OrientedBoundingBox3D::GetCentre() const {
@@ -314,5 +317,35 @@ namespace utils {
 	
 	Basis3D OrientedBoundingBox3D::GetBasis() const {
 		return GetBasisFrom(Transform);
+	}
+
+	AxisAlignedBoundingBox3D OrientedBoundingBox3D::GetEnclosingBoundingBox() const {
+		std::array<const Point3D, 2> points = { Bounds.MinPoint, Bounds.MaxPoint };
+		Point3D minPoint, maxPoint;
+		Point3D tempPoint, transformedPoint;
+
+		for (Uint8 x = 0; x < points.size(); x++) {
+			for (Uint8 y = 0; y < points.size(); y++) {
+				for (Uint8 z = 0; z < points.size(); z++) {
+					tempPoint.Reset(points[x].X, points[y].Y, points[z].Z);
+					transformedPoint = Transform * tempPoint;
+					// Initialization of min and max values to the first loop iteration
+					if (x == 0 && y == 0 && z == 0) {
+						minPoint = maxPoint = transformedPoint;
+					} else {
+						// Check each dimension of this new point, and check if any of these
+						// dimensions are the absolute minimum and maximum of it's kind in the
+						// entire bounding box.
+						for (Uint8 i = 0; i < 3; i++) {
+							if (ELT(transformedPoint[i], minPoint[i]))
+								minPoint[i] = transformedPoint[i];
+							if (EGT(transformedPoint[i], maxPoint[i]))
+								maxPoint[i] = transformedPoint[i];
+						}
+					}
+				}
+			}
+		}
+		return AxisAlignedBoundingBox3D(minPoint, maxPoint);
 	}
 }

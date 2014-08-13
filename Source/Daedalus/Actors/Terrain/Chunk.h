@@ -73,6 +73,8 @@ private:
 	void GenerateChunkMesh();
 	AItem * SpawnItem(const items::ItemDataPtr & itemData);
 	items::ItemDataPtr RemoveItem(const items::ItemDataPtr & itemData);
+	bool IsSolidAt(const utils::Point3D & point) const;
+	bool IsSolidAt(const utils::AxisAlignedBoundingBox3D & bound) const;
 
 protected:
 	virtual void ReceiveDestroyed() override;

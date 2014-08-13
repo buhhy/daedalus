@@ -35,7 +35,7 @@ namespace utils {
 
 		// Make sure the ray intersects the bounding box.
 		double tEntry;
-		const bool doesEnter = boundingBox.FindIntersection(ray, &StartingPoint, &tEntry);
+		const bool doesEnter = boundingBox.RayIntersection(ray, &StartingPoint, &tEntry);
 		DistanceLimit -= tEntry;
 
 		// If the ray doesn't enter the chunk within the maximum allowed t-value, then
