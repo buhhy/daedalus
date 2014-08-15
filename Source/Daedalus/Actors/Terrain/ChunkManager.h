@@ -43,7 +43,7 @@ public:
 	virtual void HandleEvent(const events::EventDataPtr & data) override;
 	virtual void BeginPlay() override;
 
-	terrain::TerrainRaytraceResult Raytrace(
+	utils::Option<terrain::TerrainRaytraceResult> Raytrace(
 		const utils::Ray3D & viewpoint, const double maxDist);
 	/**
 	 * Creates a new item actor from the given item data. The item data is not duplicated, so

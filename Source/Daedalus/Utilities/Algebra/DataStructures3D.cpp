@@ -227,7 +227,7 @@ namespace utils {
 		double tzmin = 0;
 		double tzmax = 0;
 
-		double divx = 1.0/ray.Direction.X;
+		double divx = 1.0 / ray.Direction.X;
 		if (divx > 0) {
 			txmin = (MinPoint.X - ray.Origin.X) * divx;
 			txmax = (MaxPoint.X - ray.Origin.X) * divx;

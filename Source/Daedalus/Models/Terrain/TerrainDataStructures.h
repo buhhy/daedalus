@@ -6,7 +6,18 @@
 namespace terrain {
 	using ChunkOffsetVector = utils::Vector3D<Int64>;       // Offset vector for entire chunk
 	using ChunkGridIndexVector = utils::Vector3D<Uint16>;   // Index vector within the chunk grid
-	using ChunkPositionVector = std::pair<ChunkOffsetVector, utils::Point3D>;
+
+	struct ChunkPositionVector {
+		ChunkOffsetVector ChunkOffset;
+		utils::Point3D InnerOffset;
+
+		ChunkPositionVector() : ChunkOffset(0), InnerOffset(0) {}
+		ChunkPositionVector(
+			const ChunkOffsetVector & chunkOffset,
+			const utils::Point3D & innerOffset
+		) : ChunkOffset(chunkOffset), InnerOffset(innerOffset)
+		{}
+	};
 
 	struct TerrainGeneratorParameters {
 		const Uint16 GridCellCount;       // Number of grid cells along a single edge of the cube
@@ -36,7 +47,7 @@ namespace terrain {
 		 * Converts the entire chunk position vector into real world coordinates.
 		 */
 		utils::Point3D ToRealCoordSpace(const ChunkPositionVector & position) const {
-			return ToRealCoordSpace(position.first) + ToRealCoordSpace(position.second);
+			return ToRealCoordSpace(position.ChunkOffset) + ToRealCoordSpace(position.InnerOffset);
 		}
 		
 		/**
@@ -70,9 +81,9 @@ namespace terrain {
 		) const {
 			auto vec = ToGridCoordSpace(position);
 			return ChunkPositionVector(anchor, {
-				GridCellCount * (vec.first.X - anchor.X) + vec.second.X,
-				GridCellCount * (vec.first.Y - anchor.Y) + vec.second.Y,
-				GridCellCount * (vec.first.Z - anchor.Z) + vec.second.Z
+				GridCellCount * (vec.ChunkOffset.X - anchor.X) + vec.InnerOffset.X,
+				GridCellCount * (vec.ChunkOffset.Y - anchor.Y) + vec.InnerOffset.Y,
+				GridCellCount * (vec.ChunkOffset.Z - anchor.Z) + vec.InnerOffset.Z
 			});
 		}
 
@@ -80,11 +91,11 @@ namespace terrain {
 		 * Ensures the provided position vector has an inner position of [0, GridCellCount).
 		 */
 		ChunkPositionVector Normalize(const ChunkPositionVector & vect) const {
-			if (vect.second.IsBoundedBy(-DBL_EPSILON, GridCellCount - DBL_EPSILON))
+			if (vect.InnerOffset.IsBoundedBy(-DBL_EPSILON, GridCellCount - DBL_EPSILON))
 				return vect;
-			const double x = vect.second.X;
-			const double y = vect.second.Y;
-			const double z = vect.second.Z;
+			const double x = vect.InnerOffset.X;
+			const double y = vect.InnerOffset.Y;
+			const double z = vect.InnerOffset.Z;
 			const utils::Vector3D<Int64> offset(
 				utils::EFloor(x / GridCellCount),
 				utils::EFloor(y / GridCellCount),
@@ -93,7 +104,7 @@ namespace terrain {
 				x - offset.X * GridCellCount,
 				y - offset.Y * GridCellCount,
 				z - offset.Z * GridCellCount);
-			return ChunkPositionVector(vect.first + offset, itemPosition);
+			return ChunkPositionVector(vect.ChunkOffset + offset, itemPosition);
 		}
 
 		bool WithinGridBounds(const utils::Point3D & point) const {

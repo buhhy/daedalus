@@ -36,7 +36,7 @@ namespace utils {
 
 		Matrix4D() {}
 		
-		Matrix4D(const T & fill) {
+		explicit Matrix4D(const T & fill) {
 			for (Uint8 i = 0; i < 16; i++)
 				Values[i] = fill;
 		}

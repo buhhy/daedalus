@@ -40,7 +40,9 @@ namespace terrain {
 		auto data = new ChunkData(TerrainGenParams.GridCellCount, offset);
 		SetDefaultHeight(*data, (Int32) height);
 		// TODO: implement disk saving
-		return ChunkDataPtr(data);
+		auto cd = ChunkDataPtr(data);
+		LoadedChunkCache.insert({ offset, cd });
+		return cd;
 	}
 
 	ChunkDataPtr ChunkLoader::GetChunkAt(const ChunkOffsetVector & offset) {

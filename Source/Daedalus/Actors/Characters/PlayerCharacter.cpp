@@ -47,11 +47,16 @@ void APlayerCharacter::UpdateItemCursor(const Ray3D & viewpoint) {
 		const auto foundResult =
 			ChunkManagerRef->Raytrace(viewpoint, TerrainInteractionDistance);
 
-		if (foundResult.Type == E_Terrain || foundResult.Type == E_PlacedItem) {
-			ItemCursorRef->SetPlayerTransform(
-				ToVector3D(this->GetActorLocation()), FRotationMatrix(this->GetActorRotation()));
-			ItemCursorRef->SetPosition(foundResult.EntryPosition);
-			ItemCursorRef->SetActorHiddenInGame(false);
+		if (foundResult.IsValid()) {
+			const auto & deref = *foundResult;
+			if (deref.Type == E_Terrain || deref.Type == E_PlacedItem) {
+				ItemCursorRef->SetPlayerTransform(
+					ToVector3D(this->GetActorLocation()), FRotationMatrix(this->GetActorRotation()));
+				ItemCursorRef->SetPosition(deref.EntryPosition);
+				ItemCursorRef->SetActorHiddenInGame(false);
+			} else {
+				ItemCursorRef->SetActorHiddenInGame(true);
+			}
 		} else {
 			ItemCursorRef->SetActorHiddenInGame(true);
 		}

@@ -24,13 +24,13 @@ void AChunkManager::UpdateChunksAt(const utils::Vector3D<> & playerPosition) {
 	// Get player's current chunk location
 	auto playerChunkPos = GenParams->ToGridCoordSpace(playerPosition);
 
-	Int64 fromX = playerChunkPos.first.X - RenderDistance;
-	Int64 fromY = playerChunkPos.first.Y - RenderDistance;
-	Int64 fromZ = playerChunkPos.first.Z - RenderDistance;
+	Int64 fromX = playerChunkPos.ChunkOffset.X - RenderDistance;
+	Int64 fromY = playerChunkPos.ChunkOffset.Y - RenderDistance;
+	Int64 fromZ = playerChunkPos.ChunkOffset.Z - RenderDistance;
 
-	Int64 toX = playerChunkPos.first.X + RenderDistance;
-	Int64 toY = playerChunkPos.first.Y + RenderDistance;
-	Int64 toZ = playerChunkPos.first.Z + RenderDistance;
+	Int64 toX = playerChunkPos.ChunkOffset.X + RenderDistance;
+	Int64 toY = playerChunkPos.ChunkOffset.Y + RenderDistance;
+	Int64 toZ = playerChunkPos.ChunkOffset.Z + RenderDistance;
 
 	// Once the player leaves an area, the chunks are cleared
 	for (auto chunkKey = LocalCache.begin(); chunkKey != LocalCache.end(); ) {
@@ -88,11 +88,11 @@ AChunk * AChunkManager::GetChunkAt(const ChunkOffsetVector & point) {
 	}
 }
 
-TerrainRaytraceResult AChunkManager::Raytrace(
+Option<TerrainRaytraceResult> AChunkManager::Raytrace(
 	const utils::Ray3D & viewpoint,
 	const double maxDist
 ) {
-	FastVoxelTraversalIterator fvt(GenParams->ChunkScale, viewpoint, maxDist);
+	FastVoxelTraversalIterator fvt(Point3D(GenParams->ChunkScale), viewpoint, maxDist);
 
 	bool foundIntersect = false;
 	Vector3D<Int64> chunkPosition = fvt.GetCurrentCell();
@@ -101,10 +101,11 @@ TerrainRaytraceResult AChunkManager::Raytrace(
 	while (fvt.IsValid()) {
 		// Get current chunk location
 		const auto chunkPos = GenParams->ToGridCoordSpace(viewpoint.Origin, chunkPosition);
-		auto chunk = GetChunkAt(chunkPos.first);
-		const auto result = chunk->Raytrace(Ray3D(chunkPos.second, viewpoint.Direction), maxDist);
+		auto chunk = GetChunkAt(chunkPos.ChunkOffset);
+		const auto result =
+			chunk->Raytrace(Ray3D(chunkPos.InnerOffset, viewpoint.Direction), maxDist);
 
-		if (result.Type != E_None)
+		if (result.IsValid())
 			return result;
 
 		// If no intersections are found, we need to search adjacent chunks.
@@ -112,11 +113,11 @@ TerrainRaytraceResult AChunkManager::Raytrace(
 		chunkPosition = fvt.GetCurrentCell();
 	}
 
-	return TerrainRaytraceResult();
+	return NoResult();
 }
 
 AItem * AChunkManager::PlaceItem(const items::ItemDataPtr & data) {
-	auto chunk = GetChunkAt(data->Position.first);
+	auto chunk = GetChunkAt(data->Position.ChunkOffset);
 	return chunk->CreateItem(data);
 }
 

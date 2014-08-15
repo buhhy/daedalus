@@ -42,8 +42,8 @@ namespace terrain {
 			const ChunkOffsetVector & chunkOffset
 		) : ChunkGridSize(chunkSize),
 			ChunkFieldSize(chunkSize),
-			DensityData(chunkSize, 0),
-			MaterialData(chunkSize, 0),
+			DensityData(chunkSize, chunkSize, chunkSize, 0),
+			MaterialData(chunkSize, chunkSize, chunkSize, 0),
 			ChunkOffset(chunkOffset)
 		{}
 		

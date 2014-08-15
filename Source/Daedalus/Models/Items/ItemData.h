@@ -52,6 +52,15 @@ namespace items {
 		{}
 	};
 
+	struct ItemDataId {
+		Uint64 ItemId;
+		terrain::ChunkOffsetVector ChunkOffset;
+
+		ItemDataId(Uint64 id, terrain::ChunkOffsetVector offset) :
+			ItemId(id), ChunkOffset(offset)
+		{}
+	};
+
 	/**
 	 * This data structure contains item-specific data. An item is some entity placed in the world
 	 * that can be interacted with by players or AI. Items in the inventory should reference
@@ -85,11 +94,11 @@ namespace items {
 			bIsPlaced(isPlaced),
 			Size(tmp.Size),
 			Template(tmp),
-			OriginBounds(0, tmp.Size)
+			OriginBounds(utils::Point3D(0), tmp.Size)
 		{}
 
 		ItemData(const ItemDataTemplate & tmp) :
-			ItemData(0, terrain::ChunkPositionVector(0, 0), ItemRotation(0, 0), false, tmp)
+			ItemData(0, terrain::ChunkPositionVector(), ItemRotation(0, 0), false, tmp)
 		{}
 
 		const ItemRotation & GetRotation() const { return Rotation; }
@@ -116,7 +125,7 @@ namespace items {
 		}
 
 		utils::Matrix4D<> GetPositionMatrix() const {
-			return utils::CreateTranslation(Position.second) * GetRotationMatrix();
+			return utils::CreateTranslation(Position.InnerOffset) * GetRotationMatrix();
 		}
 
 		utils::OrientedBoundingBox3D GetBoundingBox() const {

@@ -434,7 +434,7 @@ namespace terrain {
 		const auto triOpt = std::get<0>(foundResults);
 
 		if (triOpt.IsValid()) {
-			const auto results = triOpt();
+			const auto & results = *triOpt;
 			return BiomeTriangle {
 				GetBiomeAt(results[0]),
 				GetBiomeAt(results[1]),
@@ -461,7 +461,7 @@ namespace terrain {
 									position.second.Y - y
 								}));
 							if (found.IsValid()) {
-								const auto results = found();
+								const auto & results = *found;
 								return BiomeTriangle {
 									GetBiomeAt(results[0]),
 									GetBiomeAt(results[1]),

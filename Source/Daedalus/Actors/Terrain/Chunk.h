@@ -7,6 +7,7 @@
 #include <Controllers/DDGameState.h>
 #include <Models/Terrain/ChunkData.h>
 #include <Models/Terrain/TerrainDataStructures.h>
+#include <Utilities/DataStructures.h>
 #include <Utilities/Algebra/Algebra3D.h>
 #include <Utilities/FastVoxelTraversal.h>
 
@@ -18,7 +19,6 @@ class AChunk;
 
 namespace terrain {
 	enum TerrainRaytraceResultType {
-		E_None,
 		E_Character,
 		E_Terrain,
 		E_PlacedItem
@@ -26,15 +26,21 @@ namespace terrain {
 
 	struct TerrainRaytraceResult {
 		const TerrainRaytraceResultType Type;
-		AActor * const Result;
+		utils::Option<items::ItemDataId> ItemId;
 		const ChunkPositionVector EntryPosition;
 
 		TerrainRaytraceResult(
-			const TerrainRaytraceResultType Type, AActor * const actor, const ChunkPositionVector & pos);
-		TerrainRaytraceResult(AChunk * const chunk, const ChunkPositionVector & pos);
-		TerrainRaytraceResult(AItem * const item, const ChunkPositionVector & pos);
-		TerrainRaytraceResult();
+			const TerrainRaytraceResultType type,
+			const ChunkPositionVector & pos,
+			const utils::Option<items::ItemDataId> itemId
+		) : Type(type), ItemId(itemId), EntryPosition(pos)
+		{}
 	};
+
+	utils::Option<TerrainRaytraceResult> TerrainResult(const ChunkPositionVector & entry);
+	utils::Option<TerrainRaytraceResult> ItemResult(
+		const items::ItemDataId & id, const ChunkPositionVector & pos);
+	utils::Option<TerrainRaytraceResult> NoResult();
 }
 
 USTRUCT()
@@ -57,8 +63,11 @@ public:
 	using ChunkDataSet = utils::TensorFixed3D<terrain::ChunkDataPtr, 3>;
 
 private:
+	// Convenience vector that stores the position of the current chunk within the neighbour data
+	utils::Vector3D<Uint32> CurrentChunkIndex;
 	ChunkDataSet ChunkNeighbourData;
 	terrain::ChunkDataPtr CurrentChunkData;
+
 	const terrain::TerrainGeneratorParameters * TerrainGenParams;
 	utils::TensorResizable3D<bool> SolidTerrain;
 	Uint64 ItemIdCounter;                            // Used to store the minimum unique ID
@@ -69,12 +78,19 @@ private:
 	 * @param boundingBox Bounding box to search for intersections, the values should be in
 	 *                    grid coordinate space.
 	 */
-	terrain::TerrainRaytraceResult FindIntersection(const utils::AxisAlignedBoundingBox3D & bound);
 	void GenerateChunkMesh();
 	AItem * SpawnItem(const items::ItemDataPtr & itemData);
 	items::ItemDataPtr RemoveItem(const items::ItemDataPtr & itemData);
-	bool IsSolidAt(const utils::Point3D & point) const;
-	bool IsSolidAt(const utils::AxisAlignedBoundingBox3D & bound) const;
+
+	bool IsSolidTerrainAt(const utils::Point3D & point) const;
+	bool IsSolidTerrainAt(const utils::AxisAlignedBoundingBox3D & bound) const;
+	utils::Option<items::ItemDataId> FindItemCollision(
+		const utils::AxisAlignedBoundingBox3D & bound) const;
+	/**
+	 * Checks if the space specified by the bounding box is occupied or not. This is used for
+	 * determining the validity of item placement.
+	 */
+	bool AChunk::IsSpaceOccupied(const utils::AxisAlignedBoundingBox3D & bound) const;
 
 protected:
 	virtual void ReceiveDestroyed() override;
@@ -96,5 +112,6 @@ public:
 	 *            direction should be normal.
 	 * @param maxDistance Maximum number of grid cells to search for solid blocks.
 	 */
-	terrain::TerrainRaytraceResult Raytrace(const utils::Ray3D & ray, const double maxDistance);
+	utils::Option<terrain::TerrainRaytraceResult> Raytrace(
+		const utils::Ray3D & ray, const double maxDistance);
 };

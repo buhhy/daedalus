@@ -74,16 +74,19 @@ namespace utils {
 	};
 
 	struct AxisAlignedBoundingBox3D : BoundingBox3D {
-		virtual Basis3D GetBasis() const;
-		virtual Vector3D<> GetExtents() const;
-		virtual Vector3D<> GetCentre() const;
-
 		Point3D MinPoint;
 		Point3D MaxPoint;
 
+
+
+		AxisAlignedBoundingBox3D() : MinPoint(0), MaxPoint(0) {}
 		AxisAlignedBoundingBox3D(const Point3D & min, const Point3D & max) :
 			MinPoint(min), MaxPoint(max)
 		{}
+		
+		virtual Basis3D GetBasis() const;
+		virtual Vector3D<> GetExtents() const;
+		virtual Vector3D<> GetCentre() const;
 
 		/**
 		 * This method WILL introduce floating point error into the intersection point. Make sure
@@ -100,18 +103,21 @@ namespace utils {
 	 * shearing, which changes the bounding box to a non-box volume.
 	 */
 	struct OrientedBoundingBox3D : BoundingBox3D {
-		virtual Basis3D GetBasis() const;
-		virtual Vector3D<> GetExtents() const;
-		virtual Vector3D<> GetCentre() const;
-
 		AxisAlignedBoundingBox3D Bounds;
 		Matrix4D<> Transform;
 
+
+		
+		OrientedBoundingBox3D() : Transform(0), Bounds() {}
 		OrientedBoundingBox3D(
 			const Point3D & min, const Point3D & max,
 			const Matrix4D<> & transform
 		) : Bounds(min, max), Transform(transform)
 		{}
+		
+		virtual Basis3D GetBasis() const;
+		virtual Vector3D<> GetExtents() const;
+		virtual Vector3D<> GetCentre() const;
 
 		virtual bool RayIntersection(
 			const Ray3D & ray, Point3D * intersectPoint = NULL, double * tValue = NULL) const;

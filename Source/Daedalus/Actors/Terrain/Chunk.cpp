@@ -7,32 +7,25 @@
 
 #include <cmath>
 
-namespace terrain {
-	TerrainRaytraceResult::TerrainRaytraceResult(
-		const TerrainRaytraceResultType type,
-		AActor * const actor,
-		const ChunkPositionVector & pos
-	) : Type(type), Result(actor), EntryPosition(pos)
-	{}
-
-	TerrainRaytraceResult::TerrainRaytraceResult(
-		AChunk * const chunk, const ChunkPositionVector & pos
-	) : TerrainRaytraceResult(E_Terrain, chunk, pos)
-	{}
-
-	TerrainRaytraceResult::TerrainRaytraceResult(
-		AItem * const item, const ChunkPositionVector & pos
-	) : TerrainRaytraceResult(E_PlacedItem, item, pos)
-	{}
-
-	TerrainRaytraceResult::TerrainRaytraceResult() :
-		TerrainRaytraceResult(E_None, NULL, { 0, 0 })
-	{}
-}
-
 using namespace utils;
 using namespace terrain;
 using namespace items;
+
+namespace terrain {
+	Option<TerrainRaytraceResult> TerrainResult(const ChunkPositionVector & entry) {
+		return Some(TerrainRaytraceResult(E_Terrain, entry, None<ItemDataId>()));
+	}
+
+	Option<TerrainRaytraceResult> ItemResult(
+		const ItemDataId & id, const ChunkPositionVector & pos
+	) {
+		return Some(TerrainRaytraceResult(E_PlacedItem, pos, Some(id)));
+	}
+
+	utils::Option<TerrainRaytraceResult> NoResult() {
+		return None<TerrainRaytraceResult>();
+	}
+}
 
 using ChunkDataSet = AChunk::ChunkDataSet;
 
@@ -49,18 +42,18 @@ AItem * AChunk::SpawnItem(const ItemDataPtr & itemData) {
 	const FRotator defaultRotator(0, 0, 0);
 	auto params = FActorSpawnParameters();
 	params.Name = *FString::Printf(TEXT("(%lld,%lld,%lld)PlacedItem%llu"),
-		itemData->Position.first.X,
-		itemData->Position.first.Y,
-		itemData->Position.first.Z,
+		itemData->Position.ChunkOffset.X,
+		itemData->Position.ChunkOffset.Y,
+		itemData->Position.ChunkOffset.Z,
 		itemData->ItemId);
 	UE_LOG(LogTemp, Warning, TEXT("(%lld,%lld,%lld)PlacedItem%llu"),
-		itemData->Position.first.X,
-		itemData->Position.first.Y,
-		itemData->Position.first.Z,
+		itemData->Position.ChunkOffset.X,
+		itemData->Position.ChunkOffset.Y,
+		itemData->Position.ChunkOffset.Z,
 		itemData->ItemId);
 	auto actor = GetWorld()->SpawnActor<AItem>(
 		AItem::StaticClass(),
-		ToFVector(TerrainGenParams->ToRealCoordSpace(itemData->Position.second)),
+		ToFVector(TerrainGenParams->ToRealCoordSpace(itemData->Position.InnerOffset)),
 		FRotator(0, 0, 0), params);
 	PlacedItems.Add({ itemData->ItemId, actor });
 	actor->Initialize(itemData);
@@ -98,7 +91,8 @@ void AChunk::InitializeChunk(const TerrainGeneratorParameters * params) {
 
 void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 	ChunkNeighbourData = chunkData;
-	CurrentChunkData = chunkData.Get(1, 1, 1);
+	CurrentChunkIndex = chunkData.Size() / Uint32(2);
+	CurrentChunkData = chunkData.Get(CurrentChunkIndex);
 	// Make sure the item ID counter is at least 1 larger than the current largest ID
 	for (const auto & itemData : CurrentChunkData->PlacedItems) {
 		if (itemData->ItemId >= ItemIdCounter)
@@ -107,18 +101,65 @@ void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 	GenerateChunkMesh();
 }
 
-bool AChunk::IsSolidAt(const utils::Point3D & point) const {
-	if (!TerrainGenParams->WithinGridBounds(point))
-		return false;
-	return SolidTerrain.Get(
-		utils::EFloor(point.X), utils::EFloor(point.Y), utils::EFloor(point.Z));
+bool AChunk::IsSolidTerrainAt(const Point3D & point) const {
+
+	//if (TerrainGenParams->WithinGridBounds(point)) {
+	//	cdata = CurrentChunkData;
+	//} else {
+	//	// If this incoming point is outside the current chunk, we should check the neighbours
+	//	// to check for collisions.
+	//	const auto startingPos = ChunkPositionVector(CurrentChunkIndex.Cast<Int64>(), point);
+	//	const auto offsetPos = TerrainGenParams->Normalize(startingPos);
+	//	const auto nsize = ChunkNeighbourData.Size().Cast<Int64>();
+
+	//	if (offsetPos.ChunkOffset.IsBoundedBy(Vector3D<Int64>(0), nsize)) {
+	//		cdata = ChunkNeighbourData.Get(offsetPos.ChunkOffset.Cast<Uint32>());
+	//		position = offsetPos.InnerOffset;
+	//	}
+	//}
+	//if (!cdata)
+	//	return false;
+
+	// Check for solidness of coordinate, depending on the algorithm used, we will probably need
+	// to change this section.
+	// TODO: change this to suit terrain mesh generation algorithm
+	const auto startIndex = EFloor(point);
+	const auto nsize = ChunkNeighbourData.Size().Cast<Int64>();
+	const auto curIndex = CurrentChunkIndex.Cast<Int64>();
+	double sum = 0;
+
+	for (Int64 x = startIndex.X; x <= startIndex.X + 1; x++) {
+		for (Int64 y = startIndex.Y; y <= startIndex.Y + 1; y++) {
+			for (Int64 z = startIndex.Z; z <= startIndex.Z + 1; z++) {
+				// If this incoming point is outside the current chunk, we should check the
+				// neighbours to check for collisions.
+				const auto startingPos = ChunkPositionVector(curIndex, Point3D(x, y, z));
+				const auto offsetPos = TerrainGenParams->Normalize(startingPos);
+
+				if (offsetPos.ChunkOffset.IsBoundedBy(Vector3D<Int64>(0), nsize)) {
+					ChunkDataPtr cdata = ChunkNeighbourData.Get(
+						offsetPos.ChunkOffset.X, offsetPos.ChunkOffset.Y, offsetPos.ChunkOffset.Z);
+
+					sum += cdata->DensityData.Get(
+						offsetPos.InnerOffset.X, offsetPos.InnerOffset.Y, offsetPos.InnerOffset.Z);
+				} else {
+					// If this point doesn't fall within the current chunk, nor within its
+					// immediate neighbours, then we return true as a conservative estimate.
+					return true;
+				}
+			}
+		}
+	}
+	return EGT(sum, 0);
 }
 
-bool AChunk::IsSolidAt(const AxisAlignedBoundingBox3D & bound) const {
-	for (double x = bound.MinPoint.X; ELTE(x, bound.MaxPoint.X); x += 1) {
-		for (double y = bound.MinPoint.Y; ELTE(y, bound.MaxPoint.Y); y += 1) {
-			for (double z = bound.MinPoint.Z; ELTE(z, bound.MaxPoint.Z); z += 1) {
-				if (IsSolidAt(Point3D(x, y, z)))
+bool AChunk::IsSolidTerrainAt(const AxisAlignedBoundingBox3D & bound) const {
+	const auto lower = EFloor(bound.MinPoint);
+	const auto upper = ECeil(bound.MaxPoint);
+	for (Int64 x = lower.X; x < upper.X; x++) {
+		for (Int64 y = lower.Y; y < upper.Y; y++) {
+			for (Int64 z = lower.Z; z < upper.Z; z++) {
+				if (IsSolidTerrainAt(Point3D(x, y, z)))
 					return true;
 			}
 		}
@@ -126,29 +167,57 @@ bool AChunk::IsSolidAt(const AxisAlignedBoundingBox3D & bound) const {
 	return false;
 }
 
-TerrainRaytraceResult AChunk::FindIntersection(const AxisAlignedBoundingBox3D & bound) {
-	// TODO: handle player collisions somehow
-	if (IsSolidAt(bound)) {
-		return TerrainRaytraceResult(
-			this, ChunkPositionVector(CurrentChunkData->ChunkOffset, { 0, 0 }));
-	} else {
-		// Check items to make sure nothing occupies this location. Perhaps using an octree
-		// might be wise here.
-		for (const auto & item : PlacedItems) {
-			const auto & itemData = item.ItemActor->GetItemData();
-			const OrientedBoundingBox3D obb(0., itemData->Size, itemData->GetPositionMatrix());
-			if (bound.BoundingBoxIntersection(itemData->GetBoundingBox(), false)) {
-				return TerrainRaytraceResult(
-					item.ItemActor, ChunkPositionVector(CurrentChunkData->ChunkOffset, { 0, 0, 0 }));
+Option<ItemDataId> AChunk::FindItemCollision(const AxisAlignedBoundingBox3D & bound) const {
+	// Check items to make sure nothing occupies this location. Perhaps using an octree
+	// might be wise here.
+	for (const auto & item : PlacedItems) {
+		const auto & itemData = item.ItemActor->GetItemData();
+		if (bound.BoundingBoxIntersection(itemData->GetBoundingBox(), false))
+			return Some(ItemDataId(item.ItemId, CurrentChunkData->ChunkOffset));
+	}
+
+	// Check against items in neighbouring chunks since some items may span multiple grid
+	// cells. This section will likely need to be optimized, since it could become very
+	// costly with large numbers of items.
+	const auto nsize = ChunkNeighbourData.Size();
+	const auto curIndex = nsize / Uint32(2);
+
+	const double gcc = (double) TerrainGenParams->GridCellCount;
+
+	AxisAlignedBoundingBox3D offsetBox;
+	Point3D offsetVector;
+
+	for (Uint8 x = 0; x < nsize.X; x++) {
+		for (Uint8 y = 0; y < nsize.Y; y++) {
+			for (Uint8 z = 0; z < nsize.Z; z++) {
+				if (x != curIndex.X || y != curIndex.Y || z != curIndex.Z) {
+					offsetVector.X = ((double) x - curIndex.X) * gcc;
+					offsetVector.Y = ((double) y - curIndex.Y) * gcc;
+					offsetVector.Z = ((double) z - curIndex.Z) * gcc;
+
+					offsetBox.MinPoint = bound.MinPoint - offsetVector;
+					offsetBox.MaxPoint = bound.MaxPoint - offsetVector;
+
+					const auto & chunkData = ChunkNeighbourData.Get(x, y, z);
+					for (const auto & item : chunkData->PlacedItems) {
+						if (offsetBox.BoundingBoxIntersection(item->GetBoundingBox(), false))
+							return Some(ItemDataId(item->ItemId, CurrentChunkData->ChunkOffset));
+					}
+				}
 			}
 		}
 	}
-	return TerrainRaytraceResult();
+
+	return None<ItemDataId>();
+}
+
+bool AChunk::IsSpaceOccupied(const AxisAlignedBoundingBox3D & bound) const {
+	return IsSolidTerrainAt(bound) || FindItemCollision(bound).IsValid();
 }
 
 AItem * AChunk::CreateItem(const items::ItemDataPtr & itemData, const bool preserveId) {
-	const auto & position = itemData->Position.second;
-	if (FindIntersection(itemData->GetBoundingBox().GetEnclosingBoundingBox()).Type == E_None) {
+	const auto & position = itemData->Position.InnerOffset;
+	if (!IsSpaceOccupied(itemData->GetBoundingBox().GetEnclosingBoundingBox())) {
 		if (!preserveId)
 			itemData->ItemId = ItemIdCounter++;
 		itemData->bIsPlaced = true;
@@ -228,33 +297,38 @@ void AChunk::GenerateChunkMesh() {
 	}
 }
 
-TerrainRaytraceResult AChunk::Raytrace(const Ray3D & ray, const double maxDistance) {
+Option<TerrainRaytraceResult> AChunk::Raytrace(const Ray3D & ray, const double maxDistance) {
 	FastVoxelTraversalIterator fvt(
-		1.0, 0, TerrainGenParams->GridCellCount,
+		Vector3D<>(1.0), Vector3D<Int64>(0), Vector3D<Int64>(TerrainGenParams->GridCellCount),
 		ray, maxDistance / TerrainGenParams->ChunkGridUnitSize);
-
-	TerrainRaytraceResultType foundType = E_None;
 
 	for (Uint16 i = 0; fvt.IsValid(); i++) {
 		const auto & current = fvt.GetCurrentCell();
 		if (current.IsBoundedBy(0, TerrainGenParams->GridCellCount)) {
-			// TODO: make this work a single ray cast instead
+			// TODO: make this work as single ray cast instead
 			const double inset = 0.01; // Accounts for rounding errors
 			const AxisAlignedBoundingBox3D bb(
 				Point3D(current.X + inset, current.Y + inset, current.Z + inset),
 				Point3D(current.X + 1 - inset, current.Y + 1 - inset, current.Z + 1 - inset));
-			const auto found = FindIntersection(bb);
-			if (found.Type != E_None) {
-				const auto & collisionIndex = fvt.GetCurrentCell();
+			const auto & precollisionIndex = fvt.GetPreviousCell();
+			const ChunkPositionVector prevPos(
+				CurrentChunkData->ChunkOffset, precollisionIndex.Cast<double>());
+			if (IsSolidTerrainAt(bb)) {
+				return TerrainResult(prevPos);
+			} else {
+				const auto item = FindItemCollision(bb);
+				if (item.IsValid())
+					return ItemResult(*item, prevPos);
+			}
+				/*const auto & collisionIndex = fvt.GetCurrentCell();
 				const auto & precollisionIndex = fvt.GetPreviousCell();
 				return TerrainRaytraceResult(
 					found.Type, found.Result,
-					ChunkPositionVector(CurrentChunkData->ChunkOffset, precollisionIndex.Cast<double>()));
-			}
+					ChunkPositionVector(CurrentChunkData->ChunkOffset, precollisionIndex.Cast<double>()));*/
 		}
 
 		fvt.Next();
 	}
 
-	return TerrainRaytraceResult();
+	return NoResult();
 }
