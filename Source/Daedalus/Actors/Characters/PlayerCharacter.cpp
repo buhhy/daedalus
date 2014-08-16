@@ -9,16 +9,24 @@ using namespace utils;
 using namespace events;
 using namespace items;
 using namespace terrain;
+using namespace fauna;
 
 APlayerCharacter::APlayerCharacter(const class FPostConstructInitializeProperties& PCIP) :
 	Super(PCIP), bHoldingJump(false), MouseHoldOffset(0, 0),
 	PositionSecondCount(0), ViewSecondCount(0), TerrainInteractionDistance(250),
-	ItemDataFactory(new items::ItemDataFactory())
+	ItemDataFactoryRef(new ItemDataFactory()),
+	CharDataFactoryRef(new CharacterDataFactory())
 {
 	auto & movement = this->CharacterMovement;
 	movement->SetWalkableFloorAngle(60.0);
 	movement->JumpZVelocity = 400;
 	movement->AirControl = 0.4;
+
+	CharDataRef = CharDataFactoryRef->BuildCharData(C_Hero);
+	CharDataRef->CharId = 1;
+	// TODO: remove this test code
+	CharDataRef->InventoryRef->AddItems(ItemDataFactoryRef->BuildItemData(I_Sofa), 3);
+	CharDataRef->InventoryRef->AddItems(ItemDataFactoryRef->BuildItemData(I_Chest), 10);
 }
 
 utils::Ray3D APlayerCharacter::GetViewRay() const {
@@ -33,7 +41,7 @@ void APlayerCharacter::SetUpItemCursor() {
 	const FRotator defaultRotator(0, 0, 0);
 	auto params = FActorSpawnParameters();
 	params.Name = TEXT("ItemPlacementGhostCursor");
-	CurrentHeldItem = ItemDataFactory->BuildItemData(I_Sofa);
+	CurrentHeldItem = ItemDataFactoryRef->BuildItemData(I_Sofa);
 	ItemCursorRef = GetWorld()->SpawnActor<AItemCursor>(
 		AItemCursor::StaticClass(), { 0, 0, 0 }, { 0, 0, 0 }, params);
 	ItemCursorRef->Initialize(CurrentHeldItem);
@@ -144,13 +152,11 @@ void APlayerCharacter::BeginRotation() {
 	// TODO: handle inventory logic
 	bRotatingItem = true;
 	MouseHoldOffset.Reset(0, 0);
-	//EventBusRef->BroadcastEvent(EventDataPtr(new EFPItemPlacementBegin(GetViewRay())));
 }
 
 void APlayerCharacter::EndRotation() {
 	bRotatingItem = false;
 	MouseHoldOffset.Reset(0, 0);
-	//EventBusRef->BroadcastEvent(EventDataPtr(new EFPItemPlacementEnd(GetViewRay())));
 }
 
 void APlayerCharacter::PlaceItem() {
@@ -158,11 +164,18 @@ void APlayerCharacter::PlaceItem() {
 		ChunkManagerRef->PlaceItem(ItemDataPtr(new ItemData(*CurrentHeldItem)));
 }
 
+void APlayerCharacter::HoldPrevItem() {
+}
+
+void APlayerCharacter::HoldNextItem() {
+}
+
 void APlayerCharacter::BeginPlay() {
 	Super::BeginPlay();
 
 	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Green, TEXT("Using standard game character."));
+		GEngine->AddOnScreenDebugMessage(
+			-1, 5.0, FColor::Green, TEXT("Using standard game character."));
 
 	auto gameState = GetWorld()->GetGameState<ADDGameState>();
 
@@ -183,6 +196,8 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent * InputCo
 	InputComponent->BindAction("RightMouseClick", IE_Pressed, this, &APlayerCharacter::BeginRotation);
 	InputComponent->BindAction("RightMouseClick", IE_Released, this, &APlayerCharacter::EndRotation);
 	InputComponent->BindAction("LeftMouseClick", IE_Released, this, &APlayerCharacter::PlaceItem);
+	InputComponent->BindAction("PrevItem", IE_Released, this, &APlayerCharacter::HoldPrevItem);
+	InputComponent->BindAction("NextItem", IE_Released, this, &APlayerCharacter::HoldNextItem);
 }
 
 void APlayerCharacter::Tick(float delta) {

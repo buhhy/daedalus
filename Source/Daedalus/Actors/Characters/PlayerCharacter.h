@@ -4,7 +4,10 @@
 #include <Actors/Terrain/ChunkManager.h>
 #include <Controllers/EventBus/EventBus.h>
 #include <Utilities/Algebra/Algebra3D.h>
+#include <Models/Fauna/CharacterData.h>
+#include <Models/Fauna/CharacterDataFactory.h>
 #include <Models/Items/ItemData.h>
+#include <Models/Items/ItemDataFactory.h>
 
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
@@ -21,12 +24,16 @@ private:
 	float PositionSecondCount;
 	float ViewSecondCount;
 
+	// TODO: assign unique character IDs upon spawning
+	fauna::CharacterDataPtr CharDataRef;
 	items::ItemDataPtr CurrentHeldItem;
 	// Each mouse movement increments this counter, when this is larger than 1, the cursor is
 	// updated and this counter is decremented to the fractional component.
 	utils::Vector2D<float> MouseHoldOffset;
-	items::ItemDataFactoryPtr ItemDataFactory;
-	
+
+	// TODO: populate these from a more global location
+	items::ItemDataFactoryPtr ItemDataFactoryRef;
+	fauna::CharacterDataFactoryPtr CharDataFactoryRef;
 	events::EventBusPtr EventBusRef;
 	const terrain::TerrainGeneratorParameters * TerrainParams;
 
@@ -65,5 +72,7 @@ public:
 	UFUNCTION() void BeginRotation();
 	UFUNCTION() void EndRotation();
 	UFUNCTION() void PlaceItem();
+	UFUNCTION() void HoldPrevItem();                 // Cycle to the previous inventory item
+	UFUNCTION() void HoldNextItem();                 // Cycle to the next inventory item
 };
 

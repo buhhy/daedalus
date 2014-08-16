@@ -110,6 +110,11 @@ namespace utils {
 		
 		OrientedBoundingBox3D() : Transform(0), Bounds() {}
 		OrientedBoundingBox3D(
+			const AxisAlignedBoundingBox3D & bounds,
+			const Matrix4D<> & transform
+		) : Bounds(bounds), Transform(transform)
+		{}
+		OrientedBoundingBox3D(
 			const Point3D & min, const Point3D & max,
 			const Matrix4D<> & transform
 		) : Bounds(min, max), Transform(transform)

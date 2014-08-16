@@ -33,22 +33,25 @@ namespace items {
 	 */
 	struct ItemDataTemplate {
 		ItemType Type;
-		utils::Vector3D<> Size;  // Size in grid cells
+		utils::AxisAlignedBoundingBox3D ItemBounds;  // Bounds of the item in grid cells
 		utils::Point3D Pivot;    // Position of pivot in grid cells
 		ItemRotation RotationInterval;
 		std::string MeshName;
+		Uint32 MaxStackSize;     // Maximum number of items possible in an item stack
 
 		ItemDataTemplate(
 			const ItemType type,
 			const ItemRotation & rotInt,
-			const utils::Vector3D<> & size,
+			const utils::AxisAlignedBoundingBox3D & bounds,
 			const utils::Point3D & pivot,
-			const std::string & meshName
+			const std::string & meshName,
+			const Uint32 maxStackSize
 		) : Type(type),
 			RotationInterval(rotInt),
 			Pivot(pivot),
-			Size(size),
-			MeshName(meshName)
+			ItemBounds(bounds),
+			MeshName(meshName),
+			MaxStackSize(maxStackSize)
 		{}
 	};
 
@@ -72,14 +75,14 @@ namespace items {
 	struct ItemData {
 	private:
 		ItemRotation Rotation;
-		utils::AxisAlignedBoundingBox3D OriginBounds;
+		// Size in grid cells, 1.0 is 1 grid cell, 0.5 is half a grid cell. The reason this exists
+		// here as well as in the templates is to allow individually scaled objects.
+		utils::AxisAlignedBoundingBox3D ItemBounds;
 
 	public:
 		Uint64 ItemId;
 		terrain::ChunkPositionVector Position;
 		bool bIsPlaced;
-		// Size in grid cells, 1.0 is 1 grid cell, 0.5 is half a grid cell
-		utils::Vector3D<> Size;
 		const ItemDataTemplate & Template;
 
 		ItemData(
@@ -92,9 +95,8 @@ namespace items {
 			Position(position),
 			Rotation(rotation),
 			bIsPlaced(isPlaced),
-			Size(tmp.Size),
 			Template(tmp),
-			OriginBounds(utils::Point3D(0), tmp.Size)
+			ItemBounds(tmp.ItemBounds)
 		{}
 
 		ItemData(const ItemDataTemplate & tmp) :
@@ -129,7 +131,7 @@ namespace items {
 		}
 
 		utils::OrientedBoundingBox3D GetBoundingBox() const {
-			return utils::OrientedBoundingBox3D(utils::Point3D(0, 0, 0), Size, GetPositionMatrix());
+			return utils::OrientedBoundingBox3D(ItemBounds, GetPositionMatrix());
 		}
 	};
 
