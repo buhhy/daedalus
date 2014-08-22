@@ -13,7 +13,7 @@ namespace fauna {
 		return count <= freeStackableSpace + freeSlotSpace;
 	}
 
-	bool Inventory::AddItems(const items::ItemDataPtr & item, const Uint32 count = 0) {
+	bool Inventory::AddItems(const items::ItemDataPtr & item, const Uint32 count) {
 		AssertValidInventory();
 
 		auto sameTypeItems = Filter(item->Template.Type);
@@ -49,7 +49,7 @@ namespace fauna {
 		return true;
 	}
 
-	bool Inventory::RemoveItems(const items::ItemDataPtr & item, const Uint32 count = 0) {
+	bool Inventory::RemoveItems(const items::ItemDataPtr & item, const Uint32 count) {
 		AssertValidInventory();
 			
 		auto sameTypeItems = Filter(item->Template.Type);

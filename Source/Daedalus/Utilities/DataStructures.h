@@ -39,7 +39,8 @@ namespace utils {
 
 		Option & operator = (const Option<T> & opt) {
 			Destruct();
-			if (bIsInitialized = opt.bIsInitialized)
+			bIsInitialized = opt.bIsInitialized;
+			if (bIsInitialized)
 				Construct(opt.Get());
 			return *this;
 		}

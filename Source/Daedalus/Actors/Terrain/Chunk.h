@@ -90,7 +90,7 @@ private:
 	 * Checks if the space specified by the bounding box is occupied or not. This is used for
 	 * determining the validity of item placement.
 	 */
-	bool AChunk::IsSpaceOccupied(const utils::AxisAlignedBoundingBox3D & bound) const;
+	bool IsSpaceOccupied(const utils::AxisAlignedBoundingBox3D & bound) const;
 
 protected:
 	virtual void ReceiveDestroyed() override;

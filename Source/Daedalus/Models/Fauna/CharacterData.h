@@ -76,6 +76,12 @@ namespace fauna {
 		bool CanAddItem(const items::ItemDataPtr & item, const Uint32 count) const;
 		bool AddItems(const items::ItemDataPtr & item, const Uint32 count = 0);
 		bool RemoveItems(const items::ItemDataPtr & item, const Uint32 count = 0);
+
+		InventoryItemPtr operator [] (const Uint32 index) {
+			if (index >= Items.size())
+				return NULL;
+			return Items[index];
+		}
 	};
 
 	using InventoryPtr = std::shared_ptr<Inventory>;
@@ -101,7 +107,7 @@ namespace fauna {
 
 	class CharacterData {
 	private:
-		Uint64 CurrentHeldItemIndex;
+		Uint32 CurrentHeldItemIndex;
 		EHandAction CurrentHandAction;
 
 	public:
@@ -124,18 +130,43 @@ namespace fauna {
 			InventoryRef(new Inventory(tmp.DefaultMaxInventorySize))
 		{}
 
-		const Uint64 GetCurrentHeldItemIndex() const { return CurrentHeldItemIndex; }
+		const Uint32 GetCurrentHeldItemIndex() const { return CurrentHeldItemIndex; }
 		const EHandAction GetCurrentHandAction() const { return CurrentHandAction; }
 
-		void NextHeldItem() {
+		Uint32 NextHeldItem() {
+			CurrentHeldItemIndex++;
+			if (CurrentHeldItemIndex >= InventoryRef->GetMaxSize())
+				CurrentHeldItemIndex = 0;
+			return CurrentHeldItemIndex;
 		}
 
-		void PrevHeldItem() {
+		Uint32 PrevHeldItem() {
+			if (CurrentHeldItemIndex == 0)
+				CurrentHeldItemIndex = InventoryRef->GetMaxSize();
+			CurrentHeldItemIndex--;
+			return CurrentHeldItemIndex;
 		}
 
-		void SwitchHandAction(const CurrentHandAction action) {
+		void SwitchHandAction(const EHandAction action) {
+			CurrentHandAction = action;
+		}
+
+		InventoryItemPtr GetItemInInventory(const Uint32 index) {
+			return (*InventoryRef)[index];
+		}
+
+		InventoryItemPtr GetCurrentItemInInventory() {
+			return GetItemInInventory(GetCurrentHeldItemIndex());
 		}
 	};
 
 	using CharacterDataPtr = std::shared_ptr<CharacterData>;
+}
+
+namespace std {
+	template <> struct hash<fauna::CharacterType> {
+		size_t operator()(const fauna::CharacterType & tp) const {
+			return std::hash<long>()(tp);
+		}
+	};
 }

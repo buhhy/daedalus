@@ -14,6 +14,7 @@ using namespace fauna;
 APlayerCharacter::APlayerCharacter(const class FPostConstructInitializeProperties& PCIP) :
 	Super(PCIP), bHoldingJump(false), MouseHoldOffset(0, 0),
 	PositionSecondCount(0), ViewSecondCount(0), TerrainInteractionDistance(250),
+	CurrentHeldItem(NULL),
 	ItemDataFactoryRef(new ItemDataFactory()),
 	CharDataFactoryRef(new CharacterDataFactory())
 {
@@ -41,16 +42,51 @@ void APlayerCharacter::SetUpItemCursor() {
 	const FRotator defaultRotator(0, 0, 0);
 	auto params = FActorSpawnParameters();
 	params.Name = TEXT("ItemPlacementGhostCursor");
-	CurrentHeldItem = ItemDataFactoryRef->BuildItemData(I_Sofa);
 	ItemCursorRef = GetWorld()->SpawnActor<AItemCursor>(
 		AItemCursor::StaticClass(), { 0, 0, 0 }, { 0, 0, 0 }, params);
-	ItemCursorRef->Initialize(CurrentHeldItem);
 	ItemCursorRef->SetActorEnableCollision(false);
 	ItemCursorRef->SetActorHiddenInGame(true);
 	ItemCursorRef->AttachRootComponentToActor(this);
 }
 
-void APlayerCharacter::UpdateItemCursor(const Ray3D & viewpoint) {
+void APlayerCharacter::ToggleHandAction() {
+	switch (CharDataRef->GetCurrentHandAction()) {
+	case H_None:
+		CharDataRef->SwitchHandAction(H_Item);
+		break;
+	case H_Item:
+		CharDataRef->SwitchHandAction(H_None);
+		break;
+	case H_Tool:
+	default:
+		break;
+	}
+	UpdateItemCursorType();
+}
+
+void APlayerCharacter::UpdateItemCursorType() {
+	switch (CharDataRef->GetCurrentHandAction()) {
+	case H_None:
+		CurrentHeldItem = NULL;
+		ItemCursorRef->SetActorHiddenInGame(true);
+		break;
+	case H_Item: {
+		const auto item = CharDataRef->GetCurrentItemInInventory();
+		if (item) {
+			CurrentHeldItem = item->ItemData;
+			ItemCursorRef->Initialize(CurrentHeldItem);
+		}
+		break;
+	}
+	case H_Tool:
+	default:
+		break;
+	}
+}
+
+void APlayerCharacter::UpdateItemCursorPosition() {
+	const auto viewpoint = GetViewRay();
+	
 	if (CurrentHeldItem) {
 		const auto foundResult =
 			ChunkManagerRef->Raytrace(viewpoint, TerrainInteractionDistance);
@@ -165,9 +201,13 @@ void APlayerCharacter::PlaceItem() {
 }
 
 void APlayerCharacter::HoldPrevItem() {
+	CharDataRef->NextHeldItem();
+	UpdateItemCursorType();
 }
 
 void APlayerCharacter::HoldNextItem() {
+	CharDataRef->PrevHeldItem();
+	UpdateItemCursorType();
 }
 
 void APlayerCharacter::BeginPlay() {
@@ -198,6 +238,7 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent * InputCo
 	InputComponent->BindAction("LeftMouseClick", IE_Released, this, &APlayerCharacter::PlaceItem);
 	InputComponent->BindAction("PrevItem", IE_Released, this, &APlayerCharacter::HoldPrevItem);
 	InputComponent->BindAction("NextItem", IE_Released, this, &APlayerCharacter::HoldNextItem);
+	InputComponent->BindAction("ToggleHandAction", IE_Released, this, &APlayerCharacter::ToggleHandAction);
 }
 
 void APlayerCharacter::Tick(float delta) {
@@ -209,7 +250,7 @@ void APlayerCharacter::Tick(float delta) {
 	if (ViewSecondCount >= 0.02) {
 		ViewSecondCount -= 0.02;
 		
-		UpdateItemCursor(GetViewRay());
+		UpdateItemCursorPosition();
 
 		EventBusRef->BroadcastEvent(EventDataPtr(new EViewPosition(GetViewRay())));
 	}

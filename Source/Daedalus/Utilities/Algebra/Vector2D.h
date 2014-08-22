@@ -1,9 +1,11 @@
 #pragma once
 
+#include <Utilities/DataStructures.h>
 #include <Utilities/Algebra/Algebra.h>
 
 #include <cmath>
 #include <functional>
+#include <sstream>
 
 namespace utils {
 	template <typename T>

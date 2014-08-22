@@ -40,7 +40,9 @@ private:
 
 
 	void SetUpItemCursor();
-	void UpdateItemCursor(const utils::Ray3D & viewpoint);
+	void ToggleHandAction();
+	void UpdateItemCursorType();
+	void UpdateItemCursorPosition();
 	void UpdateItemCursorRotation();
 
 protected:
