@@ -10,8 +10,8 @@ using namespace utils;
 
 AItem::AItem(const class FPostConstructInitializeProperties & PCIP) : Super(PCIP) {
 	MeshComponent = PCIP.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("StaticMesh"));
-
-	//MeshComponent->SetStaticMesh(GetMesh());
+	MeshComponent->SetMobility(EComponentMobility::Movable);
+	this->RootComponent = MeshComponent;
 }
 
 void AItem::AssertInitialized() const {
@@ -29,8 +29,6 @@ void AItem::ApplyTransform() {
 void AItem::LoadMesh(const std::string & meshName) {
 	auto path = "StaticMesh'/Game/" + meshName + "'";
 	MeshComponent->SetStaticMesh(FindStaticMesh(path));
-	MeshComponent->SetMobility(EComponentMobility::Movable);
-	this->RootComponent = MeshComponent;
 }
 
 void AItem::Initialize(const ItemDataPtr & data) {

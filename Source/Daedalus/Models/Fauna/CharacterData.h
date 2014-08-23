@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Models/Items/ItemData.h>
+#include <Utilities/DataStructures.h>
 
 #include <algorithm>
 #include <cassert>
@@ -14,6 +15,7 @@ namespace fauna {
 	};
 
 	struct InventoryItem {
+		// TODO: handle storing items with differing state
 		Uint32 Count;
 		items::ItemDataPtr ItemData;
 
@@ -36,18 +38,14 @@ namespace fauna {
 
 
 
-		InventoryItemVector Filter(const items::ItemType type) {
+		InventoryItemVector Filter(const items::ItemType type) const {
 			InventoryItemVector ret;
 			std::copy_if(
 				Items.begin(), Items.end(), std::back_inserter(ret),
 				[&type] (const InventoryItemPtr & x) {
-					return x->ItemData->Template.Type == type;
+					return x && x->ItemData->Template.Type == type;
 				});
 			return ret;
-		}
-
-		const InventoryItemVector Filter(const items::ItemType type) const {
-			return Filter(type);
 		}
 
 		inline void AssertValidInventory() const {
@@ -67,15 +65,24 @@ namespace fauna {
 			return totalAllowableStackCount - totalItemCount;
 		}
 
-	public:
-		Inventory(const Uint32 size) : MaxSize(size) {}
 
+		/**
+		 * Removes item stacks that contain 0 items in it.
+		 */
+		void ClearInvalidItemSlots();
+
+	public:
+		explicit Inventory(const Uint32 size);
+		
+		utils::Option<Uint32> GetNextFreeSlot() const;
+		Uint32 GetCurrentSize() const;
 		Uint32 GetMaxSize() const { return MaxSize; }
 		const InventoryItemVector & GetItems() const { return Items; }
 
 		bool CanAddItem(const items::ItemDataPtr & item, const Uint32 count) const;
-		bool AddItems(const items::ItemDataPtr & item, const Uint32 count = 0);
-		bool RemoveItems(const items::ItemDataPtr & item, const Uint32 count = 0);
+		bool AddItems(const items::ItemDataPtr & item, const Uint32 count = 1);
+		bool RemoveItems(const items::ItemDataPtr & item, const Uint32 count = 1);
+		bool RemoveItems(const Uint32 index, const Uint32 count = 1);
 
 		InventoryItemPtr operator [] (const Uint32 index) {
 			if (index >= Items.size())
@@ -157,6 +164,17 @@ namespace fauna {
 
 		InventoryItemPtr GetCurrentItemInInventory() {
 			return GetItemInInventory(GetCurrentHeldItemIndex());
+		}
+
+		items::ItemDataPtr PlaceCurrentItemInInventory() {
+			const auto curIndex = GetCurrentHeldItemIndex();
+			const auto curItem = GetItemInInventory(curIndex);
+
+			if (!curItem || curItem->Count == 0)
+				return NULL;
+
+			InventoryRef->RemoveItems(curIndex, 1);
+			return curItem->ItemData;
 		}
 	};
 

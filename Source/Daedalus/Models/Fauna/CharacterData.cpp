@@ -1,11 +1,24 @@
 #include <daedalus.h>
 #include "CharacterData.h"
 
+using namespace utils;
+
 namespace fauna {
+	Inventory::Inventory(const Uint32 size) : MaxSize(size) {
+		Items.resize(size);
+	}
+
+	void Inventory::ClearInvalidItemSlots() {
+		for (Uint32 i = 0; i < Items.size(); i++) {
+			if (Items[i]->Count == 0)
+				Items[i] = NULL;
+		}
+	}
+
 	bool Inventory::CanAddItem(const items::ItemDataPtr & item, const Uint32 count) const {
 		AssertValidInventory();
 
-		const Uint64 freeSlotSpace = (MaxSize - Items.size()) * item->Template.MaxStackSize;
+		const Uint64 freeSlotSpace = (MaxSize - GetCurrentSize()) * item->Template.MaxStackSize;
 		const Uint64 freeStackableSpace = CountFreeStackSpace(Filter(item->Template.Type));
 
 		// If all the remaining free slots and free stack space is larger than the number
@@ -19,7 +32,7 @@ namespace fauna {
 		auto sameTypeItems = Filter(item->Template.Type);
 
 		const auto stackSize = item->Template.MaxStackSize;
-		const Uint64 freeSlotSpace = (MaxSize - Items.size()) * stackSize;
+		const Uint64 freeSlotSpace = (MaxSize - GetCurrentSize()) * stackSize;
 		const Uint64 freeStackableSpace = CountFreeStackSpace(sameTypeItems);
 
 		// Ensure we actually have enough space to add items first.
@@ -43,8 +56,14 @@ namespace fauna {
 		}
 
 		// If any more items need to be added, create a new stack.
-		if (remainingCount > 0)
-			Items.push_back(InventoryItemPtr(new InventoryItem(item, count)));
+		while (remainingCount > 0) {
+			const auto newSlotIndex = GetNextFreeSlot();
+			const auto amount = std::min(item->Template.MaxStackSize, remainingCount);
+			if (!newSlotIndex.IsValid())
+				break;
+			Items[*newSlotIndex] = InventoryItemPtr(new InventoryItem(item, amount));
+			remainingCount -= amount;
+		}
 
 		return true;
 	}
@@ -79,12 +98,38 @@ namespace fauna {
 		}
 
 		// Remove empty stacks from the inventory.
-		std::remove_if(
-			Items.begin(), Items.end(),
-			[] (const InventoryItemPtr & iItem) {
-				return iItem->Count == 0;
-			});
+		ClearInvalidItemSlots();
 
 		return true;
+	}
+	
+	bool Inventory::RemoveItems(const Uint32 index, const Uint32 count) {
+		AssertValidInventory();
+
+		auto itemStack = (*this)[index];
+
+		if (!itemStack || itemStack->Count < count)
+			return false;
+
+		itemStack->Count -= count;
+		if (itemStack->Count == 0)
+			Items[index] = NULL;
+
+		return true;
+	}
+	
+	Option<Uint32> Inventory::GetNextFreeSlot() const {
+		for (Uint32 i = 0; i < Items.size(); i++) {
+			if (!Items[i] || Items[i]->Count == 0)
+				return Some(i);
+		}
+		return None<Uint32>();
+	}
+
+	Uint32 Inventory::GetCurrentSize() const {
+		Uint32 count = 0;
+		for (Uint32 i = 0; i < Items.size(); i++)
+			count += Items[i] && Items[i]->Count > 0 ? 1 : 0;
+		return count;
 	}
 }

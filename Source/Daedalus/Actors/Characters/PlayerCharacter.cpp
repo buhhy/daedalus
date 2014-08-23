@@ -75,6 +75,8 @@ void APlayerCharacter::UpdateItemCursorType() {
 		if (item) {
 			CurrentHeldItem = item->ItemData;
 			ItemCursorRef->Initialize(CurrentHeldItem);
+		} else {
+			CurrentHeldItem = NULL;
 		}
 		break;
 	}
@@ -87,6 +89,8 @@ void APlayerCharacter::UpdateItemCursorType() {
 void APlayerCharacter::UpdateItemCursorPosition() {
 	const auto viewpoint = GetViewRay();
 	
+	bool hidden = true;
+	
 	if (CurrentHeldItem) {
 		const auto foundResult =
 			ChunkManagerRef->Raytrace(viewpoint, TerrainInteractionDistance);
@@ -97,14 +101,11 @@ void APlayerCharacter::UpdateItemCursorPosition() {
 				ItemCursorRef->SetPlayerTransform(
 					ToVector3D(this->GetActorLocation()), FRotationMatrix(this->GetActorRotation()));
 				ItemCursorRef->SetPosition(deref.EntryPosition);
-				ItemCursorRef->SetActorHiddenInGame(false);
-			} else {
-				ItemCursorRef->SetActorHiddenInGame(true);
+				hidden = false;
 			}
-		} else {
-			ItemCursorRef->SetActorHiddenInGame(true);
 		}
 	}
+	ItemCursorRef->SetActorHiddenInGame(hidden);
 }
 
 void APlayerCharacter::UpdateItemCursorRotation() {
@@ -196,17 +197,21 @@ void APlayerCharacter::EndRotation() {
 }
 
 void APlayerCharacter::PlaceItem() {
-	if (CurrentHeldItem)
-		ChunkManagerRef->PlaceItem(ItemDataPtr(new ItemData(*CurrentHeldItem)));
+	const auto curItem = CharDataRef->PlaceCurrentItemInInventory();
+	// TODO: if we wish to preserve item state, we'll need to place the original item data here
+	if (curItem) {
+		ChunkManagerRef->PlaceItem(ItemDataPtr(new ItemData(*curItem)));
+		UpdateItemCursorType();
+	}
 }
 
 void APlayerCharacter::HoldPrevItem() {
-	CharDataRef->NextHeldItem();
+	CharDataRef->PrevHeldItem();
 	UpdateItemCursorType();
 }
 
 void APlayerCharacter::HoldNextItem() {
-	CharDataRef->PrevHeldItem();
+	CharDataRef->NextHeldItem();
 	UpdateItemCursorType();
 }
 

@@ -35,8 +35,7 @@ protected:
 		if (path == NULL) return NULL;
 		return Cast<ObjClass>(StaticLoadObject(ObjClass::StaticClass(), NULL, path));
 	}
-	//StaticMesh'/Game/Chest.Chest'
-	//StaticMesh'/Game/Chest.Chest'
+
 	UStaticMesh * FindStaticMesh(const std::string & nameStr) {
 		const TCHAR * name = UTF8_TO_TCHAR(nameStr.c_str());
 		auto found = MeshCache.find(nameStr);
