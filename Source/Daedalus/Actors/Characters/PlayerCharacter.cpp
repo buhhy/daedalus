@@ -131,7 +131,7 @@ void APlayerCharacter::UpdateItemCursorRotation() {
 			turnNotches.X %= yaw;
 			turnNotches.Y %= pitch;
 
-			ItemRotation rot(turnNotches.X, turnNotches.Y);
+			ItemRotation rot(-turnNotches.X, turnNotches.Y);
 			ItemCursorRef->AddRotation(rot);
 		}
 	}

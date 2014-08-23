@@ -1,7 +1,9 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "GeneratedMeshComponent.h"
+
+#include <Actors/CustomComponents/GeneratedMeshComponent.h>
+
 #include "TestMesh.generated.h"
 
 /**

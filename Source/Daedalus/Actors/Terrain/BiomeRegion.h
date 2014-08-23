@@ -1,10 +1,10 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "GeneratedMeshComponent.h"
-#include "BiomeRegionData.h"
-#include "TerrainDataStructures.h"
 
+#include <Actors/CustomComponents/GeneratedMeshComponent.h>
+#include <Models/Terrain/BiomeRegionData.h>
+#include <Models/Terrain/TerrainDataStructures.h>
 #include <Utilities/Algebra/Algebra3D.h>
 #include <memory>
 

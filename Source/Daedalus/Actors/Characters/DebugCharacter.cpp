@@ -1,7 +1,8 @@
 #include "Daedalus.h"
 #include "DebugCharacter.h"
-#include "DDGameState.h"
-#include "Constants.h"
+
+#include <Controllers/DDGameState.h>
+#include <Utilities/Constants.h>
 
 #include <Utilities/UnrealBridge.h>
 

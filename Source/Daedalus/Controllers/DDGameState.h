@@ -1,10 +1,11 @@
 #pragma once
 
 #include "GameFramework/GameState.h"
-#include "EventBus.h"
-#include "ChunkLoader.h"
-#include "BiomeRegionLoader.h"
-#include "TerrainDataStructures.h"
+
+#include <Controllers/EventBus/EventBus.h>
+#include <Models/Terrain/ChunkLoader.h>
+#include <Models/Terrain/BiomeRegionLoader.h>
+#include <Models/Terrain/TerrainDataStructures.h>
 
 #include <memory>
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "GeneratedMeshComponent.h"
 
+#include <Actors/CustomComponents/GeneratedMeshComponent.h>
 #include <Actors/Items/Item.h>
 #include <Controllers/DDGameState.h>
 #include <Models/Terrain/ChunkData.h>
