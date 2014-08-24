@@ -64,6 +64,7 @@ protected:
 
 	void AssertInitialized() const;
 	void LoadMesh(const std::string & meshName);
+	void SetRelativeTransform(const FVector & location, const FRotator & rot);
 	virtual void ApplyTransform();
 
 public:
@@ -72,6 +73,7 @@ public:
 	
 	items::ItemDataPtr & GetItemData() { return ItemData; }
 	const items::ItemDataPtr & GetItemData() const { return ItemData; }
+	void BeginPlay() override;
 	void Initialize(const items::ItemDataPtr & data);
 	void SetPosition(const terrain::ChunkPositionVector & position);
 	void SetRotation(const items::ItemRotation & rotation);

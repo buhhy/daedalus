@@ -8,8 +8,12 @@
 using namespace items;
 using namespace utils;
 
-AItemCursor::AItemCursor(const class FPostConstructInitializeProperties & PCIP) : Super(PCIP)
-{}
+AItemCursor::AItemCursor(const class FPostConstructInitializeProperties & PCIP) :
+	Super(PCIP), bIsHidden(false)
+{
+	SetActorEnableCollision(false);
+	SetHidden(true);
+}
 
 Vector3D<> AItemCursor::GetOffsetVector() const {
 	const auto & ipos = this->ItemData->Position;
@@ -30,12 +34,24 @@ void AItemCursor::ApplyTransform() {
 	// The player character naturally has a Z-rotation for looking around, we need to rotate the
 	// item location and rotation by the inverse of that Z-rotation to ensure correct placement.
 	const auto invPlayerRot = PlayerRotation.Inverse();
-	MeshComponent->SetRelativeLocationAndRotation(
+	SetRelativeTransform(
 		invPlayerRot.TransformVector(ToFVector(trans)),
 		(invPlayerRot * fRotMat).Rotator());
+}
+
+void AItemCursor::InvalidateCursor() {
+	SetHidden(true);
+	ItemData = NULL;
 }
 
 void AItemCursor::SetPlayerTransform(const Point3D & position, const FMatrix & rotation) {
 	PlayerPosition = this->TerrainParams->ToGridCoordSpace(position);
 	PlayerRotation = rotation;
+}
+
+void AItemCursor::SetHidden(const bool isHidden) {
+	if (bIsHidden != isHidden) {
+		bIsHidden = isHidden;
+		SetActorHiddenInGame(bIsHidden);
+	}
 }

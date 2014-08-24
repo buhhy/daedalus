@@ -26,7 +26,6 @@ private:
 
 	// TODO: assign unique character IDs upon spawning
 	fauna::CharacterDataPtr CharDataRef;
-	items::ItemDataPtr CurrentHeldItem;
 	// Each mouse movement increments this counter, when this is larger than 1, the cursor is
 	// updated and this counter is decremented to the fractional component.
 	utils::Vector2D<float> MouseHoldOffset;

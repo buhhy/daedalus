@@ -18,12 +18,16 @@ void AItem::AssertInitialized() const {
 	assert(ItemData != NULL && "AItem::AssertInitialized: Class has not been initialized");
 }
 
+void AItem::SetRelativeTransform(const FVector & location, const FRotator & rot) {
+	this->MeshComponent->SetRelativeLocationAndRotation(location, rot);
+}
+
 void AItem::ApplyTransform() {
 	const auto transform = ItemData->GetPositionMatrix();
 	Basis3D basis = GetBasisFrom(transform);
 	auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(basis.XVector), ToFVector(basis.ZVector));
 	const auto trans = TerrainParams->ToRealCoordSpace(GetTranslationVectorFrom(transform));
-	MeshComponent->SetRelativeLocationAndRotation(ToFVector(trans), fRotMat.Rotator());
+	SetRelativeTransform(ToFVector(trans), fRotMat.Rotator());
 }
 
 void AItem::LoadMesh(const std::string & meshName) {
@@ -31,10 +35,14 @@ void AItem::LoadMesh(const std::string & meshName) {
 	MeshComponent->SetStaticMesh(FindStaticMesh(path));
 }
 
-void AItem::Initialize(const ItemDataPtr & data) {
+void AItem::BeginPlay() {
 	if (TerrainParams == NULL)
 		TerrainParams =
 			&GetWorld()->GetGameState<ADDGameState>()->ChunkLoader->GetGeneratorParameters();
+	Super::BeginPlay();
+}
+
+void AItem::Initialize(const ItemDataPtr & data) {
 	ItemData = data;
 	LoadMesh(data->Template.MeshName);
 	ApplyTransform();

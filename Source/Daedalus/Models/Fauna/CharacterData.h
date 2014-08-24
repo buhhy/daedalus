@@ -182,8 +182,9 @@ namespace fauna {
 			if (!curItem->ContainsItems())
 				return NULL;
 
+			auto itemData = curItem->GetItemData();
 			InventoryRef->RemoveItems(curIndex, 1);
-			return curItem->GetItemData();
+			return itemData;
 		}
 	};
 

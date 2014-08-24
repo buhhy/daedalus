@@ -18,6 +18,7 @@ class AItemCursor : public AItem {
 protected:
 	terrain::ChunkPositionVector PlayerPosition;
 	FMatrix PlayerRotation;
+	bool bIsHidden;
 
 
 
@@ -25,5 +26,12 @@ protected:
 	virtual void ApplyTransform() override;
 
 public:
+	/**
+	 * This should be called when the cursor is no longer handling a valid item.
+	 */
+	void InvalidateCursor();
 	void SetPlayerTransform(const utils::Point3D & position, const FMatrix & rotation);
+	void SetHidden(const bool isHidden);
+	bool IsHidden() const { return bIsHidden; }
+	bool IsValid() const { return !!ItemData; }
 };

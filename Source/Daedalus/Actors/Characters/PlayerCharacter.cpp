@@ -14,7 +14,6 @@ using namespace fauna;
 APlayerCharacter::APlayerCharacter(const class FPostConstructInitializeProperties& PCIP) :
 	Super(PCIP), bHoldingJump(false), MouseHoldOffset(0, 0),
 	PositionSecondCount(0), ViewSecondCount(0), TerrainInteractionDistance(250),
-	CurrentHeldItem(NULL),
 	ItemDataFactoryRef(new ItemDataFactory()),
 	CharDataFactoryRef(new CharacterDataFactory())
 {
@@ -44,8 +43,6 @@ void APlayerCharacter::SetUpItemCursor() {
 	params.Name = TEXT("ItemPlacementGhostCursor");
 	ItemCursorRef = GetWorld()->SpawnActor<AItemCursor>(
 		AItemCursor::StaticClass(), { 0, 0, 0 }, { 0, 0, 0 }, params);
-	ItemCursorRef->SetActorEnableCollision(false);
-	ItemCursorRef->SetActorHiddenInGame(true);
 	ItemCursorRef->AttachRootComponentToActor(this);
 }
 
@@ -61,23 +58,19 @@ void APlayerCharacter::ToggleHandAction() {
 	default:
 		break;
 	}
-	UpdateItemCursorType();
 }
 
 void APlayerCharacter::UpdateItemCursorType() {
 	switch (CharDataRef->GetCurrentHandAction()) {
 	case H_None:
-		CurrentHeldItem = NULL;
-		ItemCursorRef->SetActorHiddenInGame(true);
+		ItemCursorRef->InvalidateCursor();
 		break;
 	case H_Item: {
 		const auto item = CharDataRef->GetCurrentItemInInventory();
-		if (item) {
-			CurrentHeldItem = item->ItemData;
-			ItemCursorRef->Initialize(CurrentHeldItem);
-		} else {
-			CurrentHeldItem = NULL;
-		}
+		if (item->ContainsItems())
+			ItemCursorRef->Initialize(item->GetItemData());
+		else
+			ItemCursorRef->InvalidateCursor();
 		break;
 	}
 	case H_Tool:
@@ -91,25 +84,23 @@ void APlayerCharacter::UpdateItemCursorPosition() {
 	
 	bool hidden = true;
 	
-	if (CurrentHeldItem) {
+	if (ItemCursorRef->IsValid()) {
 		const auto foundResult =
 			ChunkManagerRef->Raytrace(viewpoint, TerrainInteractionDistance);
 
 		if (foundResult.IsValid()) {
 			const auto & deref = *foundResult;
 			if (deref.Type == E_Terrain || deref.Type == E_PlacedItem) {
-				ItemCursorRef->SetPlayerTransform(
-					ToVector3D(this->GetActorLocation()), FRotationMatrix(this->GetActorRotation()));
 				ItemCursorRef->SetPosition(deref.EntryPosition);
 				hidden = false;
 			}
 		}
 	}
-	ItemCursorRef->SetActorHiddenInGame(hidden);
+	ItemCursorRef->SetHidden(hidden);
 }
 
 void APlayerCharacter::UpdateItemCursorRotation() {
-	if (CurrentHeldItem) {
+	if (ItemCursorRef->IsValid()) {
 		// Find out how many notches to turn
 		Vector2D<Int16> turnNotches;
 		for (Uint8 i = 0; i < 2; i++) {
@@ -119,8 +110,9 @@ void APlayerCharacter::UpdateItemCursorRotation() {
 		}
 
 		if (!EEq(turnNotches.Length2(), 0)) {
-			const auto yaw = CurrentHeldItem->Template.RotationInterval.Yaw;
-			const auto pitch = CurrentHeldItem->Template.RotationInterval.Pitch;
+			const auto & item = ItemCursorRef->GetItemData();
+			const auto yaw = item->Template.RotationInterval.Yaw;
+			const auto pitch = item->Template.RotationInterval.Pitch;
 
 			// Bind the notches, since the turn interval only accepts unsigned integers
 			while (turnNotches.X < 0)
@@ -158,18 +150,16 @@ void APlayerCharacter::MoveRight(float amount) {
 }
 
 void APlayerCharacter::LookUp(float amount) {
-	if (bRotatingItem) {
+	if (bRotatingItem && ItemCursorRef->IsValid()) {
 		MouseHoldOffset.Y += amount / 10.0;
-		UpdateItemCursorRotation();
 	} else {
 		AddControllerPitchInput(amount);
 	}
 }
 
 void APlayerCharacter::LookRight(float amount) {
-	if (bRotatingItem) {
+	if (bRotatingItem && ItemCursorRef->IsValid()) {
 		MouseHoldOffset.X += amount / 10.0;
-		UpdateItemCursorRotation();
 	} else {
 		AddControllerYawInput(amount);
 	}
@@ -197,22 +187,20 @@ void APlayerCharacter::EndRotation() {
 }
 
 void APlayerCharacter::PlaceItem() {
-	const auto curItem = CharDataRef->PlaceCurrentItemInInventory();
-	// TODO: if we wish to preserve item state, we'll need to place the original item data here
-	if (curItem) {
-		ChunkManagerRef->PlaceItem(ItemDataPtr(new ItemData(*curItem)));
-		UpdateItemCursorType();
+	if (ItemCursorRef->IsValid() && !ItemCursorRef->IsHidden()) {
+		const auto curItem = CharDataRef->PlaceCurrentItemInInventory();
+		// TODO: if we wish to preserve item state, we'll need to place the original item data here
+		if (curItem)
+			ChunkManagerRef->PlaceItem(ItemDataPtr(new ItemData(*curItem)));
 	}
 }
 
 void APlayerCharacter::HoldPrevItem() {
 	CharDataRef->PrevHeldItem();
-	UpdateItemCursorType();
 }
 
 void APlayerCharacter::HoldNextItem() {
 	CharDataRef->NextHeldItem();
-	UpdateItemCursorType();
 }
 
 void APlayerCharacter::BeginPlay() {
@@ -254,7 +242,12 @@ void APlayerCharacter::Tick(float delta) {
 	// Tick once every 20 milliseconds
 	if (ViewSecondCount >= 0.02) {
 		ViewSecondCount -= 0.02;
-		
+
+		ItemCursorRef->SetPlayerTransform(
+			ToVector3D(this->GetActorLocation()), FRotationMatrix(this->GetActorRotation()));
+
+		UpdateItemCursorType();
+		UpdateItemCursorRotation();
 		UpdateItemCursorPosition();
 
 		EventBusRef->BroadcastEvent(EventDataPtr(new EViewPosition(GetViewRay())));
