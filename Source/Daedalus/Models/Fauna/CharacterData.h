@@ -14,21 +14,55 @@ namespace fauna {
 		C_Hero
 	};
 
-	struct InventoryItem {
+	class InventorySlot {
+	private:
 		// TODO: handle storing items with differing state
 		Uint32 Count;
 		items::ItemDataPtr ItemData;
 
-		InventoryItem(const items::ItemDataPtr & data, const Uint32 count) :
+	public:
+		InventorySlot() : Count(0), ItemData(NULL) {}
+
+		InventorySlot(const items::ItemDataPtr & data, const Uint32 count) :
 			Count(count), ItemData(data)
 		{}
+
+		Uint32 GetCount() const { return Count; }
+		const items::ItemDataPtr GetItemData() const { return ItemData; }
+		bool ContainsItems() const { return Count > 0; }
+
+		void SetItems(const items::ItemDataPtr & item, const Uint32 count) {
+			Count = count;
+			ItemData = item;
+		}
+
+		bool AddItems(const Uint32 count) {
+			if (!ContainsItems() || Count + count >= ItemData->Template.MaxStackSize)
+				return false;
+
+			Count += count;
+
+			return true;
+		}
+
+		bool RemoveItems(const Uint32 count) {
+			if (!ContainsItems() || Count < count)
+				return false;
+
+			Count -= count;
+
+			if (Count == 0)
+				ItemData = NULL;
+
+			return true;
+		}
 	};
 
-	using InventoryItemPtr = std::shared_ptr<InventoryItem>;
+	using InventorySlotPtr = std::shared_ptr<InventorySlot>;
 
 	class Inventory {
 	public:
-		using InventoryItemVector = std::vector<InventoryItemPtr>;
+		using InventoryItemVector = std::vector<InventorySlotPtr>;
 
 	private:
 		// TODO: handle stacking of stateful items, since certain items of the same type
@@ -37,39 +71,14 @@ namespace fauna {
 		Uint32 MaxSize;
 
 
-
-		InventoryItemVector Filter(const items::ItemType type) const {
-			InventoryItemVector ret;
-			std::copy_if(
-				Items.begin(), Items.end(), std::back_inserter(ret),
-				[&type] (const InventoryItemPtr & x) {
-					return x && x->ItemData->Template.Type == type;
-				});
-			return ret;
-		}
-
+		
 		inline void AssertValidInventory() const {
 			assert(Items.size() <= MaxSize &&
 				"Inventory::AssertValidInventory: Invalid inventory state");
 		}
 
-		Uint64 CountFreeStackSpace(const InventoryItemVector & items) const {
-			Uint64 totalAllowableStackCount = 0;
-			Uint64 totalItemCount = 0;
-
-			for (const auto & iItem : items) {
-				totalItemCount += iItem->Count;
-				totalAllowableStackCount += iItem->ItemData->Template.MaxStackSize;
-			}
-
-			return totalAllowableStackCount - totalItemCount;
-		}
-
-
-		/**
-		 * Removes item stacks that contain 0 items in it.
-		 */
-		void ClearInvalidItemSlots();
+		InventoryItemVector Filter(const items::ItemType type) const;
+		Uint64 CountFreeStackSpace(const InventoryItemVector & items) const;
 
 	public:
 		explicit Inventory(const Uint32 size);
@@ -84,7 +93,7 @@ namespace fauna {
 		bool RemoveItems(const items::ItemDataPtr & item, const Uint32 count = 1);
 		bool RemoveItems(const Uint32 index, const Uint32 count = 1);
 
-		InventoryItemPtr operator [] (const Uint32 index) {
+		InventorySlotPtr operator [] (const Uint32 index) {
 			if (index >= Items.size())
 				return NULL;
 			return Items[index];
@@ -158,11 +167,11 @@ namespace fauna {
 			CurrentHandAction = action;
 		}
 
-		InventoryItemPtr GetItemInInventory(const Uint32 index) {
+		InventorySlotPtr GetItemInInventory(const Uint32 index) {
 			return (*InventoryRef)[index];
 		}
 
-		InventoryItemPtr GetCurrentItemInInventory() {
+		InventorySlotPtr GetCurrentItemInInventory() {
 			return GetItemInInventory(GetCurrentHeldItemIndex());
 		}
 
@@ -170,11 +179,11 @@ namespace fauna {
 			const auto curIndex = GetCurrentHeldItemIndex();
 			const auto curItem = GetItemInInventory(curIndex);
 
-			if (!curItem || curItem->Count == 0)
+			if (!curItem->ContainsItems())
 				return NULL;
 
 			InventoryRef->RemoveItems(curIndex, 1);
-			return curItem->ItemData;
+			return curItem->GetItemData();
 		}
 	};
 

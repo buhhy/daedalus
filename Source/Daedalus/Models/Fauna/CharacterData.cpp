@@ -5,14 +5,30 @@ using namespace utils;
 
 namespace fauna {
 	Inventory::Inventory(const Uint32 size) : MaxSize(size) {
-		Items.resize(size);
+		for (Uint32 i = 0; i < size; i++)
+			Items.push_back(InventorySlotPtr(new InventorySlot()));
 	}
 
-	void Inventory::ClearInvalidItemSlots() {
-		for (Uint32 i = 0; i < Items.size(); i++) {
-			if (Items[i]->Count == 0)
-				Items[i] = NULL;
+	Inventory::InventoryItemVector Inventory::Filter(const items::ItemType type) const {
+		InventoryItemVector ret;
+		std::copy_if(
+			Items.begin(), Items.end(), std::back_inserter(ret),
+			[&type] (const InventorySlotPtr & x) {
+				return x->ContainsItems() && x->GetItemData()->Template.Type == type;
+			});
+		return ret;
+	}
+
+	Uint64 Inventory::CountFreeStackSpace(const InventoryItemVector & items) const {
+		Uint64 totalAllowableStackCount = 0;
+		Uint64 totalItemCount = 0;
+
+		for (const auto & iItem : items) {
+			totalItemCount += iItem->GetCount();
+			totalAllowableStackCount += iItem->GetItemData()->Template.MaxStackSize;
 		}
+
+		return totalAllowableStackCount - totalItemCount;
 	}
 
 	bool Inventory::CanAddItem(const items::ItemDataPtr & item, const Uint32 count) const {
@@ -46,12 +62,12 @@ namespace fauna {
 			remainingCount > 0 && it != sameTypeItems.end();
 			++it
 		) {
-			if ((*it)->Count >= stackSize)
+			if ((*it)->GetCount() >= stackSize)
 				continue;
 
-			const auto free = stackSize - (*it)->Count;
+			const auto free = stackSize - (*it)->GetCount();
 			const auto take = std::min(free, remainingCount);
-			(*it)->Count += take;
+			(*it)->AddItems(take);
 			remainingCount -= take;
 		}
 
@@ -61,7 +77,7 @@ namespace fauna {
 			const auto amount = std::min(item->Template.MaxStackSize, remainingCount);
 			if (!newSlotIndex.IsValid())
 				break;
-			Items[*newSlotIndex] = InventoryItemPtr(new InventoryItem(item, amount));
+			Items[*newSlotIndex]->SetItems(item, amount);
 			remainingCount -= amount;
 		}
 
@@ -76,7 +92,7 @@ namespace fauna {
 		Uint64 totalItemCount = 0;
 
 		for (const auto & iItem : sameTypeItems)
-			totalItemCount += iItem->Count;
+			totalItemCount += iItem->GetCount();
 
 		// Return false if there aren't enough items to remove in one transaction.
 		if (totalItemCount < count)
@@ -85,42 +101,29 @@ namespace fauna {
 		// Sort the stacks from smallest to largest.
 		std::sort(
 			sameTypeItems.begin(), sameTypeItems.end(),
-			[] (const InventoryItemPtr & i1, const InventoryItemPtr & i2) {
-				return i1->Count < i2->Count;
+			[] (const InventorySlotPtr & i1, const InventorySlotPtr & i2) {
+				return i1->GetCount() < i2->GetCount();
 			});
 
 		// Remove items from the smallest stacks first.
 		Uint32 remainingCount = count;
 		for (auto it = sameTypeItems.begin(); remainingCount > 0; ++it) {
-			const auto remove = std::min((*it)->Count, remainingCount);
-			(*it)->Count += remove;
+			const auto remove = std::min((*it)->GetCount(), remainingCount);
+			(*it)->RemoveItems(remove);
 			remainingCount -= remove;
 		}
-
-		// Remove empty stacks from the inventory.
-		ClearInvalidItemSlots();
 
 		return true;
 	}
 	
 	bool Inventory::RemoveItems(const Uint32 index, const Uint32 count) {
 		AssertValidInventory();
-
-		auto itemStack = (*this)[index];
-
-		if (!itemStack || itemStack->Count < count)
-			return false;
-
-		itemStack->Count -= count;
-		if (itemStack->Count == 0)
-			Items[index] = NULL;
-
-		return true;
+		return (*this)[index]->RemoveItems(count);
 	}
 	
 	Option<Uint32> Inventory::GetNextFreeSlot() const {
 		for (Uint32 i = 0; i < Items.size(); i++) {
-			if (!Items[i] || Items[i]->Count == 0)
+			if (!Items[i]->ContainsItems())
 				return Some(i);
 		}
 		return None<Uint32>();
@@ -129,7 +132,7 @@ namespace fauna {
 	Uint32 Inventory::GetCurrentSize() const {
 		Uint32 count = 0;
 		for (Uint32 i = 0; i < Items.size(); i++)
-			count += Items[i] && Items[i]->Count > 0 ? 1 : 0;
+			count += Items[i]->ContainsItems() ? 1 : 0;
 		return count;
 	}
 }
