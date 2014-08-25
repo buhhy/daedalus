@@ -67,8 +67,8 @@ void APlayerCharacter::UpdateItemCursorType() {
 		break;
 	case H_Item: {
 		const auto item = CharDataRef->GetCurrentItemInInventory();
-		if (item->ContainsItems())
-			ItemCursorRef->Initialize(item->GetItemData());
+		if (item)
+			ItemCursorRef->Initialize(item);
 		else
 			ItemCursorRef->InvalidateCursor();
 		break;
@@ -206,7 +206,7 @@ void APlayerCharacter::OnRightMouseUp() {
 					itemRef->Interact(this);
 				}
 			}
- 
+
 			break;
 		}
 		case H_Item:
@@ -223,10 +223,12 @@ void APlayerCharacter::OnLeftMouseUp() {
 		break;
 	case H_Item:
 		if (ItemCursorRef->IsValid() && !ItemCursorRef->IsHidden()) {
-			const auto curItem = CharDataRef->PlaceCurrentItemInInventory();
+			const auto curItem = CharDataRef->GetCurrentItemInInventory();
 			// TODO: if we wish to preserve item state, we'll need to place the original item data here
-			if (curItem)
-				ChunkManagerRef->PlaceItem(ItemDataPtr(new ItemData(*curItem)));
+			if (curItem) {
+				if (ChunkManagerRef->PlaceItem(ItemDataPtr(new ItemData(*curItem))))
+					CharDataRef->PlaceCurrentItemInInventory();
+			}
 		}
 		break;
 	case H_Tool:

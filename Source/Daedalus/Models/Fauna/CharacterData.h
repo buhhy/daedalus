@@ -171,8 +171,11 @@ namespace fauna {
 			return (*InventoryRef)[index];
 		}
 
-		InventorySlotPtr GetCurrentItemInInventory() {
-			return GetItemInInventory(GetCurrentHeldItemIndex());
+		items::ItemDataPtr GetCurrentItemInInventory() {
+			const auto curItem = GetItemInInventory(GetCurrentHeldItemIndex());
+			if (!curItem->ContainsItems())
+				return NULL;
+			return curItem->GetItemData();
 		}
 
 		items::ItemDataPtr PlaceCurrentItemInInventory() {
