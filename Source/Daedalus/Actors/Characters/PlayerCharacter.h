@@ -13,8 +13,8 @@
 #include "PlayerCharacter.generated.h"
 
 /**
-* Default player character.
-*/
+ * Default player character.
+ */
 UCLASS()
 class APlayerCharacter : public ACharacter {
 	GENERATED_UCLASS_BODY()
@@ -70,9 +70,10 @@ public:
 	UFUNCTION() void LookRight(float amount);
 	UFUNCTION() void HoldJump();
 	UFUNCTION() void ReleaseJump();
-	UFUNCTION() void BeginRotation();
-	UFUNCTION() void EndRotation();
-	UFUNCTION() void PlaceItem();
+	UFUNCTION() void OnRightMouseDown();
+	UFUNCTION() void OnRightMouseUp();
+	UFUNCTION() void OnLeftMouseUp();
+	UFUNCTION() void RightClick();
 	UFUNCTION() void HoldPrevItem();                 // Cycle to the previous inventory item
 	UFUNCTION() void HoldNextItem();                 // Cycle to the next inventory item
 };

@@ -14,5 +14,4 @@ private:
 
 public:
 	void Construct(const FArguments & inArgs);
-
 };

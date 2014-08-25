@@ -50,4 +50,5 @@ public:
 	 * be sure to clone the item data before passing it in if spawning a brand new item.
 	 */
 	AItem * PlaceItem(const items::ItemDataPtr & data);
+	AItem * FindPlacedItem(const items::ItemDataId & id);
 };

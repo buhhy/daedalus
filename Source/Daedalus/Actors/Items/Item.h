@@ -12,6 +12,8 @@
 
 #include "Item.generated.h"
 
+class APlayerCharacter;
+
 /**
  * 
  */
@@ -70,12 +72,14 @@ protected:
 public:
 	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Static Mesh")
 		TSubobjectPtr<UStaticMeshComponent> MeshComponent;
-	
+
+	virtual void BeginPlay() override;
+
 	items::ItemDataPtr & GetItemData() { return ItemData; }
 	const items::ItemDataPtr & GetItemData() const { return ItemData; }
-	void BeginPlay() override;
 	void Initialize(const items::ItemDataPtr & data);
 	void SetPosition(const terrain::ChunkPositionVector & position);
 	void SetRotation(const items::ItemRotation & rotation);
 	void AddRotation(const items::ItemRotation & rotation);
+	void Interact(APlayerCharacter * player);
 };

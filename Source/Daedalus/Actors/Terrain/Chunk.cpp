@@ -102,24 +102,6 @@ void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 }
 
 bool AChunk::IsSolidTerrainAt(const Point3D & point) const {
-
-	//if (TerrainGenParams->WithinGridBounds(point)) {
-	//	cdata = CurrentChunkData;
-	//} else {
-	//	// If this incoming point is outside the current chunk, we should check the neighbours
-	//	// to check for collisions.
-	//	const auto startingPos = ChunkPositionVector(CurrentChunkIndex.Cast<Int64>(), point);
-	//	const auto offsetPos = TerrainGenParams->Normalize(startingPos);
-	//	const auto nsize = ChunkNeighbourData.Size().Cast<Int64>();
-
-	//	if (offsetPos.ChunkOffset.IsBoundedBy(Vector3D<Int64>(0), nsize)) {
-	//		cdata = ChunkNeighbourData.Get(offsetPos.ChunkOffset.Cast<Uint32>());
-	//		position = offsetPos.InnerOffset;
-	//	}
-	//}
-	//if (!cdata)
-	//	return false;
-
 	// Check for solidness of coordinate, depending on the algorithm used, we will probably need
 	// to change this section.
 	// TODO: change this to suit terrain mesh generation algorithm
@@ -223,6 +205,14 @@ AItem * AChunk::CreateItem(const items::ItemDataPtr & itemData, const bool prese
 		itemData->bIsPlaced = true;
 		CurrentChunkData->PlacedItems.push_back(itemData);
 		return SpawnItem(itemData);
+	}
+	return NULL;
+}
+
+AItem * AChunk::FindPlacedItem(const UInt64 uid) {
+	for (const auto & item : PlacedItems) {
+		if (item.ItemId == uid)
+			return item.ItemActor;
 	}
 	return NULL;
 }

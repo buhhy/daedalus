@@ -1,6 +1,7 @@
 #include <Daedalus.h>
 #include "Item.h"
 
+#include <Actors/Characters/PlayerCharacter.h>
 #include <Controllers/DDGameState.h>
 #include <Utilities/Algebra/Algebra3D.h>
 #include <Utilities/UnrealBridge.h>
@@ -64,4 +65,9 @@ void AItem::AddRotation(const ItemRotation & rotation) {
 	AssertInitialized();
 	ItemData->AddRotation(rotation);
 	ApplyTransform();
+}
+
+void AItem::Interact(APlayerCharacter * player) {
+	auto str = "Interacting with " + ItemData->Template.MeshName;
+	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Green, UTF8_TO_TCHAR(str.c_str()));
 }

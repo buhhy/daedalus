@@ -142,3 +142,10 @@ void AChunkManager::HandleEvent(const EventDataPtr & data) {
 	}
 	}
 }
+
+AItem * AChunkManager::FindPlacedItem(const ItemDataId & id) {
+	auto chunk = GetChunkAt(id.ChunkOffset);
+	if (chunk)
+		return chunk->FindPlacedItem(id.ItemId);
+	return NULL;
+}

@@ -106,6 +106,7 @@ public:
 	void InitializeChunk(const terrain::TerrainGeneratorParameters * params);
 	void SetChunkData(const ChunkDataSet & chunkData);
 	AItem * CreateItem(const items::ItemDataPtr & itemData, const bool preserveId = false);
+	AItem * FindPlacedItem(const Uint64 uid);
 	
 	/**
 	 * @param ray The origin of the ray should be in chunk inner coordinates, the

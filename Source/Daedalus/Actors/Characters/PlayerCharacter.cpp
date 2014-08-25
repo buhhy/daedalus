@@ -80,11 +80,10 @@ void APlayerCharacter::UpdateItemCursorType() {
 }
 
 void APlayerCharacter::UpdateItemCursorPosition() {
-	const auto viewpoint = GetViewRay();
-	
 	bool hidden = true;
 	
 	if (ItemCursorRef->IsValid()) {
+		const auto viewpoint = GetViewRay();
 		const auto foundResult =
 			ChunkManagerRef->Raytrace(viewpoint, TerrainInteractionDistance);
 
@@ -150,7 +149,7 @@ void APlayerCharacter::MoveRight(float amount) {
 }
 
 void APlayerCharacter::LookUp(float amount) {
-	if (bRotatingItem && ItemCursorRef->IsValid()) {
+	if (bRotatingItem) {
 		MouseHoldOffset.Y += amount / 10.0;
 	} else {
 		AddControllerPitchInput(amount);
@@ -158,7 +157,7 @@ void APlayerCharacter::LookUp(float amount) {
 }
 
 void APlayerCharacter::LookRight(float amount) {
-	if (bRotatingItem && ItemCursorRef->IsValid()) {
+	if (bRotatingItem) {
 		MouseHoldOffset.X += amount / 10.0;
 	} else {
 		AddControllerYawInput(amount);
@@ -175,23 +174,74 @@ void APlayerCharacter::ReleaseJump() {
 	bPressedJump = false;
 }
 
-void APlayerCharacter::BeginRotation() {
-	// TODO: handle inventory logic
-	bRotatingItem = true;
-	MouseHoldOffset.Reset(0, 0);
+void APlayerCharacter::OnRightMouseDown() {
+	switch (CharDataRef->GetCurrentHandAction()) {
+	case H_None:
+		break;
+	case H_Item:
+		bRotatingItem = true;
+		MouseHoldOffset.Reset(0, 0);
+		break;
+	case H_Tool:
+		break;
+	}
 }
 
-void APlayerCharacter::EndRotation() {
-	bRotatingItem = false;
-	MouseHoldOffset.Reset(0, 0);
+void APlayerCharacter::OnRightMouseUp() {
+	if (bRotatingItem) {
+		bRotatingItem = false;
+		MouseHoldOffset.Reset(0, 0);
+	} else {
+		switch (CharDataRef->GetCurrentHandAction()) {
+		case H_None: {
+			// TODO: item interactions
+			const auto viewpoint = GetViewRay();
+			const auto foundResult =
+				ChunkManagerRef->Raytrace(viewpoint, TerrainInteractionDistance);
+
+			if (foundResult.IsValid()) {
+				const auto & deref = *foundResult;
+				if (deref.Type == E_PlacedItem) {
+					auto itemRef = ChunkManagerRef->FindPlacedItem(*deref.ItemId);
+					itemRef->Interact(this);
+				}
+			}
+ 
+			break;
+		}
+		case H_Item:
+			break;
+		case H_Tool:
+			break;
+		}
+	}
 }
 
-void APlayerCharacter::PlaceItem() {
-	if (ItemCursorRef->IsValid() && !ItemCursorRef->IsHidden()) {
-		const auto curItem = CharDataRef->PlaceCurrentItemInInventory();
-		// TODO: if we wish to preserve item state, we'll need to place the original item data here
-		if (curItem)
-			ChunkManagerRef->PlaceItem(ItemDataPtr(new ItemData(*curItem)));
+void APlayerCharacter::OnLeftMouseUp() {
+	switch (CharDataRef->GetCurrentHandAction()) {
+	case H_None:
+		break;
+	case H_Item:
+		if (ItemCursorRef->IsValid() && !ItemCursorRef->IsHidden()) {
+			const auto curItem = CharDataRef->PlaceCurrentItemInInventory();
+			// TODO: if we wish to preserve item state, we'll need to place the original item data here
+			if (curItem)
+				ChunkManagerRef->PlaceItem(ItemDataPtr(new ItemData(*curItem)));
+		}
+		break;
+	case H_Tool:
+		break;
+	}
+}
+
+void APlayerCharacter::RightClick() {
+	switch (CharDataRef->GetCurrentHandAction()) {
+	case H_None:
+		break;
+	case H_Item:
+		break;
+	case H_Tool:
+		break;
 	}
 }
 
@@ -224,11 +274,12 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent * InputCo
 	InputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
 	InputComponent->BindAxis("LookUp", this, &APlayerCharacter::LookUp);
 	InputComponent->BindAxis("LookRight", this, &APlayerCharacter::LookRight);
+
 	InputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::HoldJump);
 	InputComponent->BindAction("Jump", IE_Released, this, &APlayerCharacter::ReleaseJump);
-	InputComponent->BindAction("RightMouseClick", IE_Pressed, this, &APlayerCharacter::BeginRotation);
-	InputComponent->BindAction("RightMouseClick", IE_Released, this, &APlayerCharacter::EndRotation);
-	InputComponent->BindAction("LeftMouseClick", IE_Released, this, &APlayerCharacter::PlaceItem);
+	InputComponent->BindAction("RightMouseClick", IE_Pressed, this, &APlayerCharacter::OnRightMouseDown);
+	InputComponent->BindAction("RightMouseClick", IE_Released, this, &APlayerCharacter::OnRightMouseUp);
+	InputComponent->BindAction("LeftMouseClick", IE_Released, this, &APlayerCharacter::OnLeftMouseUp);
 	InputComponent->BindAction("PrevItem", IE_Released, this, &APlayerCharacter::HoldPrevItem);
 	InputComponent->BindAction("NextItem", IE_Released, this, &APlayerCharacter::HoldNextItem);
 	InputComponent->BindAction("ToggleHandAction", IE_Released, this, &APlayerCharacter::ToggleHandAction);
