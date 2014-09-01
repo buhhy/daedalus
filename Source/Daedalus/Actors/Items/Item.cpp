@@ -8,8 +8,11 @@
 
 using namespace items;
 using namespace utils;
+using namespace terrain;
 
-AItem::AItem(const class FPostConstructInitializeProperties & PCIP) : Super(PCIP) {
+AItem::AItem(const class FPostConstructInitializeProperties & PCIP) :
+	Super(PCIP), tickCount(0), lastRotation(0, 0), lastPosition()
+{
 	MeshComponent = PCIP.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("StaticMesh"));
 	MeshComponent->SetMobility(EComponentMobility::Movable);
 	this->RootComponent = MeshComponent;
@@ -24,11 +27,17 @@ void AItem::SetRelativeTransform(const FVector & location, const FRotator & rot)
 }
 
 void AItem::ApplyTransform() {
-	const auto transform = ItemData->GetPositionMatrix();
-	Basis3D basis = GetBasisFrom(transform);
-	auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(basis.XVector), ToFVector(basis.ZVector));
-	const auto trans = TerrainParams->ToRealCoordSpace(GetTranslationVectorFrom(transform));
-	SetRelativeTransform(ToFVector(trans), fRotMat.Rotator());
+	AssertInitialized();
+	if (lastPosition != ItemData->getPosition() || lastRotation != ItemData->getRotation()) {
+		lastRotation = ItemData->getRotation();
+		lastPosition = ItemData->getPosition();
+
+		const auto transform = ItemData->GetPositionMatrix();
+		Basis3D basis = GetBasisFrom(transform);
+		auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(basis.XVector), ToFVector(basis.ZVector));
+		const auto trans = TerrainParams->ToRealCoordSpace(GetTranslationVectorFrom(transform));
+		SetRelativeTransform(ToFVector(trans), fRotMat.Rotator());
+	}
 }
 
 void AItem::LoadMesh(const std::string & meshName) {
@@ -49,25 +58,18 @@ void AItem::Initialize(const ItemDataPtr & data) {
 	ApplyTransform();
 }
 
-void AItem::SetPosition(const terrain::ChunkPositionVector & position) {
-	AssertInitialized();
-	ItemData->Position = TerrainParams->Normalize(position);
-	ApplyTransform();
-}
-
-void AItem::SetRotation(const ItemRotation & rotation) {
-	AssertInitialized();
-	ItemData->SetRotation(rotation);
-	ApplyTransform();
-}
-
-void AItem::AddRotation(const ItemRotation & rotation) {
-	AssertInitialized();
-	ItemData->AddRotation(rotation);
-	ApplyTransform();
-}
-
 void AItem::Interact(APlayerCharacter * player) {
 	auto str = "Interacting with " + ItemData->Template.MeshName;
 	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Green, UTF8_TO_TCHAR(str.c_str()));
+}
+
+void AItem::Tick(float interval) {
+	if (ItemData) {
+		tickCount += interval;
+
+		if (tickCount >= ItemData->Template.tickDuration) {
+			tickCount -= ItemData->Template.tickDuration;
+			ApplyTransform();
+		}
+	}
 }

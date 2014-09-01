@@ -28,6 +28,11 @@ protected:
 
 	ItemMeshCache MeshCache;
 	ItemMaterialCache MaterialCache;
+
+	items::ItemRotation lastRotation;
+	terrain::ChunkPositionVector lastPosition;
+	float tickCount;
+
 	const terrain::TerrainGeneratorParameters * TerrainParams;
 
 
@@ -74,12 +79,10 @@ public:
 		TSubobjectPtr<UStaticMeshComponent> MeshComponent;
 
 	virtual void BeginPlay() override;
+	virtual void Tick(float interval) override;
 
 	items::ItemDataPtr & GetItemData() { return ItemData; }
 	const items::ItemDataPtr & GetItemData() const { return ItemData; }
 	void Initialize(const items::ItemDataPtr & data);
-	void SetPosition(const terrain::ChunkPositionVector & position);
-	void SetRotation(const items::ItemRotation & rotation);
-	void AddRotation(const items::ItemRotation & rotation);
 	void Interact(APlayerCharacter * player);
 };

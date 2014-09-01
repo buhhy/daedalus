@@ -15,9 +15,13 @@
 UCLASS()
 class AItemCursor : public AItem {
 	GENERATED_UCLASS_BODY()
+private:
+	terrain::ChunkPositionVector lastPlayerPosition;
+	FMatrix lastPlayerRotation;
+
 protected:
-	terrain::ChunkPositionVector PlayerPosition;
-	FMatrix PlayerRotation;
+	terrain::ChunkPositionVector playerPosition;
+	FMatrix playerRotation;
 	bool bIsHidden;
 
 

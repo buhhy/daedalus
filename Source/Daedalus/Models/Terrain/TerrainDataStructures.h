@@ -19,6 +19,9 @@ namespace terrain {
 		{}
 	};
 
+	bool operator == (const ChunkPositionVector & lhs, const ChunkPositionVector & rhs);
+	bool operator != (const ChunkPositionVector & lhs, const ChunkPositionVector & rhs);
+
 	struct TerrainGeneratorParameters {
 		const Uint16 GridCellCount;       // Number of grid cells along a single edge of the cube
 		const Int64 Seed;

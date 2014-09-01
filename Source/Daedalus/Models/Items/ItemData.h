@@ -4,6 +4,7 @@
 #include <Utilities/Algebra/Algebra3D.h>
 
 #include <memory>
+#include <unordered_set>
 
 namespace items {
 	enum ItemType {
@@ -26,6 +27,9 @@ namespace items {
 		}
 	};
 
+	bool operator == (const ItemRotation & lhs, const ItemRotation & rhs);
+	bool operator != (const ItemRotation & lhs, const ItemRotation & rhs);
+
 	/**
 	 * This class specifies the template for each item type. The template is used to initialize
 	 * all the default values for a particular item data. This could be useful later when
@@ -33,11 +37,17 @@ namespace items {
 	 */
 	struct ItemDataTemplate {
 		ItemType Type;
-		utils::AxisAlignedBoundingBox3D ItemBounds;  // Bounds of the item in grid cells
-		utils::Point3D Pivot;    // Position of pivot in grid cells
+		// Bounds of the item in grid cells.
+		utils::AxisAlignedBoundingBox3D ItemBounds;
+		// Position of pivot in grid cells.
+		utils::Point3D Pivot;
 		ItemRotation RotationInterval;
 		std::string MeshName;
-		Uint32 MaxStackSize;     // Maximum number of items possible in an item stack
+		// Maximum number of items possible in an item stack.
+		Uint32 MaxStackSize;
+		// Maximum number of concurrent users of this item.
+		utils::Option<Uint16> maxCurrentUsers;
+		float tickDuration;
 
 		ItemDataTemplate(
 			const ItemType type,
@@ -45,13 +55,16 @@ namespace items {
 			const utils::AxisAlignedBoundingBox3D & bounds,
 			const utils::Point3D & pivot,
 			const std::string & meshName,
-			const Uint32 maxStackSize
+			const Uint32 maxStackSize,
+			const utils::Option<Uint16> maxCurUsers = utils::None<Uint16>()
 		) : Type(type),
 			RotationInterval(rotInt),
 			Pivot(pivot),
 			ItemBounds(bounds),
 			MeshName(meshName),
-			MaxStackSize(maxStackSize)
+			MaxStackSize(maxStackSize),
+			maxCurrentUsers(maxCurUsers),
+			tickDuration(20)
 		{}
 	};
 
@@ -72,12 +85,15 @@ namespace items {
 	 * all items can be rotated about the X-axis. The interval variables define how many possible
 	 * orientations are possible for each rotation axis. Each orientation angle size is equal.
 	 */
-	struct ItemData {
+	class ItemData {
 	private:
+		using ItemUsersSet = std::unordered_set<Uint64>;
+
 		ItemRotation Rotation;
 		// Size in grid cells, 1.0 is 1 grid cell, 0.5 is half a grid cell. The reason this exists
 		// here as well as in the templates is to allow individually scaled objects.
 		utils::AxisAlignedBoundingBox3D ItemBounds;
+		ItemUsersSet currentItemUsers;
 
 	public:
 		Uint64 ItemId;
@@ -103,7 +119,12 @@ namespace items {
 			ItemData(0, terrain::ChunkPositionVector(), ItemRotation(0, 0), false, tmp)
 		{}
 
-		const ItemRotation & GetRotation() const { return Rotation; }
+		const ItemRotation & getRotation() const { return Rotation; }
+		const terrain::ChunkPositionVector & getPosition() const { return Position; }
+
+		void setPosition(const terrain::ChunkPositionVector & position) {
+			this->Position = position;
+		}
 
 		void SetRotation(const ItemRotation & rotation) {
 			this->Rotation = rotation;
@@ -114,17 +135,6 @@ namespace items {
 			this->Rotation.Add(rotation);
 			this->Rotation.Bound(Template.RotationInterval);
 		}
-		
-		utils::Matrix4D<> GetRotationMatrix() const {
-			const double yawV = 360 * (double) Rotation.Yaw / Template.RotationInterval.Yaw;
-			const double pitchV = 360 * (double) Rotation.Pitch / Template.RotationInterval.Pitch;
-
-			return
-				utils::CreateTranslation(Template.Pivot) *
-				utils::CreateRotation(yawV, utils::AXIS_Z) *
-				utils::CreateRotation(pitchV, utils::AXIS_X) *
-				utils::CreateTranslation(-Template.Pivot);
-		}
 
 		utils::Matrix4D<> GetPositionMatrix() const {
 			return utils::CreateTranslation(Position.InnerOffset) * GetRotationMatrix();
@@ -133,6 +143,12 @@ namespace items {
 		utils::OrientedBoundingBox3D GetBoundingBox() const {
 			return utils::OrientedBoundingBox3D(ItemBounds, GetPositionMatrix());
 		}
+		
+		ItemDataId getItemId() const { return ItemDataId(ItemId, Position.ChunkOffset); }
+		
+		utils::Matrix4D<> GetRotationMatrix() const;
+		bool addUser(const Uint64 charId);
+		bool removeUser(const Uint64 charId);
 	};
 
 	using ItemDataPtr = std::shared_ptr<ItemData>;

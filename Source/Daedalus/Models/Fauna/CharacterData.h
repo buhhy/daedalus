@@ -125,6 +125,7 @@ namespace fauna {
 	private:
 		Uint32 CurrentHeldItemIndex;
 		EHandAction CurrentHandAction;
+		utils::Option<items::ItemDataId> currentUsingItem;
 
 	public:
 		Uint64 CharId;
@@ -137,58 +138,31 @@ namespace fauna {
 		CharacterData(const Uint64 cid, const CharacterDataTemplate & tmp) :
 			CharId(cid), Template(tmp),
 			CurrentHeldItemIndex(0), CurrentHandAction(H_None),
-			InventoryRef(new Inventory(tmp.DefaultMaxInventorySize))
+			InventoryRef(new Inventory(tmp.DefaultMaxInventorySize)),
+			currentUsingItem()
 		{}
 
 		CharacterData(const CharacterDataTemplate & tmp) :
 			CharId(0), Template(tmp),
 			CurrentHeldItemIndex(0), CurrentHandAction(H_None),
-			InventoryRef(new Inventory(tmp.DefaultMaxInventorySize))
+			InventoryRef(new Inventory(tmp.DefaultMaxInventorySize)),
+			currentUsingItem()
 		{}
 
 		const Uint32 GetCurrentHeldItemIndex() const { return CurrentHeldItemIndex; }
 		const EHandAction GetCurrentHandAction() const { return CurrentHandAction; }
-
-		Uint32 NextHeldItem() {
-			CurrentHeldItemIndex++;
-			if (CurrentHeldItemIndex >= InventoryRef->GetMaxSize())
-				CurrentHeldItemIndex = 0;
-			return CurrentHeldItemIndex;
-		}
-
-		Uint32 PrevHeldItem() {
-			if (CurrentHeldItemIndex == 0)
-				CurrentHeldItemIndex = InventoryRef->GetMaxSize();
-			CurrentHeldItemIndex--;
-			return CurrentHeldItemIndex;
-		}
+		InventorySlotPtr GetItemInInventory(const Uint32 index) { return (*InventoryRef)[index]; }
 
 		void SwitchHandAction(const EHandAction action) {
 			CurrentHandAction = action;
 		}
 
-		InventorySlotPtr GetItemInInventory(const Uint32 index) {
-			return (*InventoryRef)[index];
-		}
-
-		items::ItemDataPtr GetCurrentItemInInventory() {
-			const auto curItem = GetItemInInventory(GetCurrentHeldItemIndex());
-			if (!curItem->ContainsItems())
-				return NULL;
-			return curItem->GetItemData();
-		}
-
-		items::ItemDataPtr PlaceCurrentItemInInventory() {
-			const auto curIndex = GetCurrentHeldItemIndex();
-			const auto curItem = GetItemInInventory(curIndex);
-
-			if (!curItem->ContainsItems())
-				return NULL;
-
-			auto itemData = curItem->GetItemData();
-			InventoryRef->RemoveItems(curIndex, 1);
-			return itemData;
-		}
+		Uint32 NextHeldItem();
+		Uint32 PrevHeldItem();
+		items::ItemDataPtr GetCurrentItemInInventory();
+		items::ItemDataPtr PlaceCurrentItemInInventory();
+		bool startUsingItem(items::ItemDataPtr & itemData);
+		bool stopUsingItem(items::ItemDataPtr & itemData);
 	};
 
 	using CharacterDataPtr = std::shared_ptr<CharacterData>;

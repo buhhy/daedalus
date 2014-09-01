@@ -2,8 +2,13 @@
 #include "CharacterData.h"
 
 using namespace utils;
+using namespace items;
 
 namespace fauna {
+	/********************************************************************************
+	 * Inventory
+	 ********************************************************************************/
+
 	Inventory::Inventory(const Uint32 size) : MaxSize(size) {
 		for (Uint32 i = 0; i < size; i++)
 			Items.push_back(InventorySlotPtr(new InventorySlot()));
@@ -134,5 +139,61 @@ namespace fauna {
 		for (Uint32 i = 0; i < Items.size(); i++)
 			count += Items[i]->ContainsItems() ? 1 : 0;
 		return count;
+	}
+
+
+	
+	/********************************************************************************
+	 * CharacterData
+	 ********************************************************************************/
+
+	Uint32 CharacterData::NextHeldItem() {
+		CurrentHeldItemIndex++;
+		if (CurrentHeldItemIndex >= InventoryRef->GetMaxSize())
+			CurrentHeldItemIndex = 0;
+		return CurrentHeldItemIndex;
+	}
+
+	Uint32 CharacterData::PrevHeldItem() {
+		if (CurrentHeldItemIndex == 0)
+			CurrentHeldItemIndex = InventoryRef->GetMaxSize();
+		CurrentHeldItemIndex--;
+		return CurrentHeldItemIndex;
+	}
+
+	ItemDataPtr CharacterData::GetCurrentItemInInventory() {
+		const auto curItem = GetItemInInventory(GetCurrentHeldItemIndex());
+		if (!curItem->ContainsItems())
+			return NULL;
+		return curItem->GetItemData();
+	}
+
+	ItemDataPtr CharacterData::PlaceCurrentItemInInventory() {
+		const auto curIndex = GetCurrentHeldItemIndex();
+		const auto curItem = GetItemInInventory(curIndex);
+
+		if (!curItem->ContainsItems())
+			return NULL;
+
+		auto itemData = curItem->GetItemData();
+		InventoryRef->RemoveItems(curIndex, 1);
+		return itemData;
+	}
+
+	bool CharacterData::startUsingItem(ItemDataPtr & itemData) {
+		if (itemData->addUser(CharId)) {
+			currentUsingItem = itemData->getItemId();
+			return true;
+		}
+
+		return false;
+	}
+
+	bool CharacterData::stopUsingItem(ItemDataPtr & itemData) {
+		if (itemData->removeUser(CharId)) {
+			currentUsingItem = NULL;
+			return true;
+		}
+		return false;
 	}
 }

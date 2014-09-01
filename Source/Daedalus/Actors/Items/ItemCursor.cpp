@@ -17,7 +17,7 @@ AItemCursor::AItemCursor(const class FPostConstructInitializeProperties & PCIP) 
 
 Vector3D<> AItemCursor::GetOffsetVector() const {
 	const auto & ipos = this->ItemData->Position;
-	const auto & ppos = PlayerPosition;
+	const auto & ppos = playerPosition;
 	const auto result =
 		this->TerrainParams->ToRealCoordSpace(ipos.ChunkOffset - ppos.ChunkOffset) +
 			this->TerrainParams->ToRealCoordSpace(ipos.InnerOffset - ppos.InnerOffset);
@@ -25,18 +25,30 @@ Vector3D<> AItemCursor::GetOffsetVector() const {
 }
 
 void AItemCursor::ApplyTransform() {
-	const auto transform = this->ItemData->GetRotationMatrix();
-	Basis3D basis = GetBasisFrom(transform);
-	auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(basis.XVector), ToFVector(basis.ZVector));
+	AssertInitialized();
+	if (lastPosition != ItemData->getPosition() ||
+			lastRotation != ItemData->getRotation() ||
+			lastPlayerPosition != playerPosition ||
+			lastPlayerRotation != playerRotation)
+	{
+		lastRotation = ItemData->getRotation();
+		lastPosition = ItemData->getPosition();
+		lastPlayerPosition = playerPosition;
+		lastPlayerRotation = playerRotation;
 
-	const auto trans = this->GetOffsetVector() +
-		GetTranslationVectorFrom(transform) * this->TerrainParams->ChunkGridUnitSize;
-	// The player character naturally has a Z-rotation for looking around, we need to rotate the
-	// item location and rotation by the inverse of that Z-rotation to ensure correct placement.
-	const auto invPlayerRot = PlayerRotation.Inverse();
-	SetRelativeTransform(
-		invPlayerRot.TransformVector(ToFVector(trans)),
-		(invPlayerRot * fRotMat).Rotator());
+		const auto transform = this->ItemData->GetRotationMatrix();
+		Basis3D basis = GetBasisFrom(transform);
+		auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(basis.XVector), ToFVector(basis.ZVector));
+
+		const auto trans = this->GetOffsetVector() +
+			GetTranslationVectorFrom(transform) * this->TerrainParams->ChunkGridUnitSize;
+		// The player character naturally has a Z-rotation for looking around, we need to rotate the
+		// item location and rotation by the inverse of that Z-rotation to ensure correct placement.
+		const auto invPlayerRot = playerRotation.Inverse();
+		SetRelativeTransform(
+			invPlayerRot.TransformVector(ToFVector(trans)),
+			(invPlayerRot * fRotMat).Rotator());
+	}
 }
 
 void AItemCursor::InvalidateCursor() {
@@ -45,8 +57,8 @@ void AItemCursor::InvalidateCursor() {
 }
 
 void AItemCursor::SetPlayerTransform(const Point3D & position, const FMatrix & rotation) {
-	PlayerPosition = this->TerrainParams->ToGridCoordSpace(position);
-	PlayerRotation = rotation;
+	playerPosition = this->TerrainParams->ToGridCoordSpace(position);
+	playerRotation = rotation;
 }
 
 void AItemCursor::SetHidden(const bool isHidden) {

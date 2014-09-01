@@ -64,17 +64,16 @@ public:
 
 
 
-	UFUNCTION() void MoveForward(float amount);
-	UFUNCTION() void MoveRight(float amount);
-	UFUNCTION() void LookUp(float amount);
-	UFUNCTION() void LookRight(float amount);
-	UFUNCTION() void HoldJump();
-	UFUNCTION() void ReleaseJump();
-	UFUNCTION() void OnRightMouseDown();
-	UFUNCTION() void OnRightMouseUp();
-	UFUNCTION() void OnLeftMouseUp();
-	UFUNCTION() void RightClick();
-	UFUNCTION() void HoldPrevItem();                 // Cycle to the previous inventory item
-	UFUNCTION() void HoldNextItem();                 // Cycle to the next inventory item
+	void MoveForward(float amount);
+	void MoveRight(float amount);
+	void LookUp(float amount);
+	void LookRight(float amount);
+	void HoldJump();
+	void ReleaseJump();
+	void OnRightMouseDown();
+	void OnRightMouseUp();
+	void OnLeftMouseUp();
+	void HoldPrevItem();                 // Cycle to the previous inventory item
+	void HoldNextItem();                 // Cycle to the next inventory item
 };
 

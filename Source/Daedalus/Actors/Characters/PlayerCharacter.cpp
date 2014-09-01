@@ -90,7 +90,7 @@ void APlayerCharacter::UpdateItemCursorPosition() {
 		if (foundResult.IsValid()) {
 			const auto & deref = *foundResult;
 			if (deref.Type == E_Terrain || deref.Type == E_PlacedItem) {
-				ItemCursorRef->SetPosition(deref.EntryPosition);
+				ItemCursorRef->GetItemData()->setPosition(deref.EntryPosition);
 				hidden = false;
 			}
 		}
@@ -123,7 +123,7 @@ void APlayerCharacter::UpdateItemCursorRotation() {
 			turnNotches.Y %= pitch;
 
 			ItemRotation rot(-turnNotches.X, turnNotches.Y);
-			ItemCursorRef->AddRotation(rot);
+			ItemCursorRef->GetItemData()->AddRotation(rot);
 		}
 	}
 }
@@ -230,17 +230,6 @@ void APlayerCharacter::OnLeftMouseUp() {
 					CharDataRef->PlaceCurrentItemInInventory();
 			}
 		}
-		break;
-	case H_Tool:
-		break;
-	}
-}
-
-void APlayerCharacter::RightClick() {
-	switch (CharDataRef->GetCurrentHandAction()) {
-	case H_None:
-		break;
-	case H_Item:
 		break;
 	case H_Tool:
 		break;
