@@ -1,8 +1,11 @@
 #include <Daedalus.h>
 #include "ItemData.h"
 
+#include <Models/Fauna/CharacterData.h>
+
 namespace items {
 	using namespace utils;
+	using namespace fauna;
 
 	bool operator == (const ItemRotation & lhs, const ItemRotation & rhs) {
 		return lhs.Yaw == rhs.Yaw && lhs.Pitch == rhs.Pitch;
@@ -12,15 +15,23 @@ namespace items {
 		return !(lhs == rhs);
 	}
 
+	Matrix4D<> ItemData::GetPositionMatrix() const {
+		return CreateTranslation(position.InnerOffset) * GetRotationMatrix();
+	}
+
 	Matrix4D<> ItemData::GetRotationMatrix() const {
-		const double yawV = 360 * (double) Rotation.Yaw / Template.RotationInterval.Yaw;
-		const double pitchV = 360 * (double) Rotation.Pitch / Template.RotationInterval.Pitch;
+		const double yawV = 360 * (double) rotation.Yaw / Template.RotationInterval.Yaw;
+		const double pitchV = 360 * (double) rotation.Pitch / Template.RotationInterval.Pitch;
 
 		return
 			CreateTranslation(Template.Pivot) *
 			CreateRotation(yawV, utils::AXIS_Z) *
 			CreateRotation(pitchV, utils::AXIS_X) *
 			CreateTranslation(-Template.Pivot);
+	}
+	
+	Matrix4D<> ItemData::getScaleMatrix() const {
+		return CreateScaling(scale);
 	}
 
 	bool ItemData::addUser(const Uint64 charId) {
@@ -42,7 +53,12 @@ namespace items {
 		if (currentItemUsers.find(charId) == currentItemUsers.end())
 			return false;
 
-		currentItemUsers.remove(charId);
+		currentItemUsers.erase(charId);
 		return true;
+	}
+
+	void ItemData::interactAction(CharacterDataPtr & charData) {
+		auto self = shared_from_this();
+		charData->startUsingItem(self);
 	}
 }

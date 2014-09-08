@@ -31,6 +31,7 @@ protected:
 
 	items::ItemRotation lastRotation;
 	terrain::ChunkPositionVector lastPosition;
+	utils::Vector3D<> lastScale;
 	float tickCount;
 
 	const terrain::TerrainGeneratorParameters * TerrainParams;
@@ -72,7 +73,8 @@ protected:
 	void AssertInitialized() const;
 	void LoadMesh(const std::string & meshName);
 	void SetRelativeTransform(const FVector & location, const FRotator & rot);
-	virtual void ApplyTransform();
+	virtual void applyTransform();
+	void applyScale();
 
 public:
 	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Static Mesh")
@@ -84,5 +86,4 @@ public:
 	items::ItemDataPtr & GetItemData() { return ItemData; }
 	const items::ItemDataPtr & GetItemData() const { return ItemData; }
 	void Initialize(const items::ItemDataPtr & data);
-	void Interact(APlayerCharacter * player);
 };

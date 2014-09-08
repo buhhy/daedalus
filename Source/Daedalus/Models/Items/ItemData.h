@@ -6,6 +6,11 @@
 #include <memory>
 #include <unordered_set>
 
+namespace fauna {
+	class CharacterData;
+	using CharacterDataPtr = std::shared_ptr<CharacterData>;
+}
+
 namespace items {
 	enum ItemType {
 		I_Chest,
@@ -48,6 +53,7 @@ namespace items {
 		// Maximum number of concurrent users of this item.
 		utils::Option<Uint16> maxCurrentUsers;
 		float tickDuration;
+		float meshScale;
 
 		ItemDataTemplate(
 			const ItemType type,
@@ -56,7 +62,8 @@ namespace items {
 			const utils::Point3D & pivot,
 			const std::string & meshName,
 			const Uint32 maxStackSize,
-			const utils::Option<Uint16> maxCurUsers = utils::None<Uint16>()
+			const float meshScale,
+			const utils::Option<Uint16> maxCurUsers
 		) : Type(type),
 			RotationInterval(rotInt),
 			Pivot(pivot),
@@ -64,7 +71,22 @@ namespace items {
 			MeshName(meshName),
 			MaxStackSize(maxStackSize),
 			maxCurrentUsers(maxCurUsers),
-			tickDuration(20)
+			tickDuration(20),
+			meshScale(meshScale)
+		{}
+		
+
+		ItemDataTemplate(
+			const ItemType type,
+			const ItemRotation & rotInt,
+			const utils::AxisAlignedBoundingBox3D & bounds,
+			const utils::Point3D & pivot,
+			const std::string & meshName,
+			const Uint32 maxStackSize,
+			const float meshScale
+		) : ItemDataTemplate(
+				type, rotInt, bounds, pivot, meshName, maxStackSize,
+				meshScale, utils::None<Uint16>())
 		{}
 	};
 
@@ -85,70 +107,79 @@ namespace items {
 	 * all items can be rotated about the X-axis. The interval variables define how many possible
 	 * orientations are possible for each rotation axis. Each orientation angle size is equal.
 	 */
-	class ItemData {
+	class ItemData : public std::enable_shared_from_this<ItemData> {
 	private:
 		using ItemUsersSet = std::unordered_set<Uint64>;
-
-		ItemRotation Rotation;
+		
+		Uint64 uidNumber;
+		ItemDataId itemId;
+		terrain::ChunkPositionVector position;
+		utils::Vector3D<> scale;
+		ItemRotation rotation;
 		// Size in grid cells, 1.0 is 1 grid cell, 0.5 is half a grid cell. The reason this exists
 		// here as well as in the templates is to allow individually scaled objects.
-		utils::AxisAlignedBoundingBox3D ItemBounds;
+		utils::AxisAlignedBoundingBox3D itemBounds;
 		ItemUsersSet currentItemUsers;
 
 	public:
-		Uint64 ItemId;
-		terrain::ChunkPositionVector Position;
 		bool bIsPlaced;
 		const ItemDataTemplate & Template;
 
 		ItemData(
-			const Uint64 itemId,
+			const Uint64 uid,
 			const terrain::ChunkPositionVector & position,
 			const ItemRotation & rotation,
 			const bool isPlaced,
 			const ItemDataTemplate & tmp
-		) : ItemId(itemId),
-			Position(position),
-			Rotation(rotation),
+		) : uidNumber(uid),
+			itemId(ItemDataId(uid, position.ChunkOffset)),
+			position(position),
+			rotation(rotation),
+			scale(tmp.meshScale),
 			bIsPlaced(isPlaced),
 			Template(tmp),
-			ItemBounds(tmp.ItemBounds)
+			itemBounds(tmp.ItemBounds)
 		{}
 
 		ItemData(const ItemDataTemplate & tmp) :
 			ItemData(0, terrain::ChunkPositionVector(), ItemRotation(0, 0), false, tmp)
 		{}
 
-		const ItemRotation & getRotation() const { return Rotation; }
-		const terrain::ChunkPositionVector & getPosition() const { return Position; }
+		const ItemRotation & getRotation() const { return rotation; }
+		const terrain::ChunkPositionVector & getPosition() const { return position; }
+		const utils::Vector3D<> & getScale() const { return scale; }
 
 		void setPosition(const terrain::ChunkPositionVector & position) {
-			this->Position = position;
+			this->position = position;
+			this->itemId.ChunkOffset = position.ChunkOffset;
 		}
 
 		void SetRotation(const ItemRotation & rotation) {
-			this->Rotation = rotation;
-			this->Rotation.Bound(Template.RotationInterval);
+			this->rotation = rotation;
+			this->rotation.Bound(Template.RotationInterval);
 		}
 
 		void AddRotation(const ItemRotation & rotation) {
-			this->Rotation.Add(rotation);
-			this->Rotation.Bound(Template.RotationInterval);
-		}
-
-		utils::Matrix4D<> GetPositionMatrix() const {
-			return utils::CreateTranslation(Position.InnerOffset) * GetRotationMatrix();
+			this->rotation.Add(rotation);
+			this->rotation.Bound(Template.RotationInterval);
 		}
 
 		utils::OrientedBoundingBox3D GetBoundingBox() const {
-			return utils::OrientedBoundingBox3D(ItemBounds, GetPositionMatrix());
+			return utils::OrientedBoundingBox3D(itemBounds, GetPositionMatrix());
 		}
 		
-		ItemDataId getItemId() const { return ItemDataId(ItemId, Position.ChunkOffset); }
+		ItemDataId getItemId() const { return itemId; }
+		void modifyIdNumber(const Uint64 uid) {
+			this->uidNumber = uid;
+			this->itemId.ItemId = uid;
+		}
 		
 		utils::Matrix4D<> GetRotationMatrix() const;
+		utils::Matrix4D<> GetPositionMatrix() const;
+		utils::Matrix4D<> getScaleMatrix() const;
 		bool addUser(const Uint64 charId);
 		bool removeUser(const Uint64 charId);
+		void interactAction(fauna::CharacterDataPtr & charData);
 	};
 
 	using ItemDataPtr = std::shared_ptr<ItemData>;

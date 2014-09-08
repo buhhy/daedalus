@@ -125,7 +125,7 @@ namespace fauna {
 	private:
 		Uint32 CurrentHeldItemIndex;
 		EHandAction CurrentHandAction;
-		utils::Option<items::ItemDataId> currentUsingItem;
+		std::weak_ptr<items::ItemData> currentUsingItem;
 
 	public:
 		Uint64 CharId;
@@ -151,7 +151,11 @@ namespace fauna {
 
 		const Uint32 GetCurrentHeldItemIndex() const { return CurrentHeldItemIndex; }
 		const EHandAction GetCurrentHandAction() const { return CurrentHandAction; }
-		InventorySlotPtr GetItemInInventory(const Uint32 index) { return (*InventoryRef)[index]; }
+		items::ItemDataPtr GetCurrentItemInInventory();
+		items::ItemDataPtr PlaceCurrentItemInInventory();
+		InventorySlotPtr GetItemInInventory(const Uint32 index) {
+			return (*InventoryRef)[index];
+		}
 
 		void SwitchHandAction(const EHandAction action) {
 			CurrentHandAction = action;
@@ -159,10 +163,13 @@ namespace fauna {
 
 		Uint32 NextHeldItem();
 		Uint32 PrevHeldItem();
-		items::ItemDataPtr GetCurrentItemInInventory();
-		items::ItemDataPtr PlaceCurrentItemInInventory();
+
 		bool startUsingItem(items::ItemDataPtr & itemData);
-		bool stopUsingItem(items::ItemDataPtr & itemData);
+		bool stopUsingItem();
+		bool isUsingItem() const;
+		const std::weak_ptr<items::ItemData> & getUsingItem() const {
+			return currentUsingItem;
+		}
 	};
 
 	using CharacterDataPtr = std::shared_ptr<CharacterData>;

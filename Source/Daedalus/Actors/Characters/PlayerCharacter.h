@@ -62,7 +62,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = State)
 		bool bRotatingItem;
 
-
+	
+	bool canMove() const;
 
 	void MoveForward(float amount);
 	void MoveRight(float amount);
@@ -73,6 +74,7 @@ public:
 	void OnRightMouseDown();
 	void OnRightMouseUp();
 	void OnLeftMouseUp();
+	void onEscape();
 	void HoldPrevItem();                 // Cycle to the previous inventory item
 	void HoldNextItem();                 // Cycle to the next inventory item
 };

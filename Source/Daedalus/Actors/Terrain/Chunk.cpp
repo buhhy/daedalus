@@ -13,13 +13,13 @@ using namespace items;
 
 namespace terrain {
 	Option<TerrainRaytraceResult> TerrainResult(const ChunkPositionVector & entry) {
-		return Some(TerrainRaytraceResult(E_Terrain, entry, None<ItemDataId>()));
+		return Some(TerrainRaytraceResult(E_Terrain, entry, NULL));
 	}
 
 	Option<TerrainRaytraceResult> ItemResult(
-		const ItemDataId & id, const ChunkPositionVector & pos
+		const ItemDataPtr & item, const ChunkPositionVector & pos
 	) {
-		return Some(TerrainRaytraceResult(E_PlacedItem, pos, Some(id)));
+		return Some(TerrainRaytraceResult(E_PlacedItem, pos, item));
 	}
 
 	utils::Option<TerrainRaytraceResult> NoResult() {
@@ -42,20 +42,16 @@ AItem * AChunk::SpawnItem(const ItemDataPtr & itemData) {
 	const FRotator defaultRotator(0, 0, 0);
 	auto params = FActorSpawnParameters();
 	params.Name = *FString::Printf(TEXT("(%lld,%lld,%lld)PlacedItem%llu"),
-		itemData->Position.ChunkOffset.X,
-		itemData->Position.ChunkOffset.Y,
-		itemData->Position.ChunkOffset.Z,
-		itemData->ItemId);
-	UE_LOG(LogTemp, Warning, TEXT("(%lld,%lld,%lld)PlacedItem%llu"),
-		itemData->Position.ChunkOffset.X,
-		itemData->Position.ChunkOffset.Y,
-		itemData->Position.ChunkOffset.Z,
-		itemData->ItemId);
+		itemData->getPosition().ChunkOffset.X,
+		itemData->getPosition().ChunkOffset.Y,
+		itemData->getPosition().ChunkOffset.Z,
+		itemData->getItemId().ItemId);
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *params.Name.ToString());
 	auto actor = GetWorld()->SpawnActor<AItem>(
 		AItem::StaticClass(),
-		ToFVector(TerrainGenParams->ToRealCoordSpace(itemData->Position.InnerOffset)),
+		ToFVector(TerrainGenParams->ToRealCoordSpace(itemData->getPosition().InnerOffset)),
 		FRotator(0, 0, 0), params);
-	PlacedItems.Add({ itemData->ItemId, actor });
+	PlacedItems.Add({ itemData->getItemId().ItemId, actor });
 	actor->Initialize(itemData);
 	actor->AttachRootComponentToActor(this);
 	return actor;
@@ -66,7 +62,7 @@ ItemDataPtr AChunk::RemoveItem(const ItemDataPtr & itemData) {
 	ItemDataPtr removed = NULL;
 
 	for (const auto & it : PlacedItems) {
-		if (it.ItemId == itemData->ItemId) {
+		if (it.ItemId == itemData->getItemId().ItemId) {
 			it.ItemActor->Destroy();
 			PlacedItems.RemoveAt(index);
 			removed = it.ItemActor->GetItemData();
@@ -95,8 +91,8 @@ void AChunk::SetChunkData(const ChunkDataSet & chunkData) {
 	CurrentChunkData = chunkData.Get(CurrentChunkIndex);
 	// Make sure the item ID counter is at least 1 larger than the current largest ID
 	for (const auto & itemData : CurrentChunkData->PlacedItems) {
-		if (itemData->ItemId >= ItemIdCounter)
-			ItemIdCounter = itemData->ItemId + 1;
+		if (itemData->getItemId().ItemId >= ItemIdCounter)
+			ItemIdCounter = itemData->getItemId().ItemId + 1;
 	}
 	GenerateChunkMesh();
 }
@@ -149,13 +145,13 @@ bool AChunk::IsSolidTerrainAt(const AxisAlignedBoundingBox3D & bound) const {
 	return false;
 }
 
-Option<ItemDataId> AChunk::FindItemCollision(const AxisAlignedBoundingBox3D & bound) const {
+ItemDataPtr AChunk::FindItemCollision(const AxisAlignedBoundingBox3D & bound) const {
 	// Check items to make sure nothing occupies this location. Perhaps using an octree
 	// might be wise here.
 	for (const auto & item : PlacedItems) {
 		const auto & itemData = item.ItemActor->GetItemData();
 		if (bound.BoundingBoxIntersection(itemData->GetBoundingBox(), false))
-			return Some(ItemDataId(item.ItemId, CurrentChunkData->ChunkOffset));
+			return item.ItemActor->GetItemData();
 	}
 
 	// Check against items in neighbouring chunks since some items may span multiple grid
@@ -183,25 +179,25 @@ Option<ItemDataId> AChunk::FindItemCollision(const AxisAlignedBoundingBox3D & bo
 					const auto & chunkData = ChunkNeighbourData.Get(x, y, z);
 					for (const auto & item : chunkData->PlacedItems) {
 						if (offsetBox.BoundingBoxIntersection(item->GetBoundingBox(), false))
-							return Some(ItemDataId(item->ItemId, CurrentChunkData->ChunkOffset));
+							return item;
 					}
 				}
 			}
 		}
 	}
 
-	return None<ItemDataId>();
+	return NULL;
 }
 
 bool AChunk::IsSpaceOccupied(const AxisAlignedBoundingBox3D & bound) const {
-	return IsSolidTerrainAt(bound) || FindItemCollision(bound).IsValid();
+	return IsSolidTerrainAt(bound) || FindItemCollision(bound);
 }
 
 AItem * AChunk::CreateItem(const items::ItemDataPtr & itemData, const bool preserveId) {
-	const auto & position = itemData->Position.InnerOffset;
+	const auto & position = itemData->getPosition().InnerOffset;
 	if (!IsSpaceOccupied(itemData->GetBoundingBox().GetEnclosingBoundingBox())) {
 		if (!preserveId)
-			itemData->ItemId = ItemIdCounter++;
+			itemData->modifyIdNumber(ItemIdCounter++);
 		itemData->bIsPlaced = true;
 		CurrentChunkData->PlacedItems.push_back(itemData);
 		return SpawnItem(itemData);
@@ -209,7 +205,7 @@ AItem * AChunk::CreateItem(const items::ItemDataPtr & itemData, const bool prese
 	return NULL;
 }
 
-AItem * AChunk::FindPlacedItem(const UInt64 uid) {
+AItem * AChunk::FindPlacedItem(const Uint64 uid) {
 	for (const auto & item : PlacedItems) {
 		if (item.ItemId == uid)
 			return item.ItemActor;
@@ -307,8 +303,8 @@ Option<TerrainRaytraceResult> AChunk::Raytrace(const Ray3D & ray, const double m
 				return TerrainResult(prevPos);
 			} else {
 				const auto item = FindItemCollision(bb);
-				if (item.IsValid())
-					return ItemResult(*item, prevPos);
+				if (item)
+					return ItemResult(item, prevPos);
 			}
 				/*const auto & collisionIndex = fvt.GetCurrentCell();
 				const auto & precollisionIndex = fvt.GetPreviousCell();

@@ -26,20 +26,20 @@ namespace terrain {
 
 	struct TerrainRaytraceResult {
 		const TerrainRaytraceResultType Type;
-		utils::Option<items::ItemDataId> ItemId;
+		const items::ItemDataPtr ItemData;
 		const ChunkPositionVector EntryPosition;
 
 		TerrainRaytraceResult(
 			const TerrainRaytraceResultType type,
 			const ChunkPositionVector & pos,
-			const utils::Option<items::ItemDataId> itemId
-		) : Type(type), ItemId(itemId), EntryPosition(pos)
+			const items::ItemDataPtr & itemId
+		) : Type(type), ItemData(itemId), EntryPosition(pos)
 		{}
 	};
 
 	utils::Option<TerrainRaytraceResult> TerrainResult(const ChunkPositionVector & entry);
 	utils::Option<TerrainRaytraceResult> ItemResult(
-		const items::ItemDataId & id, const ChunkPositionVector & pos);
+		const items::ItemDataPtr & id, const ChunkPositionVector & pos);
 	utils::Option<TerrainRaytraceResult> NoResult();
 }
 
@@ -84,8 +84,7 @@ private:
 
 	bool IsSolidTerrainAt(const utils::Point3D & point) const;
 	bool IsSolidTerrainAt(const utils::AxisAlignedBoundingBox3D & bound) const;
-	utils::Option<items::ItemDataId> FindItemCollision(
-		const utils::AxisAlignedBoundingBox3D & bound) const;
+	items::ItemDataPtr FindItemCollision(const utils::AxisAlignedBoundingBox3D & bound) const;
 	/**
 	 * Checks if the space specified by the bounding box is occupied or not. This is used for
 	 * determining the validity of item placement.

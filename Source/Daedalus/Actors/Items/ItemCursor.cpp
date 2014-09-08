@@ -16,7 +16,7 @@ AItemCursor::AItemCursor(const class FPostConstructInitializeProperties & PCIP) 
 }
 
 Vector3D<> AItemCursor::GetOffsetVector() const {
-	const auto & ipos = this->ItemData->Position;
+	const auto & ipos = this->ItemData->getPosition();
 	const auto & ppos = playerPosition;
 	const auto result =
 		this->TerrainParams->ToRealCoordSpace(ipos.ChunkOffset - ppos.ChunkOffset) +
@@ -24,7 +24,7 @@ Vector3D<> AItemCursor::GetOffsetVector() const {
 	return result;
 }
 
-void AItemCursor::ApplyTransform() {
+void AItemCursor::applyTransform() {
 	AssertInitialized();
 	if (lastPosition != ItemData->getPosition() ||
 			lastRotation != ItemData->getRotation() ||

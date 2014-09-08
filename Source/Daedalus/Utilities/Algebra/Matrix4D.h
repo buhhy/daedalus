@@ -154,8 +154,15 @@ namespace utils {
 	// Return a matrix to represent a displacement of the given vector.
 	Matrix4D<> CreateTranslation(const Vector3D<> & displacement);
 
-	// Return a matrix to represent a nonuniform scale with the given factors.
+	/**
+	 * Return a matrix to represent a nonuniform scale with the given factors.
+	 */
 	Matrix4D<> CreateScaling(const Vector3D<> & scale);
+
+	/**
+	 * Return a matrix to represent a uniform scale with the given factors.
+	 */
+	Matrix4D<> CreateScaling(const double scale);
 
 	struct Basis3D;
 		

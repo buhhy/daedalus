@@ -26,7 +26,7 @@ void AItem::SetRelativeTransform(const FVector & location, const FRotator & rot)
 	this->MeshComponent->SetRelativeLocationAndRotation(location, rot);
 }
 
-void AItem::ApplyTransform() {
+void AItem::applyTransform() {
 	AssertInitialized();
 	if (lastPosition != ItemData->getPosition() || lastRotation != ItemData->getRotation()) {
 		lastRotation = ItemData->getRotation();
@@ -37,6 +37,13 @@ void AItem::ApplyTransform() {
 		auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(basis.XVector), ToFVector(basis.ZVector));
 		const auto trans = TerrainParams->ToRealCoordSpace(GetTranslationVectorFrom(transform));
 		SetRelativeTransform(ToFVector(trans), fRotMat.Rotator());
+	}
+}
+
+void AItem::applyScale() {
+	if (lastScale != ItemData->getScale()) {
+		lastScale = ItemData->getScale();
+		SetActorRelativeScale3D(ToFVector(lastScale));
 	}
 }
 
@@ -55,13 +62,14 @@ void AItem::BeginPlay() {
 void AItem::Initialize(const ItemDataPtr & data) {
 	ItemData = data;
 	LoadMesh(data->Template.MeshName);
-	ApplyTransform();
+	applyTransform();
+	applyScale();
 }
 
-void AItem::Interact(APlayerCharacter * player) {
-	auto str = "Interacting with " + ItemData->Template.MeshName;
-	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Green, UTF8_TO_TCHAR(str.c_str()));
-}
+//void AItem::Interact(APlayerCharacter * player) {
+//	auto str = "Interacting with " + ItemData->Template.MeshName;
+//	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Green, UTF8_TO_TCHAR(str.c_str()));
+//}
 
 void AItem::Tick(float interval) {
 	if (ItemData) {
@@ -69,7 +77,8 @@ void AItem::Tick(float interval) {
 
 		if (tickCount >= ItemData->Template.tickDuration) {
 			tickCount -= ItemData->Template.tickDuration;
-			ApplyTransform();
+			applyTransform();
+			applyScale();
 		}
 	}
 }

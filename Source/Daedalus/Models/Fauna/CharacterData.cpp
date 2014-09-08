@@ -182,18 +182,24 @@ namespace fauna {
 
 	bool CharacterData::startUsingItem(ItemDataPtr & itemData) {
 		if (itemData->addUser(CharId)) {
-			currentUsingItem = itemData->getItemId();
+			currentUsingItem = itemData;
 			return true;
 		}
 
 		return false;
 	}
 
-	bool CharacterData::stopUsingItem(ItemDataPtr & itemData) {
-		if (itemData->removeUser(CharId)) {
-			currentUsingItem = NULL;
-			return true;
+	bool CharacterData::stopUsingItem() {
+		if (!currentUsingItem.expired()) {
+			if (currentUsingItem.lock()->removeUser(CharId)) {
+				currentUsingItem.reset();
+				return true;
+			}
 		}
 		return false;
+	}
+
+	bool CharacterData::isUsingItem() const {
+		return !currentUsingItem.expired();
 	}
 }

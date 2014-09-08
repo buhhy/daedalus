@@ -129,7 +129,7 @@ void APlayerCharacter::UpdateItemCursorRotation() {
 }
 
 void APlayerCharacter::MoveForward(float amount) {
-	if (Controller != NULL && FMath::Abs(amount) > FLOAT_ERROR) {
+	if (Controller != NULL && FMath::Abs(amount) > FLOAT_ERROR && canMove()) {
 		FRotator rotator = Controller->GetControlRotation();
 
 		if (CharacterMovement->IsMovingOnGround() || CharacterMovement->IsFalling())
@@ -141,7 +141,7 @@ void APlayerCharacter::MoveForward(float amount) {
 }
 
 void APlayerCharacter::MoveRight(float amount) {
-	if (Controller != NULL && FMath::Abs(amount) > FLOAT_ERROR) {
+	if (Controller != NULL && FMath::Abs(amount) > FLOAT_ERROR && canMove()) {
 		FRotator rotator = Controller->GetControlRotation();
 		const FVector direction = FRotationMatrix(rotator).GetScaledAxis(EAxis::Y);
 		AddMovementInput(direction, amount);
@@ -165,8 +165,10 @@ void APlayerCharacter::LookRight(float amount) {
 }
 
 void APlayerCharacter::HoldJump() {
-	bHoldingJump = true;
-	bPressedJump = true;
+	if (canMove()) {
+		bHoldingJump = true;
+		bPressedJump = true;
+	}
 }
 
 void APlayerCharacter::ReleaseJump() {
@@ -202,8 +204,7 @@ void APlayerCharacter::OnRightMouseUp() {
 			if (foundResult.IsValid()) {
 				const auto & deref = *foundResult;
 				if (deref.Type == E_PlacedItem) {
-					auto itemRef = ChunkManagerRef->FindPlacedItem(*deref.ItemId);
-					itemRef->Interact(this);
+					deref.ItemData->interactAction(CharDataRef);
 				}
 			}
 
@@ -236,13 +237,24 @@ void APlayerCharacter::OnLeftMouseUp() {
 	}
 }
 
-void APlayerCharacter::HoldPrevItem() {
-	CharDataRef->PrevHeldItem();
+void APlayerCharacter::onEscape() {
+	if (CharDataRef->isUsingItem()) {
+		CharDataRef->stopUsingItem();
+	}
 }
 
-void APlayerCharacter::HoldNextItem() {
-	CharDataRef->NextHeldItem();
+bool APlayerCharacter::canMove() const {
+	auto usingItem = CharDataRef->getUsingItem();
+	if (!usingItem.expired()) {
+		const auto item = ChunkManagerRef->FindPlacedItem(usingItem.lock()->getItemId());
+		// Check if the item in use still exists.
+		return !item;
+	}
+	return true;
 }
+
+void APlayerCharacter::HoldPrevItem() { CharDataRef->PrevHeldItem(); }
+void APlayerCharacter::HoldNextItem() { CharDataRef->NextHeldItem(); }
 
 void APlayerCharacter::BeginPlay() {
 	Super::BeginPlay();
@@ -274,6 +286,7 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent * InputCo
 	InputComponent->BindAction("PrevItem", IE_Released, this, &APlayerCharacter::HoldPrevItem);
 	InputComponent->BindAction("NextItem", IE_Released, this, &APlayerCharacter::HoldNextItem);
 	InputComponent->BindAction("ToggleHandAction", IE_Released, this, &APlayerCharacter::ToggleHandAction);
+	InputComponent->BindAction("Escape", IE_Released, this, &APlayerCharacter::onEscape);
 }
 
 void APlayerCharacter::Tick(float delta) {

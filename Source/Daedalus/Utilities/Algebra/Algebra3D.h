@@ -79,6 +79,11 @@ namespace utils {
 		return lhs.X == rhs.X && lhs.Y == rhs.Y && lhs.Z == rhs.Z;
 	}
 
+	template<typename T>
+	inline bool operator != (const Vector3D<T> & lhs, const Vector3D<T> & rhs) {
+		return lhs.X != rhs.X && lhs.Y != rhs.Y && lhs.Z != rhs.Z;
+	}
+
 	template <typename T>
 	std::ostream& operator << (std::ostream &output, const Vector3D<T> vec) {
 		return output << '(' << vec.X << ", " << vec.Y << ", " << vec.Z << ')';

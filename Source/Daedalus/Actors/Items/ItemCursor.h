@@ -27,7 +27,7 @@ protected:
 
 
 	utils::Vector3D<> GetOffsetVector() const;
-	virtual void ApplyTransform() override;
+	virtual void applyTransform() override;
 
 public:
 	/**

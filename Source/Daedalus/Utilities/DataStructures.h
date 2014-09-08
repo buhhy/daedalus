@@ -45,6 +45,9 @@ namespace utils {
 			return *this;
 		}
 
+		T & operator->() { return Get(); }
+		const T & operator->() const { return Get(); }
+
 		~Option() { Destruct(); }
 
 		operator bool () const { return bIsInitialized; }

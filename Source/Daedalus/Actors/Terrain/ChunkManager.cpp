@@ -117,7 +117,7 @@ Option<TerrainRaytraceResult> AChunkManager::Raytrace(
 }
 
 AItem * AChunkManager::PlaceItem(const items::ItemDataPtr & data) {
-	auto chunk = GetChunkAt(data->Position.ChunkOffset);
+	auto chunk = GetChunkAt(data->getPosition().ChunkOffset);
 	return chunk->CreateItem(data);
 }
 

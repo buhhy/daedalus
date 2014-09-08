@@ -55,6 +55,14 @@ namespace utils {
 			      0,       0, scale.Z, 0.0,
 			      0,       0,       0, 1.0);
 	}
+
+	Matrix4D<> CreateScaling(const double scale) {
+		return Matrix4D<>(
+			scale,     0,     0, 0.0,
+			    0, scale,     0, 0.0,
+			    0,     0, scale, 0.0,
+			    0,     0,     0, 1.0);
+	}
 		
 	Basis3D GetBasisFrom(const Matrix4D<> & mat) {
 		return Basis3D(
