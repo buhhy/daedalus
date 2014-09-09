@@ -11,7 +11,7 @@ using namespace utils;
 AItemCursor::AItemCursor(const class FPostConstructInitializeProperties & PCIP) :
 	Super(PCIP), bIsHidden(false), lastHeldItemType(I_None)
 {
-	SetActorEnableCollision(false);
+	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	SetHidden(true);
 }
 

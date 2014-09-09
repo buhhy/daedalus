@@ -17,6 +17,7 @@ AItem::AItem(const class FPostConstructInitializeProperties & PCIP) :
 {
 	MeshComponent = PCIP.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("Mesh"));
 	MeshComponent->SetMobility(EComponentMobility::Movable);
+	MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	this->RootComponent = MeshComponent;
 	this->PrimaryActorTick.bCanEverTick = true;
 }
