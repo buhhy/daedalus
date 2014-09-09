@@ -68,7 +68,7 @@ void APlayerCharacter::UpdateItemCursorType() {
 	case H_Item: {
 		const auto item = CharDataRef->GetCurrentItemInInventory();
 		if (item)
-			ItemCursorRef->Initialize(item);
+			ItemCursorRef->initialize(item);
 		else
 			ItemCursorRef->InvalidateCursor();
 		break;
@@ -90,7 +90,7 @@ void APlayerCharacter::UpdateItemCursorPosition() {
 		if (foundResult.IsValid()) {
 			const auto & deref = *foundResult;
 			if (deref.Type == E_Terrain || deref.Type == E_PlacedItem) {
-				ItemCursorRef->GetItemData()->setPosition(deref.EntryPosition);
+				ItemCursorRef->getItemData()->setPosition(deref.EntryPosition);
 				hidden = false;
 			}
 		}
@@ -109,7 +109,7 @@ void APlayerCharacter::UpdateItemCursorRotation() {
 		}
 
 		if (!EEq(turnNotches.Length2(), 0)) {
-			const auto & item = ItemCursorRef->GetItemData();
+			const auto & item = ItemCursorRef->getItemData();
 			const auto yaw = item->Template.RotationInterval.Yaw;
 			const auto pitch = item->Template.RotationInterval.Pitch;
 
@@ -123,7 +123,7 @@ void APlayerCharacter::UpdateItemCursorRotation() {
 			turnNotches.Y %= pitch;
 
 			ItemRotation rot(-turnNotches.X, turnNotches.Y);
-			ItemCursorRef->GetItemData()->AddRotation(rot);
+			ItemCursorRef->getItemData()->AddRotation(rot);
 		}
 	}
 }

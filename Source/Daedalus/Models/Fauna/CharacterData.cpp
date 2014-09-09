@@ -19,7 +19,7 @@ namespace fauna {
 		std::copy_if(
 			Items.begin(), Items.end(), std::back_inserter(ret),
 			[&type] (const InventorySlotPtr & x) {
-				return x->ContainsItems() && x->GetItemData()->Template.Type == type;
+				return x->ContainsItems() && x->getItemData()->Template.Type == type;
 			});
 		return ret;
 	}
@@ -30,7 +30,7 @@ namespace fauna {
 
 		for (const auto & iItem : items) {
 			totalItemCount += iItem->GetCount();
-			totalAllowableStackCount += iItem->GetItemData()->Template.MaxStackSize;
+			totalAllowableStackCount += iItem->getItemData()->Template.MaxStackSize;
 		}
 
 		return totalAllowableStackCount - totalItemCount;
@@ -165,7 +165,7 @@ namespace fauna {
 		const auto curItem = GetItemInInventory(GetCurrentHeldItemIndex());
 		if (!curItem->ContainsItems())
 			return NULL;
-		return curItem->GetItemData();
+		return curItem->getItemData();
 	}
 
 	ItemDataPtr CharacterData::PlaceCurrentItemInInventory() {
@@ -175,12 +175,21 @@ namespace fauna {
 		if (!curItem->ContainsItems())
 			return NULL;
 
-		auto itemData = curItem->GetItemData();
+		auto itemData = curItem->getItemData();
 		InventoryRef->RemoveItems(curIndex, 1);
 		return itemData;
 	}
 
 	bool CharacterData::startUsingItem(ItemDataPtr & itemData) {
+		if (!currentUsingItem.expired()) {
+			// If the player is currently using this item already, don't start using it.
+			if (itemData->getItemId() == currentUsingItem.lock()->getItemId())
+				return false;
+
+			// Stop using any current items before using the current one.
+			stopUsingItem();
+		}
+
 		if (itemData->addUser(CharId)) {
 			currentUsingItem = itemData;
 			return true;

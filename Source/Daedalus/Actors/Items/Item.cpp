@@ -1,6 +1,8 @@
 #include <Daedalus.h>
 #include "Item.h"
 
+#include <sstream>
+
 #include <Actors/Characters/PlayerCharacter.h>
 #include <Controllers/DDGameState.h>
 #include <Utilities/Algebra/Algebra3D.h>
@@ -13,13 +15,14 @@ using namespace terrain;
 AItem::AItem(const class FPostConstructInitializeProperties & PCIP) :
 	Super(PCIP), tickCount(0), lastRotation(0, 0), lastPosition()
 {
-	MeshComponent = PCIP.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("StaticMesh"));
+	MeshComponent = PCIP.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("Mesh"));
 	MeshComponent->SetMobility(EComponentMobility::Movable);
 	this->RootComponent = MeshComponent;
+	this->PrimaryActorTick.bCanEverTick = true;
 }
 
 void AItem::AssertInitialized() const {
-	assert(ItemData != NULL && "AItem::AssertInitialized: Class has not been initialized");
+	assert(ItemData && "AItem::AssertInitialized: Class has not been initialized");
 }
 
 void AItem::SetRelativeTransform(const FVector & location, const FRotator & rot) {
@@ -34,13 +37,16 @@ void AItem::applyTransform() {
 
 		const auto transform = ItemData->GetPositionMatrix();
 		Basis3D basis = GetBasisFrom(transform);
-		auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(basis.XVector), ToFVector(basis.ZVector));
-		const auto trans = TerrainParams->ToRealCoordSpace(GetTranslationVectorFrom(transform));
+		auto fRotMat = FRotationMatrix::MakeFromXZ(
+			ToFVector(basis.XVector), ToFVector(basis.ZVector));
+		const auto trans = TerrainParams->ToRealCoordSpace(
+			GetTranslationVectorFrom(transform));
 		SetRelativeTransform(ToFVector(trans), fRotMat.Rotator());
 	}
 }
 
 void AItem::applyScale() {
+	AssertInitialized();
 	if (lastScale != ItemData->getScale()) {
 		lastScale = ItemData->getScale();
 		SetActorRelativeScale3D(ToFVector(lastScale));
@@ -48,8 +54,18 @@ void AItem::applyScale() {
 }
 
 void AItem::LoadMesh(const std::string & meshName) {
-	auto path = "StaticMesh'/Game/" + meshName + "'";
-	MeshComponent->SetStaticMesh(FindStaticMesh(path));
+	std::stringstream smn;
+	smn << "SkeletalMesh'/Game/" << meshName << "." << meshName << "_" << meshName << "'";
+	MeshComponent->SetSkeletalMesh(FindSkeletalMesh(smn.str()));
+	smn.str(""); smn.clear();
+	smn << "AnimBlueprint'/Game/Animation" << meshName << ".Animation" << meshName << "'";
+	auto anim = FindAnimBlueprint(smn.str());
+	if (anim)
+		MeshComponent->SetAnimClass(anim->GetAnimBlueprintGeneratedClass());
+}
+
+bool AItem::IsItemInUse() {
+	return ItemData && ItemData->isInUse();
 }
 
 void AItem::BeginPlay() {
@@ -59,7 +75,7 @@ void AItem::BeginPlay() {
 	Super::BeginPlay();
 }
 
-void AItem::Initialize(const ItemDataPtr & data) {
+void AItem::initialize(const ItemDataPtr & data) {
 	ItemData = data;
 	LoadMesh(data->Template.MeshName);
 	applyTransform();
@@ -77,8 +93,9 @@ void AItem::Tick(float interval) {
 
 		if (tickCount >= ItemData->Template.tickDuration) {
 			tickCount -= ItemData->Template.tickDuration;
-			applyTransform();
-			applyScale();
 		}
+		
+		applyTransform();
+		applyScale();
 	}
 }

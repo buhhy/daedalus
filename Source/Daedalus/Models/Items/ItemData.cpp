@@ -15,6 +15,18 @@ namespace items {
 		return !(lhs == rhs);
 	}
 
+
+
+	bool operator == (const ItemDataId & lhs, const ItemDataId & rhs) {
+		return lhs.ItemId == rhs.ItemId && lhs.ChunkOffset == rhs.ChunkOffset;
+	}
+
+	bool operator != (const ItemDataId & lhs, const ItemDataId & rhs) {
+		return !(lhs == rhs);
+	}
+
+
+
 	Matrix4D<> ItemData::GetPositionMatrix() const {
 		return CreateTranslation(position.InnerOffset) * GetRotationMatrix();
 	}
@@ -60,5 +72,9 @@ namespace items {
 	void ItemData::interactAction(CharacterDataPtr & charData) {
 		auto self = shared_from_this();
 		charData->startUsingItem(self);
+	}
+
+	bool ItemData::isInUse() const {
+		return currentItemUsers.size() > 0;
 	}
 }

@@ -30,7 +30,7 @@ private:
 	// updated and this counter is decremented to the fractional component.
 	utils::Vector2D<float> MouseHoldOffset;
 
-	// TODO: populate these from a more global location
+	// TODO: populate these factories from a more global location
 	items::ItemDataFactoryPtr ItemDataFactoryRef;
 	fauna::CharacterDataFactoryPtr CharDataFactoryRef;
 	events::EventBusPtr EventBusRef;

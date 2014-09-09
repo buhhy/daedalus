@@ -18,6 +18,7 @@ class AItemCursor : public AItem {
 private:
 	terrain::ChunkPositionVector lastPlayerPosition;
 	FMatrix lastPlayerRotation;
+	items::ItemType lastHeldItemType;
 
 protected:
 	terrain::ChunkPositionVector playerPosition;
@@ -38,4 +39,5 @@ public:
 	void SetHidden(const bool isHidden);
 	bool IsHidden() const { return bIsHidden; }
 	bool IsValid() const { return !!ItemData; }
+	void initialize(const items::ItemDataPtr & data) override;
 };

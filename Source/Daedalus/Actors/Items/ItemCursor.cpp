@@ -9,7 +9,7 @@ using namespace items;
 using namespace utils;
 
 AItemCursor::AItemCursor(const class FPostConstructInitializeProperties & PCIP) :
-	Super(PCIP), bIsHidden(false)
+	Super(PCIP), bIsHidden(false), lastHeldItemType(I_None)
 {
 	SetActorEnableCollision(false);
 	SetHidden(true);
@@ -51,9 +51,17 @@ void AItemCursor::applyTransform() {
 	}
 }
 
+void AItemCursor::initialize(const ItemDataPtr & data) {
+	if (lastHeldItemType != data->Template.Type) {
+		lastHeldItemType = data->Template.Type;
+		AItem::initialize(data);
+	}
+}
+
 void AItemCursor::InvalidateCursor() {
 	SetHidden(true);
 	ItemData = NULL;
+	lastHeldItemType = I_None;
 }
 
 void AItemCursor::SetPlayerTransform(const Point3D & position, const FMatrix & rotation) {

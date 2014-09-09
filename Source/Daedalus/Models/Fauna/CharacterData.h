@@ -28,7 +28,7 @@ namespace fauna {
 		{}
 
 		Uint32 GetCount() const { return Count; }
-		const items::ItemDataPtr GetItemData() const { return ItemData; }
+		const items::ItemDataPtr getItemData() const { return ItemData; }
 		bool ContainsItems() const { return Count > 0; }
 
 		void SetItems(const items::ItemDataPtr & item, const Uint32 count) {

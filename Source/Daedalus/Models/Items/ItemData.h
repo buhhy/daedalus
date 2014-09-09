@@ -13,6 +13,7 @@ namespace fauna {
 
 namespace items {
 	enum ItemType {
+		I_None,
 		I_Chest,
 		I_Sofa
 	};
@@ -71,7 +72,7 @@ namespace items {
 			MeshName(meshName),
 			MaxStackSize(maxStackSize),
 			maxCurrentUsers(maxCurUsers),
-			tickDuration(20),
+			tickDuration(0.02),
 			meshScale(meshScale)
 		{}
 		
@@ -98,6 +99,9 @@ namespace items {
 			ItemId(id), ChunkOffset(offset)
 		{}
 	};
+
+	bool operator == (const ItemDataId & lhs, const ItemDataId & rhs);
+	bool operator != (const ItemDataId & lhs, const ItemDataId & rhs);
 
 	/**
 	 * This data structure contains item-specific data. An item is some entity placed in the world
@@ -180,6 +184,7 @@ namespace items {
 		bool addUser(const Uint64 charId);
 		bool removeUser(const Uint64 charId);
 		void interactAction(fauna::CharacterDataPtr & charData);
+		bool isInUse() const;
 	};
 
 	using ItemDataPtr = std::shared_ptr<ItemData>;

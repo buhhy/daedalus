@@ -21,13 +21,15 @@ UCLASS()
 class AItem : public AActor {
 	GENERATED_UCLASS_BODY()
 protected:
-	using ItemMeshCache = std::unordered_map<std::string, UStaticMesh *>;
+	using ItemMeshCache = std::unordered_map<std::string, USkeletalMesh *>;
+	using AnimBlueprintCache = std::unordered_map<std::string, UAnimBlueprint *>;
 	using ItemMaterialCache = std::unordered_map<std::string, UMaterial *>;
 
 	items::ItemDataPtr ItemData;
 
 	ItemMeshCache MeshCache;
 	ItemMaterialCache MaterialCache;
+	AnimBlueprintCache AnimBPCache;
 
 	items::ItemRotation lastRotation;
 	terrain::ChunkPositionVector lastPosition;
@@ -40,18 +42,19 @@ protected:
 
 	template <typename ObjClass>
 	ObjClass * LoadObjFromPath(const TCHAR * path) {
+		// TODO: eventually use global precached meshes instead of dunamic fetching
 		if (path == NULL) return NULL;
 		return Cast<ObjClass>(StaticLoadObject(ObjClass::StaticClass(), NULL, path));
 	}
 
-	UStaticMesh * FindStaticMesh(const std::string & nameStr) {
+	USkeletalMesh * FindSkeletalMesh(const std::string & nameStr) {
 		const TCHAR * name = UTF8_TO_TCHAR(nameStr.c_str());
 		auto found = MeshCache.find(nameStr);
 
 		if (found != MeshCache.end())
 			return found->second;
 		else {
-			auto mesh = LoadObjFromPath<UStaticMesh>(name);
+			auto mesh = LoadObjFromPath<USkeletalMesh>(name);
 			MeshCache.insert({ nameStr, mesh });
 			return mesh;
 		}
@@ -70,6 +73,19 @@ protected:
 		}
 	}
 
+	UAnimBlueprint * FindAnimBlueprint(const std::string & nameStr) {
+		const TCHAR * name = UTF8_TO_TCHAR(nameStr.c_str());
+		auto found = AnimBPCache.find(nameStr);
+
+		if (found != AnimBPCache.end())
+			return found->second;
+		else {
+			auto animBP = LoadObjFromPath<UAnimBlueprint>(name);
+			AnimBPCache.insert({ nameStr, animBP });
+			return animBP;
+		}
+	}
+
 	void AssertInitialized() const;
 	void LoadMesh(const std::string & meshName);
 	void SetRelativeTransform(const FVector & location, const FRotator & rot);
@@ -78,12 +94,21 @@ protected:
 
 public:
 	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Static Mesh")
-		TSubobjectPtr<UStaticMeshComponent> MeshComponent;
+		TSubobjectPtr<USkeletalMeshComponent> MeshComponent;
+
+	UFUNCTION(
+		BlueprintPure,
+		meta = (
+			FriendlyName = "Is Item Currently In Use",
+			CompactNodeTitle = "In Use",
+			Keywords = "use"),
+		Category = "Item Properties")
+		bool IsItemInUse();
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float interval) override;
 
-	items::ItemDataPtr & GetItemData() { return ItemData; }
-	const items::ItemDataPtr & GetItemData() const { return ItemData; }
-	void Initialize(const items::ItemDataPtr & data);
+	items::ItemDataPtr & getItemData() { return ItemData; }
+	const items::ItemDataPtr & getItemData() const { return ItemData; }
+	virtual void initialize(const items::ItemDataPtr & data);
 };

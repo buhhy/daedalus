@@ -52,7 +52,7 @@ AItem * AChunk::SpawnItem(const ItemDataPtr & itemData) {
 		ToFVector(TerrainGenParams->ToRealCoordSpace(itemData->getPosition().InnerOffset)),
 		FRotator(0, 0, 0), params);
 	PlacedItems.Add({ itemData->getItemId().ItemId, actor });
-	actor->Initialize(itemData);
+	actor->initialize(itemData);
 	actor->AttachRootComponentToActor(this);
 	return actor;
 }
@@ -65,7 +65,7 @@ ItemDataPtr AChunk::RemoveItem(const ItemDataPtr & itemData) {
 		if (it.ItemId == itemData->getItemId().ItemId) {
 			it.ItemActor->Destroy();
 			PlacedItems.RemoveAt(index);
-			removed = it.ItemActor->GetItemData();
+			removed = it.ItemActor->getItemData();
 			break;
 		}
 		++index;
@@ -149,9 +149,9 @@ ItemDataPtr AChunk::FindItemCollision(const AxisAlignedBoundingBox3D & bound) co
 	// Check items to make sure nothing occupies this location. Perhaps using an octree
 	// might be wise here.
 	for (const auto & item : PlacedItems) {
-		const auto & itemData = item.ItemActor->GetItemData();
+		const auto & itemData = item.ItemActor->getItemData();
 		if (bound.BoundingBoxIntersection(itemData->GetBoundingBox(), false))
-			return item.ItemActor->GetItemData();
+			return item.ItemActor->getItemData();
 	}
 
 	// Check against items in neighbouring chunks since some items may span multiple grid
