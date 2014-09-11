@@ -22,6 +22,19 @@ APlayerCharacter::APlayerCharacter(const class FPostConstructInitializePropertie
 	movement->JumpZVelocity = 400;
 	movement->AirControl = 0.4;
 
+	// Set up the default camera.
+	CameraComponentRef = PCIP.CreateDefaultSubobject<UCameraComponent>(this, TEXT("Camera"));
+	CameraComponentRef->AttachParent = CapsuleComponent;
+	CameraComponentRef->AddLocalOffset(FVector(-100, 0, 200));
+
+	// Set up the default mesh.
+	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> mesh(
+	//	TEXT("SkeletalMesh'/Game/PlayerCharacterMale.PlayerCharacterMale_PlayerCharacterMale'"));
+	//static ConstructorHelpers::FObjectFinder<UAnimBlueprint> anim(
+	//	TEXT("AnimBlueprint'/Game/AnimationPlayerCharacterMale.AnimationPlayerCharacterMale'"));
+	//Mesh->SetSkeletalMesh(mesh.Object);
+	//Mesh->SetAnimClass(anim.Object->GetAnimBlueprintGeneratedClass());
+
 	CharDataRef = CharDataFactoryRef->BuildCharData(C_Hero);
 	CharDataRef->CharId = 1;
 	// TODO: remove this test code

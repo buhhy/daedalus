@@ -54,13 +54,13 @@ void AItem::applyScale() {
 	}
 }
 
-void AItem::LoadMesh(const std::string & meshName) {
+void AItem::loadMesh(const std::string & meshName) {
 	std::stringstream smn;
 	smn << "SkeletalMesh'/Game/" << meshName << "." << meshName << "_" << meshName << "'";
-	MeshComponent->SetSkeletalMesh(FindSkeletalMesh(smn.str()));
+	MeshComponent->SetSkeletalMesh(findSkeletalMesh(smn.str()));
 	smn.str(""); smn.clear();
 	smn << "AnimBlueprint'/Game/Animation" << meshName << ".Animation" << meshName << "'";
-	auto anim = FindAnimBlueprint(smn.str());
+	auto anim = findAnimBlueprint(smn.str());
 	if (anim)
 		MeshComponent->SetAnimClass(anim->GetAnimBlueprintGeneratedClass());
 }
@@ -78,7 +78,7 @@ void AItem::BeginPlay() {
 
 void AItem::initialize(const ItemDataPtr & data) {
 	ItemData = data;
-	LoadMesh(data->Template.MeshName);
+	loadMesh(data->Template.MeshName);
 	applyTransform();
 	applyScale();
 }

@@ -53,8 +53,8 @@ namespace items {
 		Uint32 MaxStackSize;
 		// Maximum number of concurrent users of this item.
 		utils::Option<Uint16> maxCurrentUsers;
-		float tickDuration;
-		float meshScale;
+		float tickDuration;              // Length of each tick in seconds.
+		float meshScale;                 // Ingame scaling of the 3D mesh.
 
 		ItemDataTemplate(
 			const ItemType type,

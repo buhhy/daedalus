@@ -56,6 +56,8 @@ public:
 		AChunkManager * ChunkManagerRef;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = State)
 		AItemCursor * ItemCursorRef;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh)
+		TSubobjectPtr<UCameraComponent> CameraComponentRef;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = State)
 		bool bHoldingJump;
