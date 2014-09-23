@@ -32,14 +32,14 @@ namespace items {
 	}
 
 	Matrix4D<> ItemData::GetRotationMatrix() const {
-		const double yawV = 360 * (double) rotation.Yaw / Template.RotationInterval.Yaw;
-		const double pitchV = 360 * (double) rotation.Pitch / Template.RotationInterval.Pitch;
+		const double yawV = 360 * (double) rotation.Yaw / Template.rotationInterval.Yaw;
+		const double pitchV = 360 * (double) rotation.Pitch / Template.rotationInterval.Pitch;
 
 		return
-			CreateTranslation(Template.Pivot) *
+			CreateTranslation(Template.pivot) *
 			CreateRotation(yawV, utils::AXIS_Z) *
 			CreateRotation(pitchV, utils::AXIS_X) *
-			CreateTranslation(-Template.Pivot);
+			CreateTranslation(-Template.pivot);
 	}
 	
 	Matrix4D<> ItemData::getScaleMatrix() const {

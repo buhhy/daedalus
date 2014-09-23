@@ -6,20 +6,41 @@ using namespace items;
 
 namespace fauna {
 	/********************************************************************************
+	 * InventorySlot
+	 ********************************************************************************/
+
+	void InventorySlot::useShortcut(CharacterDataPtr & source) {
+		if (ContainsItems())
+			ItemData->interactAction(source);
+	}
+
+	std::string InventorySlot::getIconName() const {
+		if (ContainsItems())
+			return ItemData->Template.resourceName;
+		return "";
+	}
+
+	utils::Option<Uint32> InventorySlot::getQuantity() const {
+		return Some(Count);
+	}
+
+
+
+	/********************************************************************************
 	 * Inventory
 	 ********************************************************************************/
 
-	Inventory::Inventory(const Uint32 size) : MaxSize(size) {
+	Inventory::Inventory(const Uint32 size) : maxSize(size) {
 		for (Uint32 i = 0; i < size; i++)
-			Items.push_back(InventorySlotPtr(new InventorySlot()));
+			items.push_back(InventorySlotPtr(new InventorySlot()));
 	}
 
 	Inventory::InventoryItemVector Inventory::Filter(const items::ItemType type) const {
 		InventoryItemVector ret;
 		std::copy_if(
-			Items.begin(), Items.end(), std::back_inserter(ret),
+			items.begin(), items.end(), std::back_inserter(ret),
 			[&type] (const InventorySlotPtr & x) {
-				return x->ContainsItems() && x->getItemData()->Template.Type == type;
+				return x->ContainsItems() && x->getItemData()->Template.itemType == type;
 			});
 		return ret;
 	}
@@ -30,7 +51,7 @@ namespace fauna {
 
 		for (const auto & iItem : items) {
 			totalItemCount += iItem->GetCount();
-			totalAllowableStackCount += iItem->getItemData()->Template.MaxStackSize;
+			totalAllowableStackCount += iItem->getItemData()->Template.maxStackSize;
 		}
 
 		return totalAllowableStackCount - totalItemCount;
@@ -39,8 +60,8 @@ namespace fauna {
 	bool Inventory::CanAddItem(const items::ItemDataPtr & item, const Uint32 count) const {
 		AssertValidInventory();
 
-		const Uint64 freeSlotSpace = (MaxSize - GetCurrentSize()) * item->Template.MaxStackSize;
-		const Uint64 freeStackableSpace = CountFreeStackSpace(Filter(item->Template.Type));
+		const Uint64 freeSlotSpace = (maxSize - GetCurrentSize()) * item->Template.maxStackSize;
+		const Uint64 freeStackableSpace = CountFreeStackSpace(Filter(item->Template.itemType));
 
 		// If all the remaining free slots and free stack space is larger than the number
 		// of items we are checking against, then we can insert at least that many items.
@@ -50,10 +71,10 @@ namespace fauna {
 	bool Inventory::AddItems(const items::ItemDataPtr & item, const Uint32 count) {
 		AssertValidInventory();
 
-		auto sameTypeItems = Filter(item->Template.Type);
+		auto sameTypeItems = Filter(item->Template.itemType);
 
-		const auto stackSize = item->Template.MaxStackSize;
-		const Uint64 freeSlotSpace = (MaxSize - GetCurrentSize()) * stackSize;
+		const auto stackSize = item->Template.maxStackSize;
+		const Uint64 freeSlotSpace = (maxSize - GetCurrentSize()) * stackSize;
 		const Uint64 freeStackableSpace = CountFreeStackSpace(sameTypeItems);
 
 		// Ensure we actually have enough space to add items first.
@@ -79,10 +100,10 @@ namespace fauna {
 		// If any more items need to be added, create a new stack.
 		while (remainingCount > 0) {
 			const auto newSlotIndex = GetNextFreeSlot();
-			const auto amount = std::min(item->Template.MaxStackSize, remainingCount);
+			const auto amount = std::min(item->Template.maxStackSize, remainingCount);
 			if (!newSlotIndex.IsValid())
 				break;
-			Items[*newSlotIndex]->SetItems(item, amount);
+			items[*newSlotIndex]->SetItems(item, amount);
 			remainingCount -= amount;
 		}
 
@@ -92,7 +113,7 @@ namespace fauna {
 	bool Inventory::RemoveItems(const items::ItemDataPtr & item, const Uint32 count) {
 		AssertValidInventory();
 			
-		auto sameTypeItems = Filter(item->Template.Type);
+		auto sameTypeItems = Filter(item->Template.itemType);
 			
 		Uint64 totalItemCount = 0;
 
@@ -127,8 +148,8 @@ namespace fauna {
 	}
 	
 	Option<Uint32> Inventory::GetNextFreeSlot() const {
-		for (Uint32 i = 0; i < Items.size(); i++) {
-			if (!Items[i]->ContainsItems())
+		for (Uint32 i = 0; i < items.size(); i++) {
+			if (!items[i]->ContainsItems())
 				return Some(i);
 		}
 		return None<Uint32>();
@@ -136,47 +157,95 @@ namespace fauna {
 
 	Uint32 Inventory::GetCurrentSize() const {
 		Uint32 count = 0;
-		for (Uint32 i = 0; i < Items.size(); i++)
-			count += Items[i]->ContainsItems() ? 1 : 0;
+		for (Uint32 i = 0; i < items.size(); i++)
+			count += items[i]->ContainsItems() ? 1 : 0;
 		return count;
 	}
 
 
+
+	/********************************************************************************
+	 * ShortcutBar
+	 ********************************************************************************/
+
+	ShortcutBar::ShortcutBar(const Uint32 size) : maxSize(size) {
+		shortcuts.resize(size);
+	}
+
+	void ShortcutBar::addShortcut(const ShortcutPtr & shortcut, const Uint32 index) {
+		if (index < shortcuts.size())
+			shortcuts[index] = shortcut;
+	}
+
+	void ShortcutBar::removeShortcut(const ShortcutPtr & shortcut, const Uint32 index) {
+		if (index < shortcuts.size())
+			shortcuts[index] = NULL;
+	}
 	
+	Uint32 ShortcutBar::getMaxSize() const {
+		return maxSize;
+	}
+
+	ShortcutBar::ShortcutVector::const_iterator ShortcutBar::startIterator() const {
+		return shortcuts.cbegin();
+	}
+
+	ShortcutBar::ShortcutVector::const_iterator ShortcutBar::endIterator() const {
+		return shortcuts.cend();
+	}
+
+
+
 	/********************************************************************************
 	 * CharacterData
 	 ********************************************************************************/
 
-	Uint32 CharacterData::NextHeldItem() {
+	CharacterData::CharacterData(const CharacterDataTemplate & tmp, const Uint64 cid) :
+		charId(cid), Template(tmp),
+		CurrentHeldItemIndex(0), CurrentHandAction(H_None),
+		inventoryRef(new Inventory(tmp.defaultMaxInventorySize)),
+		currentShortcutBarRef(new ShortcutBar(tmp.defaultShortcutBarSize)),
+		currentHP(tmp.startingMaxHP),
+		currentFullness(tmp.startingMaxFullness),
+		defaultMaxHP(tmp.startingMaxHP),
+		defaultMaxFullness(tmp.startingMaxFullness),
+		currentUsingItem()
+	{}
+
+	CharacterData::CharacterData(const CharacterDataTemplate & tmp) :
+		CharacterData(tmp, 0)
+	{}
+
+	Uint32 CharacterData::nextHeldItem() {
 		CurrentHeldItemIndex++;
-		if (CurrentHeldItemIndex >= InventoryRef->GetMaxSize())
+		if (CurrentHeldItemIndex >= inventoryRef->GetMaxSize())
 			CurrentHeldItemIndex = 0;
 		return CurrentHeldItemIndex;
 	}
 
-	Uint32 CharacterData::PrevHeldItem() {
+	Uint32 CharacterData::prevHeldItem() {
 		if (CurrentHeldItemIndex == 0)
-			CurrentHeldItemIndex = InventoryRef->GetMaxSize();
+			CurrentHeldItemIndex = inventoryRef->GetMaxSize();
 		CurrentHeldItemIndex--;
 		return CurrentHeldItemIndex;
 	}
 
-	ItemDataPtr CharacterData::GetCurrentItemInInventory() {
-		const auto curItem = GetItemInInventory(GetCurrentHeldItemIndex());
+	ItemDataPtr CharacterData::getCurrentItemInInventory() {
+		const auto curItem = getItemInInventory(getCurrentHeldItemIndex());
 		if (!curItem->ContainsItems())
 			return NULL;
 		return curItem->getItemData();
 	}
 
-	ItemDataPtr CharacterData::PlaceCurrentItemInInventory() {
-		const auto curIndex = GetCurrentHeldItemIndex();
-		const auto curItem = GetItemInInventory(curIndex);
+	ItemDataPtr CharacterData::placeCurrentItemInInventory() {
+		const auto curIndex = getCurrentHeldItemIndex();
+		const auto curItem = getItemInInventory(curIndex);
 
 		if (!curItem->ContainsItems())
 			return NULL;
 
 		auto itemData = curItem->getItemData();
-		InventoryRef->RemoveItems(curIndex, 1);
+		inventoryRef->RemoveItems(curIndex, 1);
 		return itemData;
 	}
 
@@ -190,7 +259,7 @@ namespace fauna {
 			stopUsingItem();
 		}
 
-		if (itemData->addUser(CharId)) {
+		if (itemData->addUser(charId)) {
 			currentUsingItem = itemData;
 			return true;
 		}
@@ -200,7 +269,7 @@ namespace fauna {
 
 	bool CharacterData::stopUsingItem() {
 		if (!currentUsingItem.expired()) {
-			if (currentUsingItem.lock()->removeUser(CharId)) {
+			if (currentUsingItem.lock()->removeUser(charId)) {
 				currentUsingItem.reset();
 				return true;
 			}
@@ -210,5 +279,27 @@ namespace fauna {
 
 	bool CharacterData::isUsingItem() const {
 		return !currentUsingItem.expired();
+	}
+
+	void CharacterData::addToCurrentShortcutSet(
+		const ShortcutPtr & shortcut,
+		const Uint32 index
+	) {
+		currentShortcutBarRef->addShortcut(shortcut, index);
+	}
+
+	void CharacterData::removeFromCurrentShortcutSet(
+		const ShortcutPtr & shortcut,
+		const Uint32 index
+	) {
+		currentShortcutBarRef->removeShortcut(shortcut, index);
+	}
+
+	InventoryCPtr CharacterData::getInventory() const {
+		return inventoryRef;
+	}
+
+	ShortcutBarCPtr CharacterData::getCurrentShortcutSet() const {
+		return currentShortcutBarRef;
 	}
 }

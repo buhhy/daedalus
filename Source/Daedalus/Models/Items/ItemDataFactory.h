@@ -9,20 +9,20 @@
 namespace items {
 	class ItemDataFactory {
 	public:
-		using ItemDataTemplateUPtr = std::unique_ptr<ItemDataTemplate>;
-		using ItemDataTemplateMap = std::unordered_map<ItemType, ItemDataTemplateUPtr>;
+		using ItemDataTemplateMap = std::unordered_map<ItemType, ItemDataTemplatePtr>;
 
 	private:
-		ItemDataTemplateMap ItemTemplates;
+		ItemDataTemplateMap itemTemplates;
 
-		void LoadItemDataTemplates();
+		void loadItemDataTemplates();
 
 	public:
 		ItemDataFactory();
 
 		ItemDataPtr BuildItemData(const ItemType type) const;
-
+		const ItemDataTemplateMap & getItemDataTemplates() const;
 	};
 
 	using ItemDataFactoryPtr = std::shared_ptr<ItemDataFactory>;
+	using ItemDataFactoryCPtr = std::shared_ptr<const ItemDataFactory>;
 }

@@ -10,7 +10,7 @@ ADDGameMode::ADDGameMode(const class FPostConstructInitializeProperties& PCIP)
 	: Super(PCIP)
 {
 	static ConstructorHelpers::FObjectFinder<UBlueprint> playerPawnObject(
-		TEXT("Blueprint'/Game/BlueprintPlayerCharacterMale.BlueprintPlayerCharacterMale'"));
+		TEXT("Blueprint'/Game/PlayerCharacter/Male/BlueprintPlayer.BlueprintPlayer'"));
 	DefaultPawnClass = (UClass *) playerPawnObject.Object->GeneratedClass;
 	GameStateClass = ADDGameState::StaticClass();
 	PlayerControllerClass = ADDPlayerController::StaticClass();

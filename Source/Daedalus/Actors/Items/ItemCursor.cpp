@@ -52,8 +52,8 @@ void AItemCursor::applyTransform() {
 }
 
 void AItemCursor::initialize(const ItemDataPtr & data) {
-	if (lastHeldItemType != data->Template.Type) {
-		lastHeldItemType = data->Template.Type;
+	if (lastHeldItemType != data->Template.itemType) {
+		lastHeldItemType = data->Template.itemType;
 		AItem::initialize(data);
 	}
 }

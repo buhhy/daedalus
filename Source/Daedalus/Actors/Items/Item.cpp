@@ -54,13 +54,10 @@ void AItem::applyScale() {
 	}
 }
 
-void AItem::loadMesh(const std::string & meshName) {
-	std::stringstream smn;
-	smn << "SkeletalMesh'/Game/" << meshName << "." << meshName << "_" << meshName << "'";
-	MeshComponent->SetSkeletalMesh(findSkeletalMesh(smn.str()));
-	smn.str(""); smn.clear();
-	smn << "AnimBlueprint'/Game/Animation" << meshName << ".Animation" << meshName << "'";
-	auto anim = findAnimBlueprint(smn.str());
+void AItem::loadResources(const std::string & meshName) {
+	const auto resourceSet = getResourceCache()->findItemResourceSet(meshName);
+	MeshComponent->SetSkeletalMesh(resourceSet.mesh);
+	auto anim = resourceSet.animBP;
 	if (anim)
 		MeshComponent->SetAnimClass(anim->GetAnimBlueprintGeneratedClass());
 }
@@ -78,13 +75,13 @@ void AItem::BeginPlay() {
 
 void AItem::initialize(const ItemDataPtr & data) {
 	ItemData = data;
-	loadMesh(data->Template.MeshName);
+	loadResources(data->Template.resourceName);
 	applyTransform();
 	applyScale();
 }
 
 //void AItem::Interact(APlayerCharacter * player) {
-//	auto str = "Interacting with " + ItemData->Template.MeshName;
+//	auto str = "Interacting with " + ItemData->Template.meshName;
 //	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Green, UTF8_TO_TCHAR(str.c_str()));
 //}
 

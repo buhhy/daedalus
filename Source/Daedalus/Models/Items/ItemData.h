@@ -42,15 +42,12 @@ namespace items {
 	 * designing the modding system.
 	 */
 	struct ItemDataTemplate {
-		ItemType Type;
-		// Bounds of the item in grid cells.
-		utils::AxisAlignedBoundingBox3D ItemBounds;
-		// Position of pivot in grid cells.
-		utils::Point3D Pivot;
-		ItemRotation RotationInterval;
-		std::string MeshName;
-		// Maximum number of items possible in an item stack.
-		Uint32 MaxStackSize;
+		ItemType itemType;                // Bounds of the item in grid cells.
+		utils::AxisAlignedBoundingBox3D itemBounds;
+		utils::Point3D pivot;             // Position of pivot in grid cells.
+		ItemRotation rotationInterval;    // Allowable rotations for this item.
+		std::string resourceName;         // Path to the resource in Unreal Engine.
+		Uint32 maxStackSize;              // Maximum number of items possible in an item stack.
 		// Maximum number of concurrent users of this item.
 		utils::Option<Uint16> maxCurrentUsers;
 		float tickDuration;              // Length of each tick in seconds.
@@ -61,16 +58,16 @@ namespace items {
 			const ItemRotation & rotInt,
 			const utils::AxisAlignedBoundingBox3D & bounds,
 			const utils::Point3D & pivot,
-			const std::string & meshName,
+			const std::string & resourceName,
 			const Uint32 maxStackSize,
 			const float meshScale,
 			const utils::Option<Uint16> maxCurUsers
-		) : Type(type),
-			RotationInterval(rotInt),
-			Pivot(pivot),
-			ItemBounds(bounds),
-			MeshName(meshName),
-			MaxStackSize(maxStackSize),
+		) : itemType(type),
+			rotationInterval(rotInt),
+			pivot(pivot),
+			itemBounds(bounds),
+			resourceName(resourceName),
+			maxStackSize(maxStackSize),
 			maxCurrentUsers(maxCurUsers),
 			tickDuration(0.02),
 			meshScale(meshScale)
@@ -82,14 +79,16 @@ namespace items {
 			const ItemRotation & rotInt,
 			const utils::AxisAlignedBoundingBox3D & bounds,
 			const utils::Point3D & pivot,
-			const std::string & meshName,
+			const std::string & resourceName,
 			const Uint32 maxStackSize,
 			const float meshScale
 		) : ItemDataTemplate(
-				type, rotInt, bounds, pivot, meshName, maxStackSize,
+				type, rotInt, bounds, pivot, resourceName, maxStackSize,
 				meshScale, utils::None<Uint16>())
 		{}
 	};
+
+	using ItemDataTemplatePtr = std::shared_ptr<ItemDataTemplate>;
 
 	struct ItemDataId {
 		Uint64 ItemId;
@@ -142,7 +141,7 @@ namespace items {
 			scale(tmp.meshScale),
 			bIsPlaced(isPlaced),
 			Template(tmp),
-			itemBounds(tmp.ItemBounds)
+			itemBounds(tmp.itemBounds)
 		{}
 
 		ItemData(const ItemDataTemplate & tmp) :
@@ -160,12 +159,12 @@ namespace items {
 
 		void SetRotation(const ItemRotation & rotation) {
 			this->rotation = rotation;
-			this->rotation.Bound(Template.RotationInterval);
+			this->rotation.Bound(Template.rotationInterval);
 		}
 
 		void AddRotation(const ItemRotation & rotation) {
 			this->rotation.Add(rotation);
-			this->rotation.Bound(Template.RotationInterval);
+			this->rotation.Bound(Template.rotationInterval);
 		}
 
 		utils::OrientedBoundingBox3D GetBoundingBox() const {

@@ -65,6 +65,10 @@ public:
 		bool bRotatingItem;
 
 	
+
+	fauna::CharacterDataPtr getCharacterData() { return CharDataRef; }
+	const fauna::CharacterDataPtr getCharacterData() const { return CharDataRef; }
+
 	bool canMove() const;
 
 	void MoveForward(float amount);

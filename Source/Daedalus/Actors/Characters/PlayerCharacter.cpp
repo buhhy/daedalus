@@ -27,19 +27,12 @@ APlayerCharacter::APlayerCharacter(const class FPostConstructInitializePropertie
 	CameraComponentRef->AttachParent = CapsuleComponent;
 	CameraComponentRef->AddLocalOffset(FVector(-100, 0, 200));
 
-	// Set up the default mesh.
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> mesh(
-	//	TEXT("SkeletalMesh'/Game/PlayerCharacterMale.PlayerCharacterMale_PlayerCharacterMale'"));
-	//static ConstructorHelpers::FObjectFinder<UAnimBlueprint> anim(
-	//	TEXT("AnimBlueprint'/Game/AnimationPlayerCharacterMale.AnimationPlayerCharacterMale'"));
-	//Mesh->SetSkeletalMesh(mesh.Object);
-	//Mesh->SetAnimClass(anim.Object->GetAnimBlueprintGeneratedClass());
-
 	CharDataRef = CharDataFactoryRef->BuildCharData(C_Hero);
-	CharDataRef->CharId = 1;
 	// TODO: remove this test code
-	CharDataRef->InventoryRef->AddItems(ItemDataFactoryRef->BuildItemData(I_Sofa), 3);
-	CharDataRef->InventoryRef->AddItems(ItemDataFactoryRef->BuildItemData(I_Chest), 10);
+	CharDataRef->inventoryRef->AddItems(ItemDataFactoryRef->BuildItemData(I_Sofa), 3);
+	CharDataRef->inventoryRef->AddItems(ItemDataFactoryRef->BuildItemData(I_Chest), 10);
+	CharDataRef->addToCurrentShortcutSet(CharDataRef->getItemInInventory(0), 0);
+	CharDataRef->addToCurrentShortcutSet(CharDataRef->getItemInInventory(1), 1);
 }
 
 utils::Ray3D APlayerCharacter::GetViewRay() const {
@@ -60,12 +53,12 @@ void APlayerCharacter::SetUpItemCursor() {
 }
 
 void APlayerCharacter::ToggleHandAction() {
-	switch (CharDataRef->GetCurrentHandAction()) {
+	switch (CharDataRef->getCurrentHandAction()) {
 	case H_None:
-		CharDataRef->SwitchHandAction(H_Item);
+		CharDataRef->switchHandAction(H_Item);
 		break;
 	case H_Item:
-		CharDataRef->SwitchHandAction(H_None);
+		CharDataRef->switchHandAction(H_None);
 		break;
 	case H_Tool:
 	default:
@@ -74,12 +67,12 @@ void APlayerCharacter::ToggleHandAction() {
 }
 
 void APlayerCharacter::UpdateItemCursorType() {
-	switch (CharDataRef->GetCurrentHandAction()) {
+	switch (CharDataRef->getCurrentHandAction()) {
 	case H_None:
 		ItemCursorRef->InvalidateCursor();
 		break;
 	case H_Item: {
-		const auto item = CharDataRef->GetCurrentItemInInventory();
+		const auto item = CharDataRef->getCurrentItemInInventory();
 		if (item)
 			ItemCursorRef->initialize(item);
 		else
@@ -123,8 +116,8 @@ void APlayerCharacter::UpdateItemCursorRotation() {
 
 		if (!EEq(turnNotches.Length2(), 0)) {
 			const auto & item = ItemCursorRef->getItemData();
-			const auto yaw = item->Template.RotationInterval.Yaw;
-			const auto pitch = item->Template.RotationInterval.Pitch;
+			const auto yaw = item->Template.rotationInterval.Yaw;
+			const auto pitch = item->Template.rotationInterval.Pitch;
 
 			// Bind the notches, since the turn interval only accepts unsigned integers
 			while (turnNotches.X < 0)
@@ -190,7 +183,7 @@ void APlayerCharacter::ReleaseJump() {
 }
 
 void APlayerCharacter::OnRightMouseDown() {
-	switch (CharDataRef->GetCurrentHandAction()) {
+	switch (CharDataRef->getCurrentHandAction()) {
 	case H_None:
 		break;
 	case H_Item:
@@ -207,7 +200,7 @@ void APlayerCharacter::OnRightMouseUp() {
 		bRotatingItem = false;
 		MouseHoldOffset.Reset(0, 0);
 	} else {
-		switch (CharDataRef->GetCurrentHandAction()) {
+		switch (CharDataRef->getCurrentHandAction()) {
 		case H_None: {
 			// TODO: item interactions
 			const auto viewpoint = GetViewRay();
@@ -232,16 +225,16 @@ void APlayerCharacter::OnRightMouseUp() {
 }
 
 void APlayerCharacter::OnLeftMouseUp() {
-	switch (CharDataRef->GetCurrentHandAction()) {
+	switch (CharDataRef->getCurrentHandAction()) {
 	case H_None:
 		break;
 	case H_Item:
 		if (ItemCursorRef->IsValid() && !ItemCursorRef->IsHidden()) {
-			const auto curItem = CharDataRef->GetCurrentItemInInventory();
+			const auto curItem = CharDataRef->getCurrentItemInInventory();
 			// TODO: if we wish to preserve item state, we'll need to place the original item data here
 			if (curItem) {
 				if (ChunkManagerRef->PlaceItem(ItemDataPtr(new ItemData(*curItem))))
-					CharDataRef->PlaceCurrentItemInInventory();
+					CharDataRef->placeCurrentItemInInventory();
 			}
 		}
 		break;
@@ -266,8 +259,8 @@ bool APlayerCharacter::canMove() const {
 	return true;
 }
 
-void APlayerCharacter::HoldPrevItem() { CharDataRef->PrevHeldItem(); }
-void APlayerCharacter::HoldNextItem() { CharDataRef->NextHeldItem(); }
+void APlayerCharacter::HoldPrevItem() { CharDataRef->prevHeldItem(); }
+void APlayerCharacter::HoldNextItem() { CharDataRef->nextHeldItem(); }
 
 void APlayerCharacter::BeginPlay() {
 	Super::BeginPlay();

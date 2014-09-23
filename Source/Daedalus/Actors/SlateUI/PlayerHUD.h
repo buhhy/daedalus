@@ -7,15 +7,20 @@
 #include "GameFramework/HUD.h"
 
 #include <Actors/SlateUI/InventoryPanel.h>
+#include <Models/Fauna/CharacterData.h>
 
 #include "PlayerHUD.generated.h"
 
 UCLASS()
 class APlayerHUD : public AHUD {
 	GENERATED_UCLASS_BODY()
+private:
+	UFont * uiFontLatoSmall;
 
 protected:
-	TSharedPtr<SInventoryPanel> InventoryUI;
+	//TSharedPtr<SInventoryPanel> InventoryUI;
+	
+	virtual void DrawHUD() override;
 
 public:
 	virtual void PostInitializeComponents() override;

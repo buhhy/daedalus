@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Models/Shortcut.h>
 #include <Models/Items/ItemData.h>
 #include <Utilities/DataStructures.h>
 
@@ -14,7 +15,7 @@ namespace fauna {
 		C_Hero
 	};
 
-	class InventorySlot {
+	class InventorySlot : public IShortcut {
 	private:
 		// TODO: handle storing items with differing state
 		Uint32 Count;
@@ -26,6 +27,11 @@ namespace fauna {
 		InventorySlot(const items::ItemDataPtr & data, const Uint32 count) :
 			Count(count), ItemData(data)
 		{}
+		
+		// Override from Shortcut.
+		virtual void useShortcut(fauna::CharacterDataPtr & charData) override;
+		virtual std::string getIconName() const override;
+		virtual utils::Option<Uint32> getQuantity() const override;
 
 		Uint32 GetCount() const { return Count; }
 		const items::ItemDataPtr getItemData() const { return ItemData; }
@@ -37,7 +43,7 @@ namespace fauna {
 		}
 
 		bool AddItems(const Uint32 count) {
-			if (!ContainsItems() || Count + count >= ItemData->Template.MaxStackSize)
+			if (!ContainsItems() || Count + count >= ItemData->Template.maxStackSize)
 				return false;
 
 			Count += count;
@@ -67,13 +73,13 @@ namespace fauna {
 	private:
 		// TODO: handle stacking of stateful items, since certain items of the same type
 		// could have differing states, and shouldn't stack
-		InventoryItemVector Items;
-		Uint32 MaxSize;
+		InventoryItemVector items;
+		Uint32 maxSize;
 
 
 		
 		inline void AssertValidInventory() const {
-			assert(Items.size() <= MaxSize &&
+			assert(Items.size() <= maxSize &&
 				"Inventory::AssertValidInventory: Invalid inventory state");
 		}
 
@@ -85,8 +91,8 @@ namespace fauna {
 		
 		utils::Option<Uint32> GetNextFreeSlot() const;
 		Uint32 GetCurrentSize() const;
-		Uint32 GetMaxSize() const { return MaxSize; }
-		const InventoryItemVector & GetItems() const { return Items; }
+		Uint32 GetMaxSize() const { return maxSize; }
+		const InventoryItemVector & GetItems() const { return items; }
 
 		bool CanAddItem(const items::ItemDataPtr & item, const Uint32 count) const;
 		bool AddItems(const items::ItemDataPtr & item, const Uint32 count = 1);
@@ -94,13 +100,41 @@ namespace fauna {
 		bool RemoveItems(const Uint32 index, const Uint32 count = 1);
 
 		InventorySlotPtr operator [] (const Uint32 index) {
-			if (index >= Items.size())
+			if (index >= items.size())
 				return NULL;
-			return Items[index];
+			return items[index];
 		}
 	};
 
 	using InventoryPtr = std::shared_ptr<Inventory>;
+	using InventoryCPtr = std::shared_ptr<const Inventory>;
+
+	class ShortcutBar {
+	public:
+		using ShortcutVector = std::vector<ShortcutPtr>;
+
+	private:
+		ShortcutVector shortcuts;
+		Uint32 maxSize;
+
+	public:
+		explicit ShortcutBar(const Uint32 size);
+
+		ShortcutPtr operator [] (const Uint32 index) {
+			if (index >= shortcuts.size())
+				return NULL;
+			return shortcuts[index];
+		}
+
+		void addShortcut(const ShortcutPtr & shortcut, const Uint32 index);
+		void removeShortcut(const ShortcutPtr & shortcut, const Uint32 index);
+		Uint32 getMaxSize() const;
+		ShortcutVector::const_iterator startIterator() const;
+		ShortcutVector::const_iterator endIterator() const;
+	};
+
+	using ShortcutBarPtr = std::shared_ptr<ShortcutBar>;
+	using ShortcutBarCPtr = std::shared_ptr<const ShortcutBar>;
 
 	/**
 	 * This template data structure specifies the default parameters and state of the character
@@ -108,10 +142,20 @@ namespace fauna {
 	 */
 	struct CharacterDataTemplate {
 		CharacterType Type;
-		Uint32 DefaultMaxInventorySize;
+		Uint32 defaultMaxInventorySize;
+		Uint32 defaultShortcutBarSize;
+		Uint32 startingMaxHP;
+		Uint32 startingMaxFullness;
 
-		CharacterDataTemplate(const CharacterType type, const Uint32 maxInvSize) :
-			Type(type), DefaultMaxInventorySize(maxInvSize)
+		CharacterDataTemplate(
+			const CharacterType type,
+			const Uint32 maxInvSize,
+			const Uint32 shortcutBarSize,
+			const Uint32 startingMaxHP,
+			const Uint32 startingMaxFullness
+		) : Type(type), defaultMaxInventorySize(maxInvSize),
+			defaultShortcutBarSize(shortcutBarSize),
+			startingMaxHP(startingMaxHP), startingMaxFullness(startingMaxFullness)
 		{}
 	};
 
@@ -123,46 +167,57 @@ namespace fauna {
 
 	class CharacterData {
 	private:
+		Uint64 charId;
 		Uint32 CurrentHeldItemIndex;
 		EHandAction CurrentHandAction;
 		std::weak_ptr<items::ItemData> currentUsingItem;
+		Uint32 currentHP;
+		Uint32 currentFullness;
+		Uint32 defaultMaxHP;
+		Uint32 defaultMaxFullness;
+
+		ShortcutBarPtr currentShortcutBarRef;
 
 	public:
-		Uint64 CharId;
-		InventoryPtr InventoryRef;
+		InventoryPtr inventoryRef;
 
 		const CharacterDataTemplate & Template;
 
 
 
-		CharacterData(const Uint64 cid, const CharacterDataTemplate & tmp) :
-			CharId(cid), Template(tmp),
-			CurrentHeldItemIndex(0), CurrentHandAction(H_None),
-			InventoryRef(new Inventory(tmp.DefaultMaxInventorySize)),
-			currentUsingItem()
-		{}
+		CharacterData(const CharacterDataTemplate & tmp, const Uint64 cid);
+		CharacterData(const CharacterDataTemplate & tmp);
+		
+		Uint64 getCharId() const { return charId; }
 
-		CharacterData(const CharacterDataTemplate & tmp) :
-			CharId(0), Template(tmp),
-			CurrentHeldItemIndex(0), CurrentHandAction(H_None),
-			InventoryRef(new Inventory(tmp.DefaultMaxInventorySize)),
-			currentUsingItem()
-		{}
-
-		const Uint32 GetCurrentHeldItemIndex() const { return CurrentHeldItemIndex; }
-		const EHandAction GetCurrentHandAction() const { return CurrentHandAction; }
-		items::ItemDataPtr GetCurrentItemInInventory();
-		items::ItemDataPtr PlaceCurrentItemInInventory();
-		InventorySlotPtr GetItemInInventory(const Uint32 index) {
-			return (*InventoryRef)[index];
+		Uint32 getCurrentHeldItemIndex() const { return CurrentHeldItemIndex; }
+		EHandAction getCurrentHandAction() const { return CurrentHandAction; }
+		items::ItemDataPtr getCurrentItemInInventory();
+		items::ItemDataPtr placeCurrentItemInInventory();
+		InventorySlotPtr getItemInInventory(const Uint32 index) {
+			return (*inventoryRef)[index];
 		}
 
-		void SwitchHandAction(const EHandAction action) {
+		void addToCurrentShortcutSet(const ShortcutPtr & shortcut, const Uint32 index);
+		void removeFromCurrentShortcutSet(const ShortcutPtr & shortcut, const Uint32 index);
+
+		InventoryCPtr getInventory() const;
+		ShortcutBarCPtr getCurrentShortcutSet() const;
+
+		Uint32 getCurrentHP() const { return currentHP; }
+		Uint32 getCurrentFullness() const { return currentFullness; }
+		Uint32 getDefaultMaxHP() const { return defaultMaxHP; }
+		Uint32 getDefaultMaxFullness() const { return defaultMaxFullness; }
+		
+		void setCurrentHP(const Uint32 cHP) { currentHP = cHP; }
+		void setCurrentFullness(const Uint32 cFullness) { currentFullness = cFullness; }
+
+		void switchHandAction(const EHandAction action) {
 			CurrentHandAction = action;
 		}
 
-		Uint32 NextHeldItem();
-		Uint32 PrevHeldItem();
+		Uint32 nextHeldItem();
+		Uint32 prevHeldItem();
 
 		bool startUsingItem(items::ItemDataPtr & itemData);
 		bool stopUsingItem();
