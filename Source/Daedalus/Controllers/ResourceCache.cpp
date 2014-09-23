@@ -15,11 +15,10 @@ ResourceCache::ResourceCache(
 		const auto rName = idPair.second->resourceName;
 		meshSetCache.insert({
 			rName,
-			{
+			SkeletalMeshResourceSet(
 				staticLoadResource(skeletalMeshCache, itemMeshName(rName)),
 				staticLoadResource(materialCache, itemMaterialName(rName)),
-				staticLoadResource(animBPCache, itemAnimBlueprintName(rName))
-			}
+				staticLoadResource(animBPCache, itemAnimBlueprintName(rName)))
 		});
 		staticLoadResource(iconCache, iconName(rName), rName);
 	}

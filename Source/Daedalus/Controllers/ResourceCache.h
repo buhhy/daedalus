@@ -18,6 +18,15 @@ public:
 		USkeletalMesh * mesh;
 		UMaterial * material;
 		UAnimBlueprint * animBP;
+
+		SkeletalMeshResourceSet() : mesh(NULL), material(NULL), animBP(NULL) {}
+
+		SkeletalMeshResourceSet(
+			USkeletalMesh * mesh,
+			UMaterial * material,
+			UAnimBlueprint * animBP
+		) : mesh(mesh), material(material), animBP(animBP)
+		{}
 	};
 
 private:
@@ -71,7 +80,7 @@ private:
 
 	template <typename ObjClass>
 	ObjClass * staticLoadResource(PtrCache<ObjClass> & cache, const std::string & nameStr) {
-		staticLoadResource(cache, nameStr, nameStr);
+		return staticLoadResource(cache, nameStr, nameStr);
 	}
 
 	template <typename ObjClass>

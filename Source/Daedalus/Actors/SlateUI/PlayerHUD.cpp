@@ -75,7 +75,13 @@ void APlayerHUD::DrawHUD() {
 			float y = screenH - (slotSize + slotBorder);
 			if (*it) {
 				auto icon = resourceCache->findIcon((*it)->getIconName());
+				auto count = (*it)->getQuantity();
 				DrawTextureSimple(icon, x, y, slotSize / icon->GetSizeX());
+				if (count.IsValid()) {
+					ss << *count;
+					DrawText(FString(UTF8_TO_TCHAR(ss.str().c_str())), FLinearColor(1, 1, 1), x + 5, y + 5);
+					ss.str(""); ss.clear();
+				}
 			} else {
 				DrawRect(FLinearColor(0.9, 0.9, 0.9), x, y, slotSize, slotSize);
 			}
