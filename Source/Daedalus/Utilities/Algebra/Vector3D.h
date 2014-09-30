@@ -24,6 +24,7 @@ namespace utils {
 		Vector3D(const T & x, const T & y, const T & z) : X(x), Y(y), Z(z) {}
 		Vector3D(const Vector2D<T> & vec) : Vector3D(vec.X, vec.Y, 0) {}
 		Vector3D(const Vector2D<T> & vec, const T z) : Vector3D(vec.X, vec.Y, z) {}
+		Vector3D(const Vector3D<T> & copy) : Vector3D(copy.X, copy.Y, copy.Z) {}
 
 		bool IsBoundedBy(
 			const T min, const T max,

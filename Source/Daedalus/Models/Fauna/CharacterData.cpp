@@ -10,18 +10,22 @@ namespace fauna {
 	 ********************************************************************************/
 
 	void InventorySlot::useShortcut(CharacterDataPtr & source) {
-		if (ContainsItems())
+		if (containsItems())
 			ItemData->interactAction(source);
 	}
 
 	std::string InventorySlot::getIconName() const {
-		if (ContainsItems())
+		if (containsItems())
 			return ItemData->Template.resourceName;
 		return "";
 	}
 
 	utils::Option<Uint32> InventorySlot::getQuantity() const {
 		return Some(Count);
+	}
+
+	bool InventorySlot::isValid() const {
+		return containsItems();
 	}
 
 
@@ -40,7 +44,7 @@ namespace fauna {
 		std::copy_if(
 			items.begin(), items.end(), std::back_inserter(ret),
 			[&type] (const InventorySlotPtr & x) {
-				return x->ContainsItems() && x->getItemData()->Template.itemType == type;
+				return x->containsItems() && x->getItemData()->Template.itemType == type;
 			});
 		return ret;
 	}
@@ -50,7 +54,7 @@ namespace fauna {
 		Uint64 totalItemCount = 0;
 
 		for (const auto & iItem : items) {
-			totalItemCount += iItem->GetCount();
+			totalItemCount += iItem->getCount();
 			totalAllowableStackCount += iItem->getItemData()->Template.maxStackSize;
 		}
 
@@ -88,10 +92,10 @@ namespace fauna {
 			remainingCount > 0 && it != sameTypeItems.end();
 			++it
 		) {
-			if ((*it)->GetCount() >= stackSize)
+			if ((*it)->getCount() >= stackSize)
 				continue;
 
-			const auto free = stackSize - (*it)->GetCount();
+			const auto free = stackSize - (*it)->getCount();
 			const auto take = std::min(free, remainingCount);
 			(*it)->AddItems(take);
 			remainingCount -= take;
@@ -118,7 +122,7 @@ namespace fauna {
 		Uint64 totalItemCount = 0;
 
 		for (const auto & iItem : sameTypeItems)
-			totalItemCount += iItem->GetCount();
+			totalItemCount += iItem->getCount();
 
 		// Return false if there aren't enough items to remove in one transaction.
 		if (totalItemCount < count)
@@ -128,13 +132,13 @@ namespace fauna {
 		std::sort(
 			sameTypeItems.begin(), sameTypeItems.end(),
 			[] (const InventorySlotPtr & i1, const InventorySlotPtr & i2) {
-				return i1->GetCount() < i2->GetCount();
+				return i1->getCount() < i2->getCount();
 			});
 
 		// Remove items from the smallest stacks first.
 		Uint32 remainingCount = count;
 		for (auto it = sameTypeItems.begin(); remainingCount > 0; ++it) {
-			const auto remove = std::min((*it)->GetCount(), remainingCount);
+			const auto remove = std::min((*it)->getCount(), remainingCount);
 			(*it)->RemoveItems(remove);
 			remainingCount -= remove;
 		}
@@ -149,7 +153,7 @@ namespace fauna {
 	
 	Option<Uint32> Inventory::GetNextFreeSlot() const {
 		for (Uint32 i = 0; i < items.size(); i++) {
-			if (!items[i]->ContainsItems())
+			if (!items[i]->containsItems())
 				return Some(i);
 		}
 		return None<Uint32>();
@@ -158,7 +162,7 @@ namespace fauna {
 	Uint32 Inventory::GetCurrentSize() const {
 		Uint32 count = 0;
 		for (Uint32 i = 0; i < items.size(); i++)
-			count += items[i]->ContainsItems() ? 1 : 0;
+			count += items[i]->containsItems() ? 1 : 0;
 		return count;
 	}
 
@@ -192,6 +196,13 @@ namespace fauna {
 
 	ShortcutBar::ShortcutVector::const_iterator ShortcutBar::endIterator() const {
 		return shortcuts.cend();
+	}
+
+	void ShortcutBar::cullShortcuts() {
+		for (Uint32 i = 0; i < shortcuts.size(); i++) {
+			if (shortcuts[i] && !shortcuts[i]->isValid())
+				shortcuts[i] = nullptr;
+		}
 	}
 
 
@@ -232,7 +243,7 @@ namespace fauna {
 
 	ItemDataPtr CharacterData::getCurrentItemInInventory() {
 		const auto curItem = getItemInInventory(getCurrentHeldItemIndex());
-		if (!curItem->ContainsItems())
+		if (!curItem->containsItems())
 			return NULL;
 		return curItem->getItemData();
 	}
@@ -241,11 +252,12 @@ namespace fauna {
 		const auto curIndex = getCurrentHeldItemIndex();
 		const auto curItem = getItemInInventory(curIndex);
 
-		if (!curItem->ContainsItems())
+		if (!curItem->containsItems())
 			return NULL;
 
 		auto itemData = curItem->getItemData();
 		inventoryRef->RemoveItems(curIndex, 1);
+		currentShortcutBarRef->cullShortcuts();
 		return itemData;
 	}
 

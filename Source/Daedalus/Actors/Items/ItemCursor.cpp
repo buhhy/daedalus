@@ -19,8 +19,8 @@ Vector3D<> AItemCursor::GetOffsetVector() const {
 	const auto & ipos = this->ItemData->getPosition();
 	const auto & ppos = playerPosition;
 	const auto result =
-		this->TerrainParams->ToRealCoordSpace(ipos.ChunkOffset - ppos.ChunkOffset) +
-			this->TerrainParams->ToRealCoordSpace(ipos.InnerOffset - ppos.InnerOffset);
+		this->terrainParams->ToRealCoordSpace(ipos.ChunkOffset - ppos.ChunkOffset) +
+			this->terrainParams->ToRealCoordSpace(ipos.InnerOffset - ppos.InnerOffset);
 	return result;
 }
 
@@ -41,7 +41,7 @@ void AItemCursor::applyTransform() {
 		auto fRotMat = FRotationMatrix::MakeFromXZ(ToFVector(basis.XVector), ToFVector(basis.ZVector));
 
 		const auto trans = this->GetOffsetVector() +
-			GetTranslationVectorFrom(transform) * this->TerrainParams->ChunkGridUnitSize;
+			GetTranslationVectorFrom(transform) * this->terrainParams->ChunkGridUnitSize;
 		// The player character naturally has a Z-rotation for looking around, we need to rotate the
 		// item location and rotation by the inverse of that Z-rotation to ensure correct placement.
 		const auto invPlayerRot = playerRotation.Inverse();
@@ -65,7 +65,7 @@ void AItemCursor::InvalidateCursor() {
 }
 
 void AItemCursor::SetPlayerTransform(const Point3D & position, const FMatrix & rotation) {
-	playerPosition = this->TerrainParams->ToGridCoordSpace(position);
+	playerPosition = this->terrainParams->ToGridCoordSpace(position);
 	playerRotation = rotation;
 }
 

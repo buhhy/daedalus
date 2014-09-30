@@ -30,7 +30,7 @@ private:
 	const Uint64 RenderDistance;                      // Specified in number of chunks
 
 	const terrain::TerrainGeneratorParameters * GenParams;
-	events::EventBusPtr EventBusRef;
+	events::EventBusPtr eventBusRef;
 	terrain::ChunkLoaderPtr ChunkLoaderRef;
 
 	

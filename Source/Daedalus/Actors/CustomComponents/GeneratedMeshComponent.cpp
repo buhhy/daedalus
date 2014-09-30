@@ -247,7 +247,8 @@ public:
 
 UGeneratedMeshComponent::UGeneratedMeshComponent(
 	const FPostConstructInitializeProperties & PCIP
-	) : Super(PCIP), MeshTriangleCount(0) {
+) : Super(PCIP), MeshTriangleCount(0)
+{
 	PrimaryComponentTick.bCanEverTick = false;
 }
 

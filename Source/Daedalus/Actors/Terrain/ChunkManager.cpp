@@ -126,10 +126,10 @@ void AChunkManager::BeginPlay() {
 
 	ChunkLoaderRef = GetGameState()->ChunkLoader;
 	GenParams = &ChunkLoaderRef->GetGeneratorParameters();
-	EventBusRef = GetGameState()->EventBus;
+	eventBusRef = GetGameState()->EventBus;
 
-	EventBusRef->AddListener(E_PlayerPosition, this);
-	EventBusRef->AddListener(E_ViewPosition, this);
+	eventBusRef->AddListener(E_PlayerPosition, this);
+	eventBusRef->AddListener(E_ViewPosition, this);
 }
 
 void AChunkManager::HandleEvent(const EventDataPtr & data) {

@@ -1,6 +1,8 @@
 #include "Daedalus.h"
 #include "PlayerCharacter.h"
 
+#include <Actors/SlateUI/PlayerHUD.h>
+#include <Controllers/DDPlayerController.h>
 #include <Controllers/DDGameState.h>
 #include <Utilities/Constants.h>
 #include <Utilities/UnrealBridge.h>
@@ -12,14 +14,15 @@ using namespace terrain;
 using namespace fauna;
 
 APlayerCharacter::APlayerCharacter(const class FPostConstructInitializeProperties& PCIP) :
-	Super(PCIP), bHoldingJump(false), MouseHoldOffset(0, 0),
+	Super(PCIP), bHoldingJump(false), mouseHoldOffset(0, 0),
 	PositionSecondCount(0), ViewSecondCount(0), TerrainInteractionDistance(250),
-	ItemDataFactoryRef(new ItemDataFactory()),
-	CharDataFactoryRef(new CharacterDataFactory())
+	itemDataFactoryRef(new ItemDataFactory()),
+	charDataFactoryRef(new CharacterDataFactory())
 {
 	auto & movement = this->CharacterMovement;
 	movement->SetWalkableFloorAngle(60.0);
 	movement->JumpZVelocity = 400;
+	movement->GravityScale = 2.8;
 	movement->AirControl = 0.4;
 
 	// Set up the default camera.
@@ -27,12 +30,12 @@ APlayerCharacter::APlayerCharacter(const class FPostConstructInitializePropertie
 	CameraComponentRef->AttachParent = CapsuleComponent;
 	CameraComponentRef->AddLocalOffset(FVector(-100, 0, 200));
 
-	CharDataRef = CharDataFactoryRef->BuildCharData(C_Hero);
+	charDataRef = charDataFactoryRef->BuildCharData(C_Hero);
 	// TODO: remove this test code
-	CharDataRef->inventoryRef->AddItems(ItemDataFactoryRef->BuildItemData(I_Sofa), 3);
-	CharDataRef->inventoryRef->AddItems(ItemDataFactoryRef->BuildItemData(I_Chest), 10);
-	CharDataRef->addToCurrentShortcutSet(CharDataRef->getItemInInventory(0), 0);
-	CharDataRef->addToCurrentShortcutSet(CharDataRef->getItemInInventory(1), 1);
+	charDataRef->inventoryRef->AddItems(itemDataFactoryRef->BuildItemData(I_Sofa), 3);
+	charDataRef->inventoryRef->AddItems(itemDataFactoryRef->BuildItemData(I_Chest), 10);
+	charDataRef->addToCurrentShortcutSet(charDataRef->getItemInInventory(0), 0);
+	charDataRef->addToCurrentShortcutSet(charDataRef->getItemInInventory(1), 1);
 }
 
 utils::Ray3D APlayerCharacter::GetViewRay() const {
@@ -52,27 +55,13 @@ void APlayerCharacter::SetUpItemCursor() {
 	ItemCursorRef->AttachRootComponentToActor(this);
 }
 
-void APlayerCharacter::ToggleHandAction() {
-	switch (CharDataRef->getCurrentHandAction()) {
-	case H_None:
-		CharDataRef->switchHandAction(H_Item);
-		break;
-	case H_Item:
-		CharDataRef->switchHandAction(H_None);
-		break;
-	case H_Tool:
-	default:
-		break;
-	}
-}
-
 void APlayerCharacter::UpdateItemCursorType() {
-	switch (CharDataRef->getCurrentHandAction()) {
+	switch (charDataRef->getCurrentHandAction()) {
 	case H_None:
 		ItemCursorRef->InvalidateCursor();
 		break;
 	case H_Item: {
-		const auto item = CharDataRef->getCurrentItemInInventory();
+		const auto item = charDataRef->getCurrentItemInInventory();
 		if (item)
 			ItemCursorRef->initialize(item);
 		else
@@ -109,9 +98,9 @@ void APlayerCharacter::UpdateItemCursorRotation() {
 		// Find out how many notches to turn
 		Vector2D<Int16> turnNotches;
 		for (Uint8 i = 0; i < 2; i++) {
-			turnNotches[i] = (Int16) MouseHoldOffset[i];
+			turnNotches[i] = (Int16) mouseHoldOffset[i];
 			if (turnNotches[i] != 0)
-				MouseHoldOffset[i] -= turnNotches[i];
+				mouseHoldOffset[i] -= turnNotches[i];
 		}
 
 		if (!EEq(turnNotches.Length2(), 0)) {
@@ -134,123 +123,8 @@ void APlayerCharacter::UpdateItemCursorRotation() {
 	}
 }
 
-void APlayerCharacter::MoveForward(float amount) {
-	if (Controller != NULL && FMath::Abs(amount) > FLOAT_ERROR && canMove()) {
-		FRotator rotator = Controller->GetControlRotation();
-
-		if (CharacterMovement->IsMovingOnGround() || CharacterMovement->IsFalling())
-			rotator.Pitch = 0.0;
-
-		const FVector direction = FRotationMatrix(rotator).GetScaledAxis(EAxis::X);
-		AddMovementInput(direction, amount);
-	}
-}
-
-void APlayerCharacter::MoveRight(float amount) {
-	if (Controller != NULL && FMath::Abs(amount) > FLOAT_ERROR && canMove()) {
-		FRotator rotator = Controller->GetControlRotation();
-		const FVector direction = FRotationMatrix(rotator).GetScaledAxis(EAxis::Y);
-		AddMovementInput(direction, amount);
-	}
-}
-
-void APlayerCharacter::LookUp(float amount) {
-	if (bRotatingItem) {
-		MouseHoldOffset.Y += amount / 10.0;
-	} else {
-		AddControllerPitchInput(amount);
-	}
-}
-
-void APlayerCharacter::LookRight(float amount) {
-	if (bRotatingItem) {
-		MouseHoldOffset.X += amount / 10.0;
-	} else {
-		AddControllerYawInput(amount);
-	}
-}
-
-void APlayerCharacter::HoldJump() {
-	if (canMove()) {
-		bHoldingJump = true;
-		bPressedJump = true;
-	}
-}
-
-void APlayerCharacter::ReleaseJump() {
-	bHoldingJump = false;
-	bPressedJump = false;
-}
-
-void APlayerCharacter::OnRightMouseDown() {
-	switch (CharDataRef->getCurrentHandAction()) {
-	case H_None:
-		break;
-	case H_Item:
-		bRotatingItem = true;
-		MouseHoldOffset.Reset(0, 0);
-		break;
-	case H_Tool:
-		break;
-	}
-}
-
-void APlayerCharacter::OnRightMouseUp() {
-	if (bRotatingItem) {
-		bRotatingItem = false;
-		MouseHoldOffset.Reset(0, 0);
-	} else {
-		switch (CharDataRef->getCurrentHandAction()) {
-		case H_None: {
-			// TODO: item interactions
-			const auto viewpoint = GetViewRay();
-			const auto foundResult =
-				ChunkManagerRef->Raytrace(viewpoint, TerrainInteractionDistance);
-
-			if (foundResult.IsValid()) {
-				const auto & deref = *foundResult;
-				if (deref.Type == E_PlacedItem) {
-					deref.ItemData->interactAction(CharDataRef);
-				}
-			}
-
-			break;
-		}
-		case H_Item:
-			break;
-		case H_Tool:
-			break;
-		}
-	}
-}
-
-void APlayerCharacter::OnLeftMouseUp() {
-	switch (CharDataRef->getCurrentHandAction()) {
-	case H_None:
-		break;
-	case H_Item:
-		if (ItemCursorRef->IsValid() && !ItemCursorRef->IsHidden()) {
-			const auto curItem = CharDataRef->getCurrentItemInInventory();
-			// TODO: if we wish to preserve item state, we'll need to place the original item data here
-			if (curItem) {
-				if (ChunkManagerRef->PlaceItem(ItemDataPtr(new ItemData(*curItem))))
-					CharDataRef->placeCurrentItemInInventory();
-			}
-		}
-		break;
-	case H_Tool:
-		break;
-	}
-}
-
-void APlayerCharacter::onEscape() {
-	if (CharDataRef->isUsingItem()) {
-		CharDataRef->stopUsingItem();
-	}
-}
-
 bool APlayerCharacter::canMove() const {
-	auto usingItem = CharDataRef->getUsingItem();
+	auto usingItem = charDataRef->getUsingItem();
 	if (!usingItem.expired()) {
 		const auto item = ChunkManagerRef->FindPlacedItem(usingItem.lock()->getItemId());
 		// Check if the item in use still exists.
@@ -259,41 +133,25 @@ bool APlayerCharacter::canMove() const {
 	return true;
 }
 
-void APlayerCharacter::HoldPrevItem() { CharDataRef->prevHeldItem(); }
-void APlayerCharacter::HoldNextItem() { CharDataRef->nextHeldItem(); }
-
 void APlayerCharacter::BeginPlay() {
 	Super::BeginPlay();
 
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(
-			-1, 5.0, FColor::Green, TEXT("Using standard game character."));
+	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Green, TEXT("Using PlayerCharacter"));
 
 	auto gameState = GetWorld()->GetGameState<ADDGameState>();
 
-	EventBusRef = gameState->EventBus;
+	assert(gameState && "APlayerCharacter::BeginPlay: Game state is NULL here.");
+
+	eventBusRef = gameState->EventBus;
 	ChunkManagerRef = *(TActorIterator<AChunkManager>(GetWorld())); // There should always be a chunk manager
-	TerrainParams = &gameState->ChunkLoader->GetGeneratorParameters();
+	terrainParams = &gameState->ChunkLoader->GetGeneratorParameters();
 
 	SetUpItemCursor();
 }
 
-void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent * InputComponent) {
-	InputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
-	InputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
-	InputComponent->BindAxis("LookUp", this, &APlayerCharacter::LookUp);
-	InputComponent->BindAxis("LookRight", this, &APlayerCharacter::LookRight);
-
-	InputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::HoldJump);
-	InputComponent->BindAction("Jump", IE_Released, this, &APlayerCharacter::ReleaseJump);
-	InputComponent->BindAction("RightMouseClick", IE_Pressed, this, &APlayerCharacter::OnRightMouseDown);
-	InputComponent->BindAction("RightMouseClick", IE_Released, this, &APlayerCharacter::OnRightMouseUp);
-	InputComponent->BindAction("LeftMouseClick", IE_Released, this, &APlayerCharacter::OnLeftMouseUp);
-	InputComponent->BindAction("PrevItem", IE_Released, this, &APlayerCharacter::HoldPrevItem);
-	InputComponent->BindAction("NextItem", IE_Released, this, &APlayerCharacter::HoldNextItem);
-	InputComponent->BindAction("ToggleHandAction", IE_Released, this, &APlayerCharacter::ToggleHandAction);
-	InputComponent->BindAction("Escape", IE_Released, this, &APlayerCharacter::onEscape);
-}
+//void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent * inputComp) {
+//	Super::SetupPlayerInputComponent(inputComp);
+//}
 
 void APlayerCharacter::Tick(float delta) {
 	Super::Tick(delta);
@@ -311,14 +169,156 @@ void APlayerCharacter::Tick(float delta) {
 		UpdateItemCursorRotation();
 		UpdateItemCursorPosition();
 
-		EventBusRef->BroadcastEvent(EventDataPtr(new EViewPosition(GetViewRay())));
+		eventBusRef->BroadcastEvent(EventDataPtr(new EViewPosition(GetViewRay())));
 	}
 
 	// Tick once every half-second
 	if (PositionSecondCount >= 0.5) {
 		PositionSecondCount -= 0.5;
 		
-		EventBusRef->BroadcastEvent(
+		eventBusRef->BroadcastEvent(
 			EventDataPtr(new EPlayerPosition(ToVector3D(GetActorLocation()))));
+	}
+}
+
+
+
+/********************************************************************************
+ * Implementation for DDPlayerController
+ ********************************************************************************/
+
+void APlayerCharacter::moveForward(float amount) {
+	if (Controller != NULL && FMath::Abs(amount) > FLOAT_ERROR && canMove()) {
+		FRotator rotator = Controller->GetControlRotation();
+
+		if (CharacterMovement->IsMovingOnGround() || CharacterMovement->IsFalling())
+			rotator.Pitch = 0.0;
+
+		const FVector direction = FRotationMatrix(rotator).GetScaledAxis(EAxis::X);
+		AddMovementInput(direction, amount);
+	}
+}
+
+void APlayerCharacter::moveRight(float amount) {
+	if (Controller != NULL && FMath::Abs(amount) > FLOAT_ERROR && canMove()) {
+		FRotator rotator = Controller->GetControlRotation();
+		const FVector direction = FRotationMatrix(rotator).GetScaledAxis(EAxis::Y);
+		AddMovementInput(direction, amount);
+	}
+}
+
+void APlayerCharacter::lookUp(float amount) {
+	if (bRotatingItem) {
+		mouseHoldOffset.Y += amount / 10.0;
+	} else {
+		AddControllerPitchInput(amount);
+	}
+}
+
+void APlayerCharacter::lookRight(float amount) {
+	if (bRotatingItem) {
+		mouseHoldOffset.X += amount / 10.0;
+	} else {
+		AddControllerYawInput(amount);
+	}
+}
+
+void APlayerCharacter::holdJump() {
+	if (canMove()) {
+		bHoldingJump = true;
+		bPressedJump = true;
+	}
+}
+
+void APlayerCharacter::releaseJump() {
+	bHoldingJump = false;
+	bPressedJump = false;
+}
+
+void APlayerCharacter::rightMouseDown() {
+	switch (charDataRef->getCurrentHandAction()) {
+	case H_None:
+		break;
+	case H_Item:
+		bRotatingItem = true;
+		mouseHoldOffset.Reset(0, 0);
+		break;
+	case H_Tool:
+		break;
+	}
+}
+
+void APlayerCharacter::rightMouseUp() {
+	if (bRotatingItem) {
+		bRotatingItem = false;
+		mouseHoldOffset.Reset(0, 0);
+	} else {
+		switch (charDataRef->getCurrentHandAction()) {
+		case H_None: {
+			// TODO: item interactions
+			const auto viewpoint = GetViewRay();
+			const auto foundResult =
+				ChunkManagerRef->Raytrace(viewpoint, TerrainInteractionDistance);
+
+			if (foundResult.IsValid()) {
+				const auto & deref = *foundResult;
+				if (deref.Type == E_PlacedItem) {
+					deref.ItemData->interactAction(charDataRef);
+				}
+			}
+
+			break;
+		}
+		case H_Item:
+			break;
+		case H_Tool:
+			break;
+		}
+	}
+}
+
+void APlayerCharacter::leftMouseDown() {}
+
+void APlayerCharacter::leftMouseUp() {
+	switch (charDataRef->getCurrentHandAction()) {
+	case H_None:
+		break;
+	case H_Item:
+		if (ItemCursorRef->IsValid() && !ItemCursorRef->IsHidden()) {
+			const auto curItem = charDataRef->getCurrentItemInInventory();
+			// TODO: if we wish to preserve item state, we'll need to place the original item data here
+			if (curItem) {
+				if (ChunkManagerRef->PlaceItem(ItemDataPtr(new ItemData(*curItem))))
+					charDataRef->placeCurrentItemInInventory();
+			}
+		}
+		break;
+	case H_Tool:
+		break;
+	}
+}
+
+void APlayerCharacter::escapeKey() {
+	if (charDataRef->isUsingItem()) {
+		charDataRef->stopUsingItem();
+	}
+
+	// Close the user HUD dashboard if it is open.
+	auto playerController = Cast<ADDPlayerController>(Controller);
+	if (playerController && playerController->isHUDDashboardOpen())
+		playerController->setHUDDashboardOpen(false);
+}
+
+void APlayerCharacter::toggleHandAction() {
+	switch (charDataRef->getCurrentHandAction()) {
+	case H_None:
+		charDataRef->switchHandAction(H_Item);
+		break;
+	case H_Item:
+		charDataRef->switchHandAction(H_None);
+		break;
+	case H_Tool:
+	default:
+		break;
 	}
 }

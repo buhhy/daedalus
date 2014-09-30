@@ -28,7 +28,7 @@ protected:
 	utils::Vector3D<> lastScale;
 	float tickCount;
 
-	const terrain::TerrainGeneratorParameters * TerrainParams;
+	const terrain::TerrainGeneratorParameters * terrainParams;
 
 
 

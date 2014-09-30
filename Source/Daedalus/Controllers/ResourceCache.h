@@ -29,6 +29,9 @@ public:
 		{}
 	};
 
+	static const std::string ICON_DEFAULT_FOLDER;
+	static const std::string ICON_CURSOR_FOLDER;
+
 private:
 	template <typename T>
 	using RefCache = std::unordered_map<std::string, T>;
@@ -51,11 +54,16 @@ private:
 
 
 
-	std::string itemMeshName(const std::string & resourceName) const;
-	std::string itemMaterialName(const std::string & resourceName) const;
-	std::string itemAnimBlueprintName(const std::string & resourceName) const;
+	std::string itemMeshResourceName(const std::string & resourceName) const;
+	std::string itemMaterialResourceName(const std::string & resourceName) const;
+	std::string itemAnimBPResourceName(const std::string & resourceName) const;
 
-	std::string iconName(const std::string & resourceName) const;
+	std::string iconName(
+		const std::string & resourceName,
+		const std::string & folderName = ICON_DEFAULT_FOLDER) const;
+	std::string iconKeyString(
+		const std::string & resourceName,
+		const std::string & folderName = ICON_DEFAULT_FOLDER) const;
 
 	template <typename ObjClass>
 	ObjClass * loadObjFromPath(const TCHAR * path) {
@@ -110,7 +118,9 @@ public:
 		const items::ItemDataFactoryPtr & idFact);
 
 	const SkeletalMeshResourceSet & findItemResourceSet(const std::string & resourceName) const;
-	UTexture2D * findIcon(const std::string & resourceName) const;
+	UTexture2D * findIcon(
+		const std::string & resourceName,
+		const std::string & folderName = ICON_DEFAULT_FOLDER) const;
 };
 
 using ResourceCachePtr = std::shared_ptr<ResourceCache>;

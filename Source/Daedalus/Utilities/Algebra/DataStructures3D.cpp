@@ -320,7 +320,7 @@ namespace utils {
 	}
 
 	AxisAlignedBoundingBox3D OrientedBoundingBox3D::GetEnclosingBoundingBox() const {
-		std::array<const Point3D, 2> points = { Bounds.MinPoint, Bounds.MaxPoint };
+		std::array<Point3D, 2> points = {{ Bounds.MinPoint, Bounds.MaxPoint }};
 		Point3D minPoint, maxPoint;
 		Point3D tempPoint, transformedPoint;
 

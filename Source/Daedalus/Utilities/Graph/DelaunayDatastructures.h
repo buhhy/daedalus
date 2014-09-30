@@ -127,6 +127,8 @@ namespace utils {
 			Vertex * Start;
 			Vertex * End;
 
+			Edge() : Start(NULL), End(NULL) {}
+
 			Edge(Vertex * const start, Vertex * const end) {
 				if (start->VertexId() < end->VertexId()) {
 					Start = start;

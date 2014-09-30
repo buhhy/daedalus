@@ -32,10 +32,11 @@ namespace fauna {
 		virtual void useShortcut(fauna::CharacterDataPtr & charData) override;
 		virtual std::string getIconName() const override;
 		virtual utils::Option<Uint32> getQuantity() const override;
+		virtual bool isValid() const override;
 
-		Uint32 GetCount() const { return Count; }
+		Uint32 getCount() const { return Count; }
 		const items::ItemDataPtr getItemData() const { return ItemData; }
-		bool ContainsItems() const { return Count > 0; }
+		bool containsItems() const { return Count > 0; }
 
 		void SetItems(const items::ItemDataPtr & item, const Uint32 count) {
 			Count = count;
@@ -43,7 +44,7 @@ namespace fauna {
 		}
 
 		bool AddItems(const Uint32 count) {
-			if (!ContainsItems() || Count + count >= ItemData->Template.maxStackSize)
+			if (!containsItems() || Count + count >= ItemData->Template.maxStackSize)
 				return false;
 
 			Count += count;
@@ -52,7 +53,7 @@ namespace fauna {
 		}
 
 		bool RemoveItems(const Uint32 count) {
-			if (!ContainsItems() || Count < count)
+			if (!containsItems() || Count < count)
 				return false;
 
 			Count -= count;
@@ -128,6 +129,10 @@ namespace fauna {
 
 		void addShortcut(const ShortcutPtr & shortcut, const Uint32 index);
 		void removeShortcut(const ShortcutPtr & shortcut, const Uint32 index);
+		/**
+		 * Removes shortcuts that have become invalid.
+		 */
+		void cullShortcuts();
 		Uint32 getMaxSize() const;
 		ShortcutVector::const_iterator startIterator() const;
 		ShortcutVector::const_iterator endIterator() const;

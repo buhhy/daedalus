@@ -40,7 +40,7 @@ void AItem::applyTransform() {
 		Basis3D basis = GetBasisFrom(transform);
 		auto fRotMat = FRotationMatrix::MakeFromXZ(
 			ToFVector(basis.XVector), ToFVector(basis.ZVector));
-		const auto trans = TerrainParams->ToRealCoordSpace(
+		const auto trans = terrainParams->ToRealCoordSpace(
 			GetTranslationVectorFrom(transform));
 		SetRelativeTransform(ToFVector(trans), fRotMat.Rotator());
 	}
@@ -67,8 +67,8 @@ bool AItem::IsItemInUse() {
 }
 
 void AItem::BeginPlay() {
-	if (TerrainParams == NULL)
-		TerrainParams =
+	if (terrainParams == NULL)
+		terrainParams =
 			&GetWorld()->GetGameState<ADDGameState>()->ChunkLoader->GetGeneratorParameters();
 	Super::BeginPlay();
 }
