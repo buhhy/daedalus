@@ -6,7 +6,7 @@
 
 #include "GameFramework/HUD.h"
 
-#include <Actors/SlateUI/InventoryPanel.h>
+#include <Actors/GUI/InventoryPanel.h>
 #include <Models/Fauna/CharacterData.h>
 
 #include "PlayerHUD.generated.h"
@@ -23,11 +23,15 @@ public:
 		C_Active
 	};
 
+	static const Uint8 BUTTON_PRESS_LEFT = (Uint8) 0x1;
+	static const Uint8 BUTTON_PRESS_MIDDLE = (Uint8) 0x2;
+	static const Uint8 BUTTON_PRESS_RIGHT = (Uint8) 0x4;
+
 private:
 	UFont * uiFontLatoSmall;
 
 	bool bDashboardOpen;
-	bool bMouseDown;
+	Uint8 mouseButtonsActive;
 	utils::Point2D cursorPosition;
 	CursorType currentCursorType;
 	CursorType previousCursorType;
@@ -52,6 +56,6 @@ public:
 	bool isDashboardOpen() const;
 
 	void onMouseMove(const utils::Point2D & position);
-	void onMouseDown();
-	void onMouseUp();
+	void onMouseDown(const Uint8 whichBtn);
+	void onMouseUp(const Uint8 whichBtn);
 };

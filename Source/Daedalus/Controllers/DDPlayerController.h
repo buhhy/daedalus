@@ -2,7 +2,7 @@
 
 #include <GameFramework/PlayerController.h>
 #include <Actors/ControllableCharacter.h>
-#include <Actors/SlateUI/PlayerHUD.h>
+#include <Actors/GUI/PlayerHUD.h>
 #include "DDPlayerController.generated.h"
 
 /**

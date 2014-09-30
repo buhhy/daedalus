@@ -59,7 +59,7 @@ namespace utils {
 	) {
 		Vector3D<> u1 = endPoint - startPoint;
 		Vector3D<> u2, u3;
-		BuildBasis(u1, u2, u3);
+		buildBasis3D(u1, u2, u3);
 		Matrix4D<> rotation = CreateRotation(u1, u2, u3);
 		Matrix4D<> startTransform =
 			CreateTranslation(startPoint) * rotation * CreateScaling({ radius, radius, radius });

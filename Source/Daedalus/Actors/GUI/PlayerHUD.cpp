@@ -1,12 +1,13 @@
 #include <Daedalus.h>
-#include <Actors/SlateUI/PlayerHUD.h>
+#include <Actors/GUI/PlayerHUD.h>
 #include <Actors/Characters/PlayerCharacter.h>
 #include <Controllers/DDGameState.h>
 
 using namespace fauna;
+using namespace utils;
 
 APlayerHUD::APlayerHUD(const class FPostConstructInitializeProperties & PCIP) :
-	Super(PCIP), cursorPosition(0, 0), bDashboardOpen(false), bMouseDown(false),
+	Super(PCIP), cursorPosition(0, 0), bDashboardOpen(false), mouseButtonsActive(0),
 	currentCursorType(C_Pointer), previousCursorType(C_Pointer)
 {
 	static ConstructorHelpers::FObjectFinder<UFont> latoSmall(
@@ -75,16 +76,18 @@ void APlayerHUD::drawCursor(ADDGameState * gameState) {
 	const auto resourceCache = gameState->getResourceCacheRef();
 
 	std::string cursorSuffix;
-	switch (currentCursorType) {
-	case C_Hover:
-		cursorSuffix = "-Hover";
-		break;
-	case C_Active:
+	if (mouseButtonsActive & BUTTON_PRESS_LEFT)
 		cursorSuffix = "-Active";
-		break;
-	default:
-		break;
-	}
+	//switch (currentCursorType) {
+	//case C_Hover:
+	//	cursorSuffix = "-Hover";
+	//	break;
+	//case C_Active:
+	//	cursorSuffix = "-Active";
+	//	break;
+	//default:
+	//	break;
+	//}
 
 	UTexture2D * cursorTexture = resourceCache->findIcon(
 		"Pointer" + cursorSuffix, ResourceCache::ICON_CURSOR_FOLDER);
@@ -141,17 +144,14 @@ bool APlayerHUD::isDashboardOpen() const {
 	return bDashboardOpen;
 }
 
-void APlayerHUD::onMouseMove(const utils::Point2D & position) {
+void APlayerHUD::onMouseMove(const Point2D & position) {
 	cursorPosition = position;
 }
 
-void APlayerHUD::onMouseDown() {
-	bMouseDown = true;
-	previousCursorType = currentCursorType;
-	currentCursorType = C_Active;
+void APlayerHUD::onMouseDown(const Uint8 whichBtn) {
+	mouseButtonsActive |= whichBtn;
 }
 
-void APlayerHUD::onMouseUp() {
-	bMouseDown = false;
-	currentCursorType = previousCursorType;
+void APlayerHUD::onMouseUp(const Uint8 whichBtn) {
+	mouseButtonsActive ^= whichBtn;
 }

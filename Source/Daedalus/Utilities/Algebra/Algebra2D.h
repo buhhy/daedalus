@@ -89,9 +89,9 @@ namespace utils {
 		return os;
 	}
 
-	/**
+	/********************************************************************************
 	 * Other calculations in 2D
-	 */
+	 ********************************************************************************/
 
 	Circle2D CalculateCircumcircle(
 		const Vector2D<> & A, const Vector2D<> & B, const Vector2D<> & C);
@@ -106,4 +106,14 @@ namespace utils {
 	 */
 	Int8 FindWinding(const Vector2D<> & p1, const Vector2D<> & pivot, const Vector2D<> & p3);
 	double FindAngle(const Vector2D<> & v1, const Vector2D<> & v2);
+
+	
+	Vector2D<> projectVector2D(const Vector2D<> projection, const Vector2D<> target);
+	void gramSchmidt2D(Vector2D<> & x, Vector2D<> & y);
+
+	/**
+	 * Builds a basis around the input vector. The input is always assumed to be X and the Y
+	 * vector is built around that.
+	 */
+	void buildBasis2D(Vector2D<> & input, Vector2D<> & y);
 }

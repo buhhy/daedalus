@@ -1,9 +1,9 @@
 #include <Daedalus.h>
-#include "PlayerHUDOverlay.h"
+#include "InventoryItem.h"
 
-#include <Actors/SlateUI/PlayerHUD.h>
+#include <Actors/GUI/PlayerHUD.h>
 
-void SPlayerHUDOverlay::Construct(const FArguments & inArgs) {
+void SInventorySlot::Construct(const FArguments & inArgs) {
 	OwningHUD = inArgs._OwningHUD;
 	ChildSlot
 		.VAlign(VAlign_Fill)

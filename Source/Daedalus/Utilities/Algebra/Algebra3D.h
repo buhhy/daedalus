@@ -9,9 +9,9 @@
 #include <iostream>
 
 namespace utils {
-	/********************
+	/********************************************************************************
 	 * Vector3D Operators
-	 ********************/
+	 ********************************************************************************/
 
 	/**
 	 * Unary operators
@@ -91,9 +91,9 @@ namespace utils {
 
 
 
-	/********************
+	/********************************************************************************
 	 * Matrix4D Operators
-	 ********************/
+	 ********************************************************************************/
 	
 	template <typename T>
 	inline Matrix4D<T> operator * (const Matrix4D<T> & a, const Matrix4D<T> & b) {
@@ -135,18 +135,18 @@ namespace utils {
 
 	
 
-	/********************
+	/********************************************************************************
 	 * Misc operations
-	 ********************/
+	 ********************************************************************************/
 	
-	Vector3D<> Project(const Vector3D<> projection, const Vector3D<> target);
+	Vector3D<> projectVector3D(const Vector3D<> projection, const Vector3D<> target);
 
-	void GramSchmidt(Vector3D<> & x, Vector3D<> & y, Vector3D<> & z);
+	void gramSchmidt3D(Vector3D<> & x, Vector3D<> & y, Vector3D<> & z);
 
 	/**
 	 * Builds a basis around the input vector. The input is always assumed to be X and the Y
 	 * and Z vectors are built around that. Z will be up by default, unless the input is up,
 	 * in which case Z will be set to right.
 	 */
-	void BuildBasis(Vector3D<> & input, Vector3D<> & y, Vector3D<> & z);
+	void buildBasis3D(Vector3D<> & input, Vector3D<> & y, Vector3D<> & z);
 }

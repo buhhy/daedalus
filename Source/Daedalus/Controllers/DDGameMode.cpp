@@ -2,7 +2,7 @@
 #include "DDGameMode.h"
 #include <Actors/Characters/PlayerCharacter.h>
 #include <Actors/Characters/DebugCharacter.h>
-#include <Actors/SlateUI/PlayerHUD.h>
+#include <Actors/GUI/PlayerHUD.h>
 #include <Controllers/DDGameState.h>
 #include <Controllers/DDPlayerController.h>
 

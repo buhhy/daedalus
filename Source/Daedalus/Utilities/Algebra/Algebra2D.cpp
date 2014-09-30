@@ -39,4 +39,21 @@ namespace utils {
 			result += 2 * MATH_PI;
 		return result;
 	}
+
+	Vector2D<> projectVector2D(const Vector2D<> projection, const Vector2D<> target) {
+		return target * (projection.Dot(target) / target.Length2());
+	}
+
+	void gramSchmidt2D(Vector2D<> & x, Vector2D<> & y) {
+		Vector2D<> u1 = x;
+		Vector2D<> u2 = y - projectVector2D(y, u1);
+		x = u1.Normalize();
+		y = u2.Normalize();
+	}
+
+	void buildBasis2D(Vector2D<> & input, Vector2D<> & y) {
+		y.X = input.Y;
+		y.Y = -input.X;
+		gramSchmidt2D(input, y);
+	}
 }

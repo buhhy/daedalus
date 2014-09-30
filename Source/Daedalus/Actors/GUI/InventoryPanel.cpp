@@ -1,7 +1,7 @@
 #include <Daedalus.h>
 #include "InventoryPanel.h"
 
-#include <Actors/SlateUI/PlayerHUD.h>
+#include <Actors/GUI/PlayerHUD.h>
 
 void SInventoryPanel::Construct(const FArguments & inArgs) {
 	OwningHUD = inArgs._OwningHUD;

@@ -7,20 +7,24 @@
 #include <Utilities/Algebra/Algebra3D.h>
 
 namespace utils {
+	/********************************************************************************
+	 * Basis 3D
+	 ********************************************************************************/
+
 	Basis3D::Basis3D(const Vector3D<> & x) : XVector(x) {
-		BuildBasis(XVector, YVector, ZVector);
+		buildBasis3D(XVector, YVector, ZVector);
 	}
 
 	Basis3D::Basis3D(const Vector3D<> & x, const Vector3D<> & y) :
 		XVector(x), YVector(y), ZVector(x.Cross<double>(y))
 	{
-		GramSchmidt(XVector, YVector, ZVector);
+		gramSchmidt3D(XVector, YVector, ZVector);
 	}
 
 	Basis3D::Basis3D(const Vector3D<> & x, const Vector3D<> & y, const Vector3D<> & z) :
 		XVector(x), YVector(y), ZVector(z)
 	{
-		GramSchmidt(XVector, YVector, ZVector);
+		gramSchmidt3D(XVector, YVector, ZVector);
 	}
 
 

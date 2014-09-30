@@ -8,6 +8,16 @@ namespace utils {
 	using UVWVector = Vector3D<>;
 	using Point2D = Vector2D<>;
 
+	struct Basis2D {
+		Vector2D<> xVector, yVector;
+
+		Basis2D(const Vector2D<> & x);
+		Basis2D(const Vector2D<> & x, const Vector2D<> & y);
+
+		Vector2D<> & operator [] (const Uint8 index);
+		const Vector2D<> & operator [] (const Uint8 index) const;
+	};
+
 	struct Circle2D {
 		Point2D Center;
 		double Radius;
@@ -30,5 +40,34 @@ namespace utils {
 		 * @Return true if the point is within this triangle, false if not
 		 */
 		bool GetBarycentricCoordinates(UVWVector & output, const Point2D & point) const;
+	};
+
+	struct BoundingBox2D {
+		virtual Basis2D getBasis() const = 0;
+		virtual Vector2D<> getExtents() const = 0;
+		virtual Vector2D<> getCentre() const = 0;
+
+		virtual bool boundingBoxIntersection(
+			const BoundingBox2D & box, const bool isInclusive = true) const;
+
+		virtual bool isInside(const Point2D & point) const = 0;
+	};
+
+	struct AxisAlignedBoundingBox2D : BoundingBox2D {
+		Point2D minPoint;
+		Point2D maxPoint;
+
+
+
+		AxisAlignedBoundingBox2D() : minPoint(0), maxPoint(0) {}
+		AxisAlignedBoundingBox2D(const Point2D & min, const Point2D & max) :
+			minPoint(min), maxPoint(max)
+		{}
+		
+		virtual Basis2D getBasis() const;
+		virtual Vector2D<> getExtents() const;
+		virtual Vector2D<> getCentre() const;
+
+		virtual bool isInside(const Point2D & point) const;
 	};
 }

@@ -145,6 +145,7 @@ void ADDPlayerController::onReleaseJump() {
 void ADDPlayerController::onRightMouseDown() {
 	if (isMainMenuOpen()) {
 	} else if (isHUDDashboardOpen()) {
+		playerHUD->onMouseDown(APlayerHUD::BUTTON_PRESS_RIGHT);
 	} else {
 		auto ch = getOwnedCharacter();
 		if (ch)
@@ -155,6 +156,7 @@ void ADDPlayerController::onRightMouseDown() {
 void ADDPlayerController::onRightMouseUp() {
 	if (isMainMenuOpen()) {
 	} else if (isHUDDashboardOpen()) {
+		playerHUD->onMouseUp(APlayerHUD::BUTTON_PRESS_RIGHT);
 	} else {
 		auto ch = getOwnedCharacter();
 		if (ch)
@@ -165,6 +167,7 @@ void ADDPlayerController::onRightMouseUp() {
 void ADDPlayerController::onLeftMouseDown() {
 	if (isMainMenuOpen()) {
 	} else if (isHUDDashboardOpen()) {
+		playerHUD->onMouseDown(APlayerHUD::BUTTON_PRESS_LEFT);
 	} else {
 		auto ch = getOwnedCharacter();
 		if (ch)
@@ -175,6 +178,7 @@ void ADDPlayerController::onLeftMouseDown() {
 void ADDPlayerController::onLeftMouseUp() {
 	if (isMainMenuOpen()) {
 	} else if (isHUDDashboardOpen()) {
+		playerHUD->onMouseUp(APlayerHUD::BUTTON_PRESS_LEFT);
 	} else {
 		auto ch = getOwnedCharacter();
 		if (ch)

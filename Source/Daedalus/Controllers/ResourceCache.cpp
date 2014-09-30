@@ -23,7 +23,7 @@ ResourceCache::ResourceCache(
 				staticLoadResource(materialCache, itemMaterialResourceName(rName)),
 				staticLoadResource(animBPCache, itemAnimBPResourceName(rName)))
 		});
-		staticLoadResource(iconCache, iconName(rName), rName);
+		staticLoadResource(iconCache, iconName(rName), iconKeyString(rName));
 	}
 
 	// Preload the resources for the missing items placeholder.

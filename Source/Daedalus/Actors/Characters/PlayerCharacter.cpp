@@ -1,7 +1,7 @@
 #include "Daedalus.h"
 #include "PlayerCharacter.h"
 
-#include <Actors/SlateUI/PlayerHUD.h>
+#include <Actors/GUI/PlayerHUD.h>
 #include <Controllers/DDPlayerController.h>
 #include <Controllers/DDGameState.h>
 #include <Utilities/Constants.h>
