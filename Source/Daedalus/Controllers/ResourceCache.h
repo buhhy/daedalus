@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Engine.h>
+#include <Utilities/DataStructures.h>
 #include <unordered_map>
 #include <memory>
 
@@ -51,12 +52,16 @@ private:
 
 	SkeletalMeshResourceSet missingMesh;
 	UTexture2D * missingIcon;
+	UFont * missingFont;
 
 
-
+	
 	std::string itemMeshResourceName(const std::string & resourceName) const;
 	std::string itemMaterialResourceName(const std::string & resourceName) const;
 	std::string itemAnimBPResourceName(const std::string & resourceName) const;
+
+	std::string fontName(const std::string & fontType, const Uint16 fontSize) const;
+	std::string fontKeyString(const std::string & fontType, const Uint16 fontSize) const;
 
 	std::string iconName(
 		const std::string & resourceName,
@@ -121,6 +126,7 @@ public:
 	UTexture2D * findIcon(
 		const std::string & resourceName,
 		const std::string & folderName = ICON_DEFAULT_FOLDER) const;
+	UFont * findFont(const std::string & fontType, const Uint16 fontSize) const;
 };
 
 using ResourceCachePtr = std::shared_ptr<ResourceCache>;

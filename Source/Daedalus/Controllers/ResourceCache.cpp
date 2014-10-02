@@ -34,6 +34,8 @@ ResourceCache::ResourceCache(
 	};
 	missingIcon = staticLoadResource(
 		iconCache, iconName("MissingIcon"), iconKeyString("MissingIcon"));
+	missingFont = staticLoadResource(
+		fontCache, fontName("MissingFont", 12), fontKeyString("MissingFont", 12));
 
 	// Preload cursors.
 	const std::string & cursorFolder = ICON_CURSOR_FOLDER;
@@ -46,6 +48,12 @@ ResourceCache::ResourceCache(
 	staticLoadResource(
 		iconCache, iconName("Pointer-Active", cursorFolder),
 		iconKeyString("Pointer-Active", cursorFolder));
+
+	// Preload fonts.
+	staticLoadResource(
+		fontCache, fontName("Lato", 12), fontKeyString("Lato", 12));
+	staticLoadResource(
+		fontCache, fontName("Lato", 18), fontKeyString("Lato", 18));
 }
 
 std::string ResourceCache::itemMeshResourceName(const std::string & resourceName) const {
@@ -60,14 +68,32 @@ std::string ResourceCache::itemAnimBPResourceName(const std::string & resourceNa
 	return "AnimBlueprint'/Game/" + resourceName + "/AnimBlueprint.AnimBlueprint'";
 }
 
+std::string ResourceCache::fontName(
+	const std::string & fontType,
+	const Uint16 fontSize
+) const {
+	std::stringstream ss;
+	ss << "Font'/Game/Fonts/" << fontType << "-" << fontSize << "."
+		<< fontType << "-" << fontSize << "'";
+	return ss.str();
+}
+
+std::string ResourceCache::fontKeyString(
+	const std::string & fontType,
+	const Uint16 fontSize
+) const {
+	std::stringstream ss;
+	ss << fontType << ":" << fontSize;
+	return ss.str();
+}
+
 std::string ResourceCache::iconName(
 	const std::string & resourceName,
 	const std::string & folderName
 ) const {
 	std::stringstream ss;
-	ss
-		<< "Texture2D'/Game/" << folderName << "/" <<
-		resourceName << "." << resourceName << "'";
+	ss << "Texture2D'/Game/" << folderName << "/"
+		<< resourceName << "." << resourceName << "'";
 	return ss.str();
 }
 
@@ -95,6 +121,14 @@ UTexture2D * ResourceCache::findIcon(
 	auto found = iconCache.find(iconKeyString(resourceName, folderName));
 	if (found == iconCache.end())
 		return missingIcon;
+	else
+		return found->second;
+}
+
+UFont * ResourceCache::findFont(const std::string & fontType, const Uint16 fontSize) const {
+	auto found = fontCache.find(fontKeyString(fontType, fontSize));
+	if (found == fontCache.end())
+		return missingFont;
 	else
 		return found->second;
 }

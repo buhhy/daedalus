@@ -7,6 +7,7 @@
 #include "GameFramework/HUD.h"
 
 #include <Actors/GUI/InventoryPanel.h>
+#include <Actors/GUI/HUDElement.h>
 #include <Models/Fauna/CharacterData.h>
 
 #include "PlayerHUD.generated.h"
@@ -28,20 +29,21 @@ public:
 	static const Uint8 BUTTON_PRESS_RIGHT = (Uint8) 0x4;
 
 private:
-	UFont * uiFontLatoSmall;
-
 	bool bDashboardOpen;
 	Uint8 mouseButtonsActive;
 	utils::Point2D cursorPosition;
 	CursorType currentCursorType;
 	CursorType previousCursorType;
 
+	gui::HUDElementPtr rootNode;
+	gui::QuickbarPtr quickbarNode;
+
 
 
 	void drawDefaultHUDElements(
-		const fauna::CharacterDataPtr & characterData, ADDGameState * gameState);
+		fauna::CharacterDataPtr & characterData, ADDGameState * gameState);
 	void drawDashboardElements(
-		const fauna::CharacterDataPtr & characterData, ADDGameState * gameState);
+		fauna::CharacterDataPtr & characterData, ADDGameState * gameState);
 	void drawCursor(ADDGameState * gameState);
 
 protected:

@@ -42,13 +42,27 @@ namespace utils {
 		bool GetBarycentricCoordinates(UVWVector & output, const Point2D & point) const;
 	};
 
+	/**
+	 * A 2D rectangle represented by an origin point and its size.
+	 */
+	struct Box2D {
+		Point2D origin;
+		Vector2D<> size;
+
+		Box2D(const Point2D & origin, const Vector2D<> size) :
+			origin(origin), size(size)
+		{}
+
+		bool isInside(const Point2D & point) const;
+	};
+
 	struct BoundingBox2D {
 		virtual Basis2D getBasis() const = 0;
 		virtual Vector2D<> getExtents() const = 0;
 		virtual Vector2D<> getCentre() const = 0;
 
-		virtual bool boundingBoxIntersection(
-			const BoundingBox2D & box, const bool isInclusive = true) const;
+		//virtual bool boundingBoxIntersection(
+		//	const BoundingBox2D & box, const bool isInclusive = true) const;
 
 		virtual bool isInside(const Point2D & point) const = 0;
 	};
@@ -60,6 +74,9 @@ namespace utils {
 
 
 		AxisAlignedBoundingBox2D() : minPoint(0), maxPoint(0) {}
+		AxisAlignedBoundingBox2D(const Box2D & box) :
+			minPoint(box.origin), maxPoint(box.origin.X + box.size.X, box.origin.Y + box.size.Y)
+		{}
 		AxisAlignedBoundingBox2D(const Point2D & min, const Point2D & max) :
 			minPoint(min), maxPoint(max)
 		{}

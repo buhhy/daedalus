@@ -314,4 +314,8 @@ namespace fauna {
 	ShortcutBarCPtr CharacterData::getCurrentShortcutSet() const {
 		return currentShortcutBarRef;
 	}
+
+	ShortcutBarPtr CharacterData::getCurrentShortcutSet() {
+		return currentShortcutBarRef;
+	}
 }

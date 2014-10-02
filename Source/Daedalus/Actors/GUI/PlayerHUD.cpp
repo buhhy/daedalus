@@ -5,24 +5,30 @@
 
 using namespace fauna;
 using namespace utils;
+using namespace gui;
 
 APlayerHUD::APlayerHUD(const class FPostConstructInitializeProperties & PCIP) :
 	Super(PCIP), cursorPosition(0, 0), bDashboardOpen(false), mouseButtonsActive(0),
-	currentCursorType(C_Pointer), previousCursorType(C_Pointer)
-{
-	static ConstructorHelpers::FObjectFinder<UFont> latoSmall(
-		TEXT("Font'/Game/Lato-Small.Lato-Small'"));
-	uiFontLatoSmall = latoSmall.Object;
-}
+	currentCursorType(C_Pointer), previousCursorType(C_Pointer),
+	rootNode(new HUDElement({ 0u, 0u }, { 0u, 0u })),
+	quickbarNode(new Quickbar())
+{}
 
 void APlayerHUD::drawDefaultHUDElements(
-	const CharacterDataPtr & characterData,
+	CharacterDataPtr & characterData,
 	ADDGameState * gameState
 ) {
 	const auto resourceCache = gameState->getResourceCacheRef();
 	const auto screenW = Canvas->SizeX;
 	const auto screenH = Canvas->SizeY;
+	auto uiFontLatoSmall = resourceCache->findFont("Lato", 12);
 
+	quickbarNode->updateQuickbar(characterData->getCurrentShortcutSet());
+	rootNode->resize({ (double) screenW, (double) screenH });
+	rootNode->runLogic(0);
+	rootNode->drawElementTree(this, resourceCache);
+
+	// TODO: make this into an element.
 	std::stringstream ss;
 	ss << characterData->getCurrentHP() << "/" << characterData->getDefaultMaxHP();
 	const auto healthStr = FString(UTF8_TO_TCHAR(ss.str().c_str()));
@@ -37,32 +43,32 @@ void APlayerHUD::drawDefaultHUDElements(
 		(screenW - healthStrWidth) / 2, 2, uiFontLatoSmall);
 
 	// Draw shortcut bar.
-	const float slotSize = 64, slotBorder = 4;
-	const auto curSBar = characterData->getCurrentShortcutSet();
-	const auto barCount = curSBar->getMaxSize();
-	Uint32 i = 0;
-	for (auto it = curSBar->startIterator(); it != curSBar->endIterator(); ++it) {
-		float x = screenW / 2 + (i - barCount / 2.0) * (slotSize + slotBorder) + slotBorder / 2;
-		float y = screenH - (slotSize + slotBorder);
-		if (*it && (*it)->isValid()) {
-			auto icon = resourceCache->findIcon((*it)->getIconName());
-			auto count = (*it)->getQuantity();
-			DrawTexture(icon, x, y, slotSize, slotSize, 0, 0, 1.0, 1.0);
-			if (count.IsValid()) {
-				ss << *count;
-				DrawText(FString(UTF8_TO_TCHAR(ss.str().c_str())),
-					FLinearColor(1, 1, 1), x + 5, y + 5, uiFontLatoSmall);
-				ss.str(""); ss.clear();
-			}
-		} else {
-			DrawRect(FLinearColor(0.5, 0.5, 0.5), x, y, slotSize, slotSize);
-		}
-		i++;
-	}
+	//const float slotSize = 64, slotBorder = 4;
+	//const auto curSBar = characterData->getCurrentShortcutSet();
+	//const auto barCount = curSBar->getMaxSize();
+	//Uint32 i = 0;
+	//for (auto it = curSBar->startIterator(); it != curSBar->endIterator(); ++it) {
+	//	float x = screenW / 2 + (i - barCount / 2.0) * (slotSize + slotBorder) + slotBorder / 2;
+	//	float y = screenH - (slotSize + slotBorder);
+	//	if (*it && (*it)->isValid()) {
+	//		auto icon = resourceCache->findIcon((*it)->getIconName());
+	//		auto count = (*it)->getQuantity();
+	//		DrawTexture(icon, x, y, slotSize, slotSize, 0, 0, 1.0, 1.0);
+	//		if (count.IsValid()) {
+	//			ss << *count;
+	//			DrawText(FString(UTF8_TO_TCHAR(ss.str().c_str())),
+	//				FLinearColor(1, 1, 1), x + 5, y + 5, uiFontLatoSmall);
+	//			ss.str(""); ss.clear();
+	//		}
+	//	} else {
+	//		DrawRect(FLinearColor(0.5, 0.5, 0.5), x, y, slotSize, slotSize);
+	//	}
+	//	i++;
+	//}
 }
 
 void APlayerHUD::drawDashboardElements(
-	const CharacterDataPtr & characterData,
+	CharacterDataPtr & characterData,
 	ADDGameState * gameState
 ) {
 	const auto resourceCache = gameState->getResourceCacheRef();
@@ -134,6 +140,10 @@ void APlayerHUD::PostInitializeComponents() {
 	//	// Set widget's properties as visible (sets child widget's properties recursively)
 	//	InventoryUI->SetVisibility(EVisibility::Visible);
 	//}
+
+
+	// Set up GUI.
+	rootNode->appendChild(quickbarNode);
 }
 
 void APlayerHUD::setDashboardOpen(const bool isOpen) {

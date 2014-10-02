@@ -31,6 +31,15 @@ namespace utils {
 		return true;
 	}
 
+	bool Box2D::isInside(const Point2D & point) const {
+		const auto maxPoint = origin + size;
+		for (int i = 0; i < 2; i++) {
+			if (point[i] < origin[i] || point[i] > maxPoint[i])
+				return false;
+		}
+		return true;
+	}
+
 
 
 	/********************************************************************************

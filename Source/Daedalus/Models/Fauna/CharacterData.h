@@ -208,6 +208,7 @@ namespace fauna {
 
 		InventoryCPtr getInventory() const;
 		ShortcutBarCPtr getCurrentShortcutSet() const;
+		ShortcutBarPtr getCurrentShortcutSet();
 
 		Uint32 getCurrentHP() const { return currentHP; }
 		Uint32 getCurrentFullness() const { return currentFullness; }
