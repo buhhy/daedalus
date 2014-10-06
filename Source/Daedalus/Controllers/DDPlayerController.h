@@ -22,6 +22,7 @@ private:
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+	virtual bool InputKey(FKey key, EInputEvent evtType, float amtDep, bool bGamepad) override;
 
 public:
 	void setHUDDashboardOpen(const bool isOpen);
@@ -32,10 +33,11 @@ public:
 
 	
 	// Input binding functions.
-	void moveForward(float amount);
-	void moveRight(float amount);
-	void lookUp(float amount);
-	void lookRight(float amount);
+	void moveForward(const float amount);
+	void moveRight(const float amount);
+	void lookUp(const float amount);
+	void lookRight(const float amount);
+	void onQuickUse(const Uint8);
 	void onHoldJump();
 	void onReleaseJump();
 	void onRightMouseDown();
@@ -45,4 +47,8 @@ public:
 	void onEscape();
 	void onToggleHandAction();
 	void onToggleDashboardUI();
+	
+	// Because we must bind a function with no arguments...
+	template <Uint8 T>
+	void onQuickUse() { onQuickUse(T); }
 };

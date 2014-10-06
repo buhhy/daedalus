@@ -182,7 +182,7 @@ namespace items {
 		utils::Matrix4D<> getScaleMatrix() const;
 		bool addUser(const Uint64 charId);
 		bool removeUser(const Uint64 charId);
-		void interactAction(fauna::CharacterDataPtr & charData);
+		void interactAction(const fauna::CharacterDataPtr & charData);
 		bool isInUse() const;
 	};
 

@@ -1,11 +1,17 @@
 #include <Daedalus.h>
 #include <Actors/GUI/HUDElement.h>
+#include <Actors/GUI/PlayerHUD.h>
 
 namespace gui {
 	using namespace utils;
+	using namespace fauna;
+	
+	/********************************************************************************
+	 * HUDElement
+	 ********************************************************************************/
 
 	HUDElement::HUDElement(const utils::Point2D & origin, const utils::Point2D & size) :
-		bIsMouseInside(false), bounds(origin, size)
+		bounds(origin, size), bIsMouseInside(false), bIsHidden(false)
 	{}
 
 	HUDElement::HUDElement() : HUDElement({ 0, 0 }, { 0, 0 }) {}
@@ -15,7 +21,9 @@ namespace gui {
 	}
 
 	void HUDElement::tick() {}
-	void HUDElement::drawElement(AHUD * hud, const ResourceCacheCPtr & rcache) {}
+	void HUDElement::drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache) {}
+	
+	void HUDElement::onMouseMove(const utils::Point2D & position) {}
 
 	bool HUDElement::onMouseOver(const utils::Point2D & position) {
 		return true; // Should propagate
@@ -32,6 +40,9 @@ namespace gui {
 	bool HUDElement::onMouseUp(const MouseEvent & evt) {
 		return true; // Should propagate
 	}
+
+	void HUDElement::preMouseDown(const MouseEvent & evt) {}
+	void HUDElement::preMouseUp(const MouseEvent & evt) {}
 
 	void HUDElement::attachTo(const HUDElementPtr & node) {
 		parent = node;
@@ -77,10 +88,12 @@ namespace gui {
 		return bounds.origin;
 	}
 	
-	void HUDElement::drawElementTree(AHUD * hud, const ResourceCacheCPtr & rcache) {
-		drawElement(hud, rcache);
-		for (auto & child : children)
-			child->drawElementTree(hud, rcache);
+	void HUDElement::drawElementTree(APlayerHUD * hud, const ResourceCacheCPtr & rcache) {
+		if (!isHidden()) {
+			drawElement(hud, rcache);
+			for (auto & child : children)
+				child->drawElementTree(hud, rcache);
+		}
 	}
 
 	void HUDElement::runLogic(const float delta) {
@@ -102,6 +115,8 @@ namespace gui {
 		} else if (!isInside && bIsMouseInside) {
 			bIsMouseInside = false;
 			return onMouseLeave(position);
+		} else {
+			onMouseMove(position);
 		}
 
 		return true;
@@ -114,8 +129,10 @@ namespace gui {
 		}
 
 		bool isInside = hitTest(evt.position);
-		if (isInside)
+		if (isInside) {
+			preMouseDown(evt);
 			return onMouseDown(evt);
+		}
 
 		return true;
 	}
@@ -127,8 +144,10 @@ namespace gui {
 		}
 
 		bool isInside = hitTest(evt.position);
-		if (isInside)
+		if (isInside) {
+			preMouseUp(evt);
 			return onMouseUp(evt);
+		}
 
 		return true;
 	}
@@ -141,114 +160,61 @@ namespace gui {
 		bounds.origin = newPos;
 	}
 
+	void HUDElement::setHidden(const bool isHidden) {
+		bIsHidden = isHidden;
+	}
 
+	bool HUDElement::isHidden() const {
+		return bIsHidden;
+	}
 
-	/********************************************************************************
-	 *
-	 ********************************************************************************/
-
-	Quickbar::Quickbar(const Point2D & origin, const Point2D & size) :
-		HUDElement(origin, size), cachedQuickbarSize(0)
-	{}
 	
-	Quickbar::Quickbar() : Quickbar({ 0, 0 }, { 0, 0 }) {}
-
-	void Quickbar::tick() {
-		const double slotSize = 64, slotBorder = 4;
-		const double barHeight = slotSize + slotBorder * 2;
-		bool hasChanged = false;
-
-		// Check for quickbar size changes.
-		Uint32 newSize = 0;
-		if (model) {
-			newSize = model->getMaxSize();
-
-			for (; newSize > cachedQuickbarSize; cachedQuickbarSize++) {
-				appendChild(HUDElementPtr(
-					new QuickbarElement({ 0, 0 }, { slotSize, slotSize },
-					(*model)[cachedQuickbarSize])));
-				hasChanged = true;
-			}
-		}
-
-		for (; cachedQuickbarSize > newSize; cachedQuickbarSize--) {
-			removeChild(cachedQuickbarSize);
-			hasChanged = true;
-		}
-
-		// Update size.
-		if (parent) {
-			const auto & parentBounds = parent->getBounds();
-
-			resize(Point2D(parentBounds.size.X, barHeight));
-			reposition(Point2D(0, parentBounds.size.Y - barHeight));
-
-			if (hasChanged) {
-				// Center the quick bar on the screen.
-				const auto size = children.size();
-				for (Uint32 i = 0; i < size; i++) {
-					float x = bounds.size.X / 2 + (i - size / 2.0) *
-						(slotSize + slotBorder) + slotBorder / 2;
-					float y = bounds.size.Y - (slotSize + slotBorder);
-					children[i]->reposition({ x, y });
-				}
-			}
-		}
-	}
-
-	void Quickbar::drawElement(AHUD * hud, const ResourceCacheCPtr & rcache) {}
-		
-	bool Quickbar::onMouseOver(const Point2D & position) { return true; }
-	bool Quickbar::onMouseLeave(const Point2D & position) { return true; }
-	bool Quickbar::onMouseDown(const MouseEvent & evt) { return true; }
-	bool Quickbar::onMouseUp(const MouseEvent & evt) { return true; }
-
-	void Quickbar::updateQuickbar(const fauna::ShortcutBarPtr & bar) {
-		model = bar;
-	}
-
-
-
+	
 	/********************************************************************************
-	 *
+	 * CursorElement
 	 ********************************************************************************/
-
-	QuickbarElement::QuickbarElement(
-		const Point2D & origin,
-		const Point2D & size,
-		const ShortcutPtr & model
-	) : HUDElement(origin, size), model(model)
-	{}
-
-	void QuickbarElement::tick() {}
-
-	void QuickbarElement::drawElement(AHUD * hud, const ResourceCacheCPtr & rcache) {
-		const auto & size = getBounds().size;
-		const auto position = getAbsolutePosition();
-
-		if (model && model->isValid()) {
-			auto icon = rcache->findIcon(model->getIconName());
-			auto font = rcache->findFont("Lato", 12);
-			const auto count = model->getQuantity();
-			hud->DrawTexture(
-				icon, position.X, position.Y, size.X,
-				size.Y, 0, 0, 1.0, 1.0);
-
-			if (count.IsValid()) {
-				std::stringstream ss;
-				ss << *count;
-				hud->DrawText(FString(UTF8_TO_TCHAR(ss.str().c_str())),
-					FLinearColor(1, 1, 1), position.X + 5, position.Y + 5, font);
-				ss.str(""); ss.clear();
-			}
-		} else {
-			hud->DrawRect(FLinearColor(0.5, 0.5, 0.5), position.X,
-				position.Y, size.X, size.Y);
-		}
+	
+	void CursorElement::tick() {
+		if (parent)
+			resize(parent->getBounds().size);
 	}
-		
-	bool QuickbarElement::onMouseOver(const Point2D & position) { return true; }
-	bool QuickbarElement::onMouseLeave(const Point2D & position) { return true; }
-	bool QuickbarElement::onMouseDown(const MouseEvent & evt) { return true; }
-	bool QuickbarElement::onMouseUp(const MouseEvent & evt) { return true; }
+
+	void CursorElement::drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache) {
+		std::string cursorSuffix, cursorPrefix;
+		if (mouseButtonsActive & MouseEvent::BUTTON_PRESS_LEFT)
+			cursorSuffix = "-Active";
+
+		switch (currentCursorType) {
+		case MouseEvent::C_Hover:
+			cursorPrefix = "Pointer";
+			break;
+		case MouseEvent::C_Active:
+			cursorPrefix = "Pointer";
+			break;
+		default:
+			cursorPrefix = "Pointer";
+			break;
+		}
+
+		UTexture2D * cursorTexture = rcache->findIcon(
+			cursorPrefix + cursorSuffix, ResourceCache::ICON_CURSOR_FOLDER);
+
+		hud->DrawTextureSimple(cursorTexture, cursorPosition.X, cursorPosition.Y);
+	}
+
+	void CursorElement::onMouseMove(const utils::Point2D & position) {
+		cursorPosition = position;
+	}
+
+	bool CursorElement::onMouseDown(const MouseEvent & evt) {
+		cursorPosition = evt.position;
+		mouseButtonsActive = evt.activeButtons;
+		return true;
+	}
+
+	bool CursorElement::onMouseUp(const MouseEvent & evt) {
+		cursorPosition = evt.position;
+		mouseButtonsActive = evt.activeButtons;
+		return true;
+	}
 }

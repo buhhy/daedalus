@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Utilities/DataStructures.h>
+
 #include "ControllableCharacter.generated.h"
 
 UINTERFACE(MinimalAPI)
@@ -19,6 +21,7 @@ public:
 	virtual void moveRight(float amount) = 0;
 	virtual void lookUp(float amount) = 0;
 	virtual void lookRight(float amount) = 0;
+	virtual void quickuse(const Uint8 slot) = 0;
 	virtual void holdJump() = 0;
 	virtual void releaseJump() = 0;
 	virtual void rightMouseDown() = 0;

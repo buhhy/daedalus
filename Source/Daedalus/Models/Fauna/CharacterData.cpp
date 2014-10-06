@@ -9,7 +9,7 @@ namespace fauna {
 	 * InventorySlot
 	 ********************************************************************************/
 
-	void InventorySlot::useShortcut(CharacterDataPtr & source) {
+	void InventorySlot::quickuse(const CharacterDataPtr & source) {
 		if (containsItems())
 			ItemData->interactAction(source);
 	}
@@ -169,36 +169,42 @@ namespace fauna {
 
 
 	/********************************************************************************
-	 * ShortcutBar
+	 * QuickuseBar
 	 ********************************************************************************/
 
-	ShortcutBar::ShortcutBar(const Uint32 size) : maxSize(size) {
+	QuickuseBar::QuickuseBar(const Uint32 size) : maxSize(size) {
 		shortcuts.resize(size);
 	}
 
-	void ShortcutBar::addShortcut(const ShortcutPtr & shortcut, const Uint32 index) {
+	void QuickuseBar::addShortcut(const IQuickusePtr & shortcut, const Uint32 index) {
 		if (index < shortcuts.size())
 			shortcuts[index] = shortcut;
 	}
 
-	void ShortcutBar::removeShortcut(const ShortcutPtr & shortcut, const Uint32 index) {
+	void QuickuseBar::removeShortcut(const IQuickusePtr & shortcut, const Uint32 index) {
 		if (index < shortcuts.size())
 			shortcuts[index] = NULL;
 	}
 	
-	Uint32 ShortcutBar::getMaxSize() const {
+	void QuickuseBar::quickuse(const CharacterDataPtr & charData, const Uint32 index) {
+		auto shortcut = (*this)[index];
+		if (shortcut)
+			shortcut->quickuse(charData);
+	}
+	
+	Uint32 QuickuseBar::getMaxSize() const {
 		return maxSize;
 	}
 
-	ShortcutBar::ShortcutVector::const_iterator ShortcutBar::startIterator() const {
+	QuickuseBar::QuickuseVector::const_iterator QuickuseBar::startIterator() const {
 		return shortcuts.cbegin();
 	}
 
-	ShortcutBar::ShortcutVector::const_iterator ShortcutBar::endIterator() const {
+	QuickuseBar::QuickuseVector::const_iterator QuickuseBar::endIterator() const {
 		return shortcuts.cend();
 	}
 
-	void ShortcutBar::cullShortcuts() {
+	void QuickuseBar::cullShortcuts() {
 		for (Uint32 i = 0; i < shortcuts.size(); i++) {
 			if (shortcuts[i] && !shortcuts[i]->isValid())
 				shortcuts[i] = nullptr;
@@ -215,7 +221,7 @@ namespace fauna {
 		charId(cid), Template(tmp),
 		CurrentHeldItemIndex(0), CurrentHandAction(H_None),
 		inventoryRef(new Inventory(tmp.defaultMaxInventorySize)),
-		currentShortcutBarRef(new ShortcutBar(tmp.defaultShortcutBarSize)),
+		currentShortcutBarRef(new QuickuseBar(tmp.defaultShortcutBarSize)),
 		currentHP(tmp.startingMaxHP),
 		currentFullness(tmp.startingMaxFullness),
 		defaultMaxHP(tmp.startingMaxHP),
@@ -227,18 +233,16 @@ namespace fauna {
 		CharacterData(tmp, 0)
 	{}
 
-	Uint32 CharacterData::nextHeldItem() {
-		CurrentHeldItemIndex++;
-		if (CurrentHeldItemIndex >= inventoryRef->GetMaxSize())
-			CurrentHeldItemIndex = 0;
-		return CurrentHeldItemIndex;
+
+	/****************************************
+	 * Inventory management
+	 ****************************************/
+
+	void CharacterData::switchHeldItem(const Uint32 index) {
 	}
 
-	Uint32 CharacterData::prevHeldItem() {
-		if (CurrentHeldItemIndex == 0)
-			CurrentHeldItemIndex = inventoryRef->GetMaxSize();
-		CurrentHeldItemIndex--;
-		return CurrentHeldItemIndex;
+	void CharacterData::switchHandAction(const EHandAction action) {
+		CurrentHandAction = action;
 	}
 
 	ItemDataPtr CharacterData::getCurrentItemInInventory() {
@@ -260,6 +264,68 @@ namespace fauna {
 		currentShortcutBarRef->cullShortcuts();
 		return itemData;
 	}
+
+	InventorySlotPtr CharacterData::getItemInInventory(const Uint32 index) {
+		return (*inventoryRef)[index];
+	}
+
+	bool CharacterData::addItemsToInventory(const ItemDataPtr & item, const Uint32 count) {
+		return inventoryRef->AddItems(item, count);
+	}
+
+	InventoryCPtr CharacterData::getInventory() const {
+		return inventoryRef;
+	}
+
+	Uint32 CharacterData::nextHeldItem() {
+		CurrentHeldItemIndex++;
+		if (CurrentHeldItemIndex >= inventoryRef->GetMaxSize())
+			CurrentHeldItemIndex = 0;
+		return CurrentHeldItemIndex;
+	}
+
+	Uint32 CharacterData::prevHeldItem() {
+		if (CurrentHeldItemIndex == 0)
+			CurrentHeldItemIndex = inventoryRef->GetMaxSize();
+		CurrentHeldItemIndex--;
+		return CurrentHeldItemIndex;
+	}
+
+
+	/****************************************
+	 * Quickuse bar
+	 ****************************************/
+
+	QuickuseBarCPtr CharacterData::getCurrentShortcutSet() const {
+		return currentShortcutBarRef;
+	}
+
+	QuickuseBarPtr CharacterData::getCurrentShortcutSet() {
+		return currentShortcutBarRef;
+	}
+
+	void CharacterData::quickuse(const Uint32 index) {
+		currentShortcutBarRef->quickuse(shared_from_this(), index);
+	}
+
+	void CharacterData::addToCurrentShortcutSet(
+		const IQuickusePtr & shortcut,
+		const Uint32 index
+	) {
+		currentShortcutBarRef->addShortcut(shortcut, index);
+	}
+
+	void CharacterData::removeFromCurrentShortcutSet(
+		const IQuickusePtr & shortcut,
+		const Uint32 index
+	) {
+		currentShortcutBarRef->removeShortcut(shortcut, index);
+	}
+
+
+	/****************************************
+	 * Environment interactions
+	 ****************************************/
 
 	bool CharacterData::startUsingItem(ItemDataPtr & itemData) {
 		if (!currentUsingItem.expired()) {
@@ -291,31 +357,5 @@ namespace fauna {
 
 	bool CharacterData::isUsingItem() const {
 		return !currentUsingItem.expired();
-	}
-
-	void CharacterData::addToCurrentShortcutSet(
-		const ShortcutPtr & shortcut,
-		const Uint32 index
-	) {
-		currentShortcutBarRef->addShortcut(shortcut, index);
-	}
-
-	void CharacterData::removeFromCurrentShortcutSet(
-		const ShortcutPtr & shortcut,
-		const Uint32 index
-	) {
-		currentShortcutBarRef->removeShortcut(shortcut, index);
-	}
-
-	InventoryCPtr CharacterData::getInventory() const {
-		return inventoryRef;
-	}
-
-	ShortcutBarCPtr CharacterData::getCurrentShortcutSet() const {
-		return currentShortcutBarRef;
-	}
-
-	ShortcutBarPtr CharacterData::getCurrentShortcutSet() {
-		return currentShortcutBarRef;
 	}
 }

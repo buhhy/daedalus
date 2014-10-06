@@ -32,10 +32,10 @@ APlayerCharacter::APlayerCharacter(const class FPostConstructInitializePropertie
 
 	charDataRef = charDataFactoryRef->BuildCharData(C_Hero);
 	// TODO: remove this test code
-	charDataRef->inventoryRef->AddItems(itemDataFactoryRef->BuildItemData(I_Sofa), 3);
-	charDataRef->inventoryRef->AddItems(itemDataFactoryRef->BuildItemData(I_Chest), 10);
-	charDataRef->addToCurrentShortcutSet(charDataRef->getItemInInventory(0), 0);
-	charDataRef->addToCurrentShortcutSet(charDataRef->getItemInInventory(1), 1);
+	charDataRef->addItemsToInventory(itemDataFactoryRef->BuildItemData(I_Sofa), 3);
+	charDataRef->addItemsToInventory(itemDataFactoryRef->BuildItemData(I_Chest), 10);
+	//charDataRef->addToCurrentShortcutSet(charDataRef->getItemInInventory(0), 0);
+	//charDataRef->addToCurrentShortcutSet(charDataRef->getItemInInventory(1), 1);
 }
 
 utils::Ray3D APlayerCharacter::GetViewRay() const {
@@ -221,6 +221,10 @@ void APlayerCharacter::lookRight(float amount) {
 	} else {
 		AddControllerYawInput(amount);
 	}
+}
+
+void APlayerCharacter::quickuse(const Uint8 slot) {
+	charDataRef->quickuse(slot);
 }
 
 void APlayerCharacter::holdJump() {

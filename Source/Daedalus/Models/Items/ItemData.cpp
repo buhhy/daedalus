@@ -69,7 +69,7 @@ namespace items {
 		return true;
 	}
 
-	void ItemData::interactAction(CharacterDataPtr & charData) {
+	void ItemData::interactAction(const CharacterDataPtr & charData) {
 		auto self = shared_from_this();
 		charData->startUsingItem(self);
 	}

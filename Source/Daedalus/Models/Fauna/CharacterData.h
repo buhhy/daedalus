@@ -15,7 +15,7 @@ namespace fauna {
 		C_Hero
 	};
 
-	class InventorySlot : public IShortcut {
+	class InventorySlot : public IQuickuse {
 	private:
 		// TODO: handle storing items with differing state
 		Uint32 Count;
@@ -29,7 +29,7 @@ namespace fauna {
 		{}
 		
 		// Override from Shortcut.
-		virtual void useShortcut(fauna::CharacterDataPtr & charData) override;
+		virtual void quickuse(const CharacterDataPtr & charData) override;
 		virtual std::string getIconName() const override;
 		virtual utils::Option<Uint32> getQuantity() const override;
 		virtual bool isValid() const override;
@@ -66,6 +66,7 @@ namespace fauna {
 	};
 
 	using InventorySlotPtr = std::shared_ptr<InventorySlot>;
+	using InventorySlotCPtr = std::shared_ptr<const InventorySlot>;
 
 	class Inventory {
 	public:
@@ -100,6 +101,12 @@ namespace fauna {
 		bool RemoveItems(const items::ItemDataPtr & item, const Uint32 count = 1);
 		bool RemoveItems(const Uint32 index, const Uint32 count = 1);
 
+		const InventorySlotCPtr operator [] (const Uint32 index) const {
+			if (index >= items.size())
+				return NULL;
+			return items[index];
+		}
+
 		InventorySlotPtr operator [] (const Uint32 index) {
 			if (index >= items.size())
 				return NULL;
@@ -110,36 +117,37 @@ namespace fauna {
 	using InventoryPtr = std::shared_ptr<Inventory>;
 	using InventoryCPtr = std::shared_ptr<const Inventory>;
 
-	class ShortcutBar {
+	class QuickuseBar {
 	public:
-		using ShortcutVector = std::vector<ShortcutPtr>;
+		using QuickuseVector = std::vector<IQuickusePtr>;
 
 	private:
-		ShortcutVector shortcuts;
+		QuickuseVector shortcuts;
 		Uint32 maxSize;
 
 	public:
-		explicit ShortcutBar(const Uint32 size);
+		explicit QuickuseBar(const Uint32 size);
 
-		ShortcutPtr operator [] (const Uint32 index) {
+		IQuickusePtr operator [] (const Uint32 index) {
 			if (index >= shortcuts.size())
 				return NULL;
 			return shortcuts[index];
 		}
 
-		void addShortcut(const ShortcutPtr & shortcut, const Uint32 index);
-		void removeShortcut(const ShortcutPtr & shortcut, const Uint32 index);
+		void addShortcut(const IQuickusePtr & shortcut, const Uint32 index);
+		void removeShortcut(const IQuickusePtr & shortcut, const Uint32 index);
+		void quickuse(const CharacterDataPtr & charData, const Uint32 index);
 		/**
 		 * Removes shortcuts that have become invalid.
 		 */
 		void cullShortcuts();
 		Uint32 getMaxSize() const;
-		ShortcutVector::const_iterator startIterator() const;
-		ShortcutVector::const_iterator endIterator() const;
+		QuickuseVector::const_iterator startIterator() const;
+		QuickuseVector::const_iterator endIterator() const;
 	};
 
-	using ShortcutBarPtr = std::shared_ptr<ShortcutBar>;
-	using ShortcutBarCPtr = std::shared_ptr<const ShortcutBar>;
+	using QuickuseBarPtr = std::shared_ptr<QuickuseBar>;
+	using QuickuseBarCPtr = std::shared_ptr<const QuickuseBar>;
 
 	/**
 	 * This template data structure specifies the default parameters and state of the character
@@ -170,7 +178,7 @@ namespace fauna {
 		H_Item
 	};
 
-	class CharacterData {
+	class CharacterData : public std::enable_shared_from_this<CharacterData> {
 	private:
 		Uint64 charId;
 		Uint32 CurrentHeldItemIndex;
@@ -181,11 +189,10 @@ namespace fauna {
 		Uint32 defaultMaxHP;
 		Uint32 defaultMaxFullness;
 
-		ShortcutBarPtr currentShortcutBarRef;
-
-	public:
+		QuickuseBarPtr currentShortcutBarRef;
 		InventoryPtr inventoryRef;
 
+	public:
 		const CharacterDataTemplate & Template;
 
 
@@ -194,21 +201,39 @@ namespace fauna {
 		CharacterData(const CharacterDataTemplate & tmp);
 		
 		Uint64 getCharId() const { return charId; }
+		
+
+		// Inventory management
+		
+		void switchHeldItem(const Uint32 index);
+		void switchHandAction(const EHandAction action);
 
 		Uint32 getCurrentHeldItemIndex() const { return CurrentHeldItemIndex; }
 		EHandAction getCurrentHandAction() const { return CurrentHandAction; }
 		items::ItemDataPtr getCurrentItemInInventory();
 		items::ItemDataPtr placeCurrentItemInInventory();
-		InventorySlotPtr getItemInInventory(const Uint32 index) {
-			return (*inventoryRef)[index];
-		}
+		InventorySlotPtr getItemInInventory(const Uint32 index);
 
-		void addToCurrentShortcutSet(const ShortcutPtr & shortcut, const Uint32 index);
-		void removeFromCurrentShortcutSet(const ShortcutPtr & shortcut, const Uint32 index);
+		bool addItemsToInventory(const items::ItemDataPtr & item, const Uint32 count = 1);
 
 		InventoryCPtr getInventory() const;
-		ShortcutBarCPtr getCurrentShortcutSet() const;
-		ShortcutBarPtr getCurrentShortcutSet();
+
+		Uint32 nextHeldItem();
+		Uint32 prevHeldItem();
+
+
+		// Quickuse bar
+
+		QuickuseBarCPtr getCurrentShortcutSet() const;
+		QuickuseBarPtr getCurrentShortcutSet();
+		
+		void quickuse(const Uint32 index);
+
+		void addToCurrentShortcutSet(const IQuickusePtr & shortcut, const Uint32 index);
+		void removeFromCurrentShortcutSet(const IQuickusePtr & shortcut, const Uint32 index);
+
+
+		// Player basic stats
 
 		Uint32 getCurrentHP() const { return currentHP; }
 		Uint32 getCurrentFullness() const { return currentFullness; }
@@ -218,12 +243,8 @@ namespace fauna {
 		void setCurrentHP(const Uint32 cHP) { currentHP = cHP; }
 		void setCurrentFullness(const Uint32 cFullness) { currentFullness = cFullness; }
 
-		void switchHandAction(const EHandAction action) {
-			CurrentHandAction = action;
-		}
 
-		Uint32 nextHeldItem();
-		Uint32 prevHeldItem();
+		// Environment interactions
 
 		bool startUsingItem(items::ItemDataPtr & itemData);
 		bool stopUsingItem();

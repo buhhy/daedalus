@@ -1,12 +1,15 @@
 #include <Daedalus.h>
-#include "DDPlayerController.h"
+#include <Controllers/DDPlayerController.h>
 
 #include <Actors/Characters/PlayerCharacter.h>
 #include <Controllers/DDGameState.h>
 #include <Utilities/UnrealBridge.h>
 
+#include <functional>
+
 using namespace events;
 using namespace utils;
+using namespace gui;
 
 ADDPlayerController::ADDPlayerController(const class FPostConstructInitializeProperties& PCIP)
 	: Super(PCIP)
@@ -38,12 +41,36 @@ void ADDPlayerController::SetupInputComponent() {
 	ins->BindAction("Escape", IE_Released, this, &ADDPlayerController::onEscape);
 	ins->BindAction("ToggleHandAction", IE_Released, this, &ADDPlayerController::onToggleHandAction);
 	ins->BindAction("ToggleDashboard", IE_Released, this, &ADDPlayerController::onToggleDashboardUI);
+	
+	ins->BindAction("Quickuse1", IE_Pressed, this, &ADDPlayerController::onQuickUse<0>);
+	ins->BindAction("Quickuse2", IE_Pressed, this, &ADDPlayerController::onQuickUse<1>);
+	ins->BindAction("Quickuse3", IE_Pressed, this, &ADDPlayerController::onQuickUse<2>);
+	ins->BindAction("Quickuse4", IE_Pressed, this, &ADDPlayerController::onQuickUse<3>);
+	ins->BindAction("Quickuse5", IE_Pressed, this, &ADDPlayerController::onQuickUse<4>);
+	ins->BindAction("Quickuse6", IE_Pressed, this, &ADDPlayerController::onQuickUse<5>);
+	ins->BindAction("Quickuse7", IE_Pressed, this, &ADDPlayerController::onQuickUse<6>);
+	ins->BindAction("Quickuse8", IE_Pressed, this, &ADDPlayerController::onQuickUse<7>);
 }
 
 void ADDPlayerController::BeginPlay() {
 	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Green, TEXT("Using DDPlayerController"));
 
 	playerHUD = Cast<APlayerHUD>(GetHUD());
+}
+
+bool ADDPlayerController::InputKey(
+	FKey key, EInputEvent evtType,
+	float amtDep, bool bGamepad
+) {
+	bool ret = APlayerController::InputKey(key, evtType, amtDep, bGamepad);
+	
+	// Check for keyboard input for text areas.
+	/*if (isMainMenuOpen()) {
+	} else if (isHUDDashboardOpen()) {
+	} else {
+	}*/
+
+	return ret;
 }
 
 void ADDPlayerController::setHUDDashboardOpen(const bool isOpen) {
@@ -122,6 +149,16 @@ void ADDPlayerController::lookRight(float amount) {
 	}
 }
 
+void ADDPlayerController::onQuickUse(const Uint8 slot) {
+	if (isMainMenuOpen()) {
+	} else if (isHUDDashboardOpen()) {
+	} else {
+		auto ch = getOwnedCharacter();
+		if (ch)
+			ch->quickuse(slot);
+	}
+}
+
 void ADDPlayerController::onHoldJump() {
 	if (isMainMenuOpen()) {
 	} else if (isHUDDashboardOpen()) {
@@ -145,7 +182,7 @@ void ADDPlayerController::onReleaseJump() {
 void ADDPlayerController::onRightMouseDown() {
 	if (isMainMenuOpen()) {
 	} else if (isHUDDashboardOpen()) {
-		playerHUD->onMouseDown(APlayerHUD::BUTTON_PRESS_RIGHT);
+		playerHUD->onMouseDown(MouseEvent::BUTTON_PRESS_RIGHT);
 	} else {
 		auto ch = getOwnedCharacter();
 		if (ch)
@@ -156,7 +193,7 @@ void ADDPlayerController::onRightMouseDown() {
 void ADDPlayerController::onRightMouseUp() {
 	if (isMainMenuOpen()) {
 	} else if (isHUDDashboardOpen()) {
-		playerHUD->onMouseUp(APlayerHUD::BUTTON_PRESS_RIGHT);
+		playerHUD->onMouseUp(MouseEvent::BUTTON_PRESS_RIGHT);
 	} else {
 		auto ch = getOwnedCharacter();
 		if (ch)
@@ -167,7 +204,7 @@ void ADDPlayerController::onRightMouseUp() {
 void ADDPlayerController::onLeftMouseDown() {
 	if (isMainMenuOpen()) {
 	} else if (isHUDDashboardOpen()) {
-		playerHUD->onMouseDown(APlayerHUD::BUTTON_PRESS_LEFT);
+		playerHUD->onMouseDown(MouseEvent::BUTTON_PRESS_LEFT);
 	} else {
 		auto ch = getOwnedCharacter();
 		if (ch)
@@ -178,7 +215,7 @@ void ADDPlayerController::onLeftMouseDown() {
 void ADDPlayerController::onLeftMouseUp() {
 	if (isMainMenuOpen()) {
 	} else if (isHUDDashboardOpen()) {
-		playerHUD->onMouseUp(APlayerHUD::BUTTON_PRESS_LEFT);
+		playerHUD->onMouseUp(MouseEvent::BUTTON_PRESS_LEFT);
 	} else {
 		auto ch = getOwnedCharacter();
 		if (ch)

@@ -9,9 +9,11 @@ using namespace gui;
 
 APlayerHUD::APlayerHUD(const class FPostConstructInitializeProperties & PCIP) :
 	Super(PCIP), cursorPosition(0, 0), bDashboardOpen(false), mouseButtonsActive(0),
-	currentCursorType(C_Pointer), previousCursorType(C_Pointer),
+	currentCursorType(MouseEvent::C_Pointer), previousCursorType(MouseEvent::C_Pointer),
 	rootNode(new HUDElement({ 0u, 0u }, { 0u, 0u })),
-	quickbarNode(new Quickbar())
+	quickbarNode(new QuickuseBarElement()),
+	inventoryNode(new InventoryElement()),
+	cursorNode(new CursorElement())
 {}
 
 void APlayerHUD::drawDefaultHUDElements(
@@ -24,6 +26,9 @@ void APlayerHUD::drawDefaultHUDElements(
 	auto uiFontLatoSmall = resourceCache->findFont("Lato", 12);
 
 	quickbarNode->updateQuickbar(characterData->getCurrentShortcutSet());
+	inventoryNode->updateData(
+		characterData->getInventory(), characterData->getCurrentShortcutSet()->getMaxSize());
+
 	rootNode->resize({ (double) screenW, (double) screenH });
 	rootNode->runLogic(0);
 	rootNode->drawElementTree(this, resourceCache);
@@ -41,30 +46,6 @@ void APlayerHUD::drawDefaultHUDElements(
 	DrawRect(FLinearColor(0, 0.85, 0.2), 0, 0, screenW, 20);
 	DrawText(healthStr, FLinearColor(1, 1, 1),
 		(screenW - healthStrWidth) / 2, 2, uiFontLatoSmall);
-
-	// Draw shortcut bar.
-	//const float slotSize = 64, slotBorder = 4;
-	//const auto curSBar = characterData->getCurrentShortcutSet();
-	//const auto barCount = curSBar->getMaxSize();
-	//Uint32 i = 0;
-	//for (auto it = curSBar->startIterator(); it != curSBar->endIterator(); ++it) {
-	//	float x = screenW / 2 + (i - barCount / 2.0) * (slotSize + slotBorder) + slotBorder / 2;
-	//	float y = screenH - (slotSize + slotBorder);
-	//	if (*it && (*it)->isValid()) {
-	//		auto icon = resourceCache->findIcon((*it)->getIconName());
-	//		auto count = (*it)->getQuantity();
-	//		DrawTexture(icon, x, y, slotSize, slotSize, 0, 0, 1.0, 1.0);
-	//		if (count.IsValid()) {
-	//			ss << *count;
-	//			DrawText(FString(UTF8_TO_TCHAR(ss.str().c_str())),
-	//				FLinearColor(1, 1, 1), x + 5, y + 5, uiFontLatoSmall);
-	//			ss.str(""); ss.clear();
-	//		}
-	//	} else {
-	//		DrawRect(FLinearColor(0.5, 0.5, 0.5), x, y, slotSize, slotSize);
-	//	}
-	//	i++;
-	//}
 }
 
 void APlayerHUD::drawDashboardElements(
@@ -79,11 +60,11 @@ void APlayerHUD::drawDashboardElements(
 }
 
 void APlayerHUD::drawCursor(ADDGameState * gameState) {
-	const auto resourceCache = gameState->getResourceCacheRef();
+	//const auto resourceCache = gameState->getResourceCacheRef();
 
-	std::string cursorSuffix;
-	if (mouseButtonsActive & BUTTON_PRESS_LEFT)
-		cursorSuffix = "-Active";
+	//std::string cursorSuffix;
+	//if (mouseButtonsActive & MouseEvent::BUTTON_PRESS_LEFT)
+	//	cursorSuffix = "-Active";
 	//switch (currentCursorType) {
 	//case C_Hover:
 	//	cursorSuffix = "-Hover";
@@ -95,10 +76,10 @@ void APlayerHUD::drawCursor(ADDGameState * gameState) {
 	//	break;
 	//}
 
-	UTexture2D * cursorTexture = resourceCache->findIcon(
-		"Pointer" + cursorSuffix, ResourceCache::ICON_CURSOR_FOLDER);
+	//UTexture2D * cursorTexture = resourceCache->findIcon(
+	//	"Pointer" + cursorSuffix, ResourceCache::ICON_CURSOR_FOLDER);
 
-	DrawTextureSimple(cursorTexture, cursorPosition.X, cursorPosition.Y);
+	//DrawTextureSimple(cursorTexture, cursorPosition.X, cursorPosition.Y);
 }
 
 void APlayerHUD::DrawHUD() {
@@ -144,6 +125,8 @@ void APlayerHUD::PostInitializeComponents() {
 
 	// Set up GUI.
 	rootNode->appendChild(quickbarNode);
+	rootNode->appendChild(inventoryNode);
+	rootNode->appendChild(cursorNode);
 }
 
 void APlayerHUD::setDashboardOpen(const bool isOpen) {
@@ -156,12 +139,15 @@ bool APlayerHUD::isDashboardOpen() const {
 
 void APlayerHUD::onMouseMove(const Point2D & position) {
 	cursorPosition = position;
+	rootNode->checkMouseMove(position);
 }
 
 void APlayerHUD::onMouseDown(const Uint8 whichBtn) {
 	mouseButtonsActive |= whichBtn;
+	rootNode->checkMouseDown(MouseEvent(cursorPosition, mouseButtonsActive));
 }
 
 void APlayerHUD::onMouseUp(const Uint8 whichBtn) {
 	mouseButtonsActive ^= whichBtn;
+	rootNode->checkMouseUp(MouseEvent(cursorPosition, mouseButtonsActive));
 }

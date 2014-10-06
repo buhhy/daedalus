@@ -5,6 +5,7 @@ public class Daedalus : ModuleRules
 	public Daedalus(TargetInfo Target) {
 		MinFilesUsingPrecompiledHeaderOverride = 1;
 		bFasterWithoutUnity = true;
+		bUseRTTI = true;
 
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"Core", "CoreUObject", "Engine", "InputCore",

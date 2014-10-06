@@ -26,6 +26,7 @@ protected:
 	virtual void moveRight(float amount) override;
 	virtual void lookUp(float amount) override;
 	virtual void lookRight(float amount) override;
+	virtual void quickuse(const Uint8 slot) override {}
 	virtual void holdJump() override;
 	virtual void releaseJump() override;
 	virtual void rightMouseDown() override;
