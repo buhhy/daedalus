@@ -94,30 +94,13 @@ namespace utils {
 	template <typename T>
 	Option<T> None() { return Option<T>(); }
 
+	template<typename T>
+	size_t hash(const std::shared_ptr<T> & ptr)	{
+		return ((size_t) ptr.get()) / sizeof(T);
+	}
 
-	//template <typename T>
-	//struct Option {
-	//private:
-	//	bool HasValue;
-	//	std::unique_ptr<T> Opt;
-
-	//public:
-	//	Option() : Opt{nullptr}, HasValue{false} {}
-	//	Option(const T & val) : Opt{new T(val)}, HasValue{true} {}
-	//	Option(T && val) : Opt{new T(val)}, HasValue{true} {}
-	//	Option(const Option<T> & other) :
-	//		Opt{other.HasValue ? new T(*other.Opt) : nullptr}, HasValue{other.HasValue}
-	//	{}
-
-	//	bool IsValid() const { return HasValue; }
-	//	T & operator()() {
-	//		if (HasValue) return *Opt;
-	//		throw StringException("Option::Get: Trying to get value from <None>");
-	//	}
-	//	
-	//	const T & operator()() const {
-	//		if (HasValue) return *Opt;
-	//		throw StringException("Option::Get: Trying to get value from <None>");
-	//	}
-	//};
+	template<typename T>
+	bool equal_to(const std::shared_ptr<T> & left, const std::shared_ptr<T> & right) {
+		return left.get() == right.get();
+	}
 }

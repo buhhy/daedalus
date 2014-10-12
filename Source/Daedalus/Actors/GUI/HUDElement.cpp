@@ -15,13 +15,23 @@ namespace gui {
 	{}
 
 	HUDElement::HUDElement() : HUDElement({ 0, 0 }, { 0, 0 }) {}
+	
+	HUDElementPtr HUDElement::clone() const {
+		return nullptr;
+	};
 
 	bool HUDElement::isMouseInside() const {
 		return bIsMouseInside;
 	}
 
-	void HUDElement::tick() {}
-	void HUDElement::drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache) {}
+	void HUDElement::copyProperties(const HUDElementPtr & element) const {
+		element->setHidden(bIsHidden);
+		element->resize(bounds.size);
+		element->reposition(bounds.origin);
+
+		for (const auto & child : children)
+			element->appendChild(child->clone());
+	}
 	
 	void HUDElement::onMouseMove(const utils::Point2D & position) {}
 
@@ -37,30 +47,74 @@ namespace gui {
 		return true; // Should propagate
 	}
 
-	bool HUDElement::onMouseUp(const MouseEvent & evt) {
+	bool HUDElement::onMouseUp(const MouseEvent & evt, const bool isInside) {
 		return true; // Should propagate
 	}
 
 	void HUDElement::preMouseDown(const MouseEvent & evt) {}
-	void HUDElement::preMouseUp(const MouseEvent & evt) {}
+	void HUDElement::preMouseUp(const MouseEvent & evt, const bool isInside) {}
 
 	void HUDElement::attachTo(const HUDElementPtr & node) {
-		parent = node;
+		detach();
+		if (node)
+			parent->appendChild(shared_from_this());
+	}
+	
+	void HUDElement::detach() {
+		if (parent)
+			parent->removeChild(shared_from_this());
 	}
 
-	bool HUDElement::appendChild(const HUDElementPtr & child) {
-		children.push_back(child);
-		child->attachTo(shared_from_this());
-		return true;
+	void HUDElement::appendChild(const HUDElementPtr & child) {
+		if (child) {
+			// If this child already exists in the children list, then remove it, and
+			// re-append to the end of the children list. Otherwise, we need to detach
+			// it from its existing parent.
+			child->detach();
+			children.push_back(child);
+			child->parent = shared_from_this();
+		}
+	}
+
+	void HUDElement::insertChild(const HUDElementPtr & child, const Uint32 index) {
+		if (child) {
+			// If this child already exists in the children list, then remove it, and
+			// re-append to the end of the children list. Otherwise, we need to detach
+			// it from its existing parent.
+			child->detach();
+			children.insert(children.cbegin() + index, child);
+			child->parent = shared_from_this();
+		}
+	}
+
+	bool HUDElement::removeChild(const HUDElementPtr & possibleChild) {
+		bool removed = false;
+		for (Uint32 i = 0; i < childCount(); i++) {
+			if (getChild(i) == possibleChild) {
+				removeChild(i);
+				removed = true;
+			}
+		}
+
+		return removed;
 	}
 
 	HUDElementPtr HUDElement::removeChild(const Uint32 index) {
 		if (index >= childCount())
 			return nullptr;
-		return *(children.erase(children.begin() + index));
+		auto removed = *(children.erase(children.begin() + index));
+		// Detach this child from any existing parents.
+		removed->parent = nullptr;
+		return removed;
 	}
 	
 	HUDElementPtr HUDElement::getChild(const Uint32 index) {
+		if (index >= childCount())
+			return nullptr;
+		return children[index];
+	}
+	
+	HUDElementCPtr HUDElement::getChild(const Uint32 index) const {
 		if (index >= childCount())
 			return nullptr;
 		return children[index];
@@ -69,13 +123,21 @@ namespace gui {
 	HUDElementPtr HUDElement::getParent() {
 		return parent;
 	}
+	
+	Option<Uint32> HUDElement::findChildIndex(const HUDElementPtr & possibleChild) const {
+		for (Uint32 i = 0; i < childCount(); i++) {
+			if (getChild(i) == possibleChild)
+				return Some(i);
+		}
+		return None<Uint32>();
+	}
 
 	Uint32 HUDElement::childCount() const {
 		return children.size();
 	}
 
 	bool HUDElement::hitTest(const utils::Point2D & pointerPos) {
-		return getBounds().isInside(pointerPos);
+		return getAbsoluteBounds().isInside(pointerPos);
 	}
 
 	const utils::Box2D & HUDElement::getBounds() const {
@@ -86,6 +148,11 @@ namespace gui {
 		if (parent)
 			return parent->getAbsolutePosition() + bounds.origin;
 		return bounds.origin;
+	}
+
+	Box2D HUDElement::getAbsoluteBounds() const {
+		// TODO: account for actual transforms, not just translation
+		return Box2D(getAbsolutePosition(), getBounds().size);
 	}
 	
 	void HUDElement::drawElementTree(APlayerHUD * hud, const ResourceCacheCPtr & rcache) {
@@ -123,8 +190,8 @@ namespace gui {
 	}
 
 	bool HUDElement::checkMouseDown(const MouseEvent & evt) {
-		for (auto & child : children) {
-			if (!child->checkMouseDown(evt))
+		for (Uint32 i = 0; i < childCount(); i++) {
+			if (!getChild(i)->checkMouseDown(evt))
 				return false;
 		}
 
@@ -138,18 +205,14 @@ namespace gui {
 	}
 
 	bool HUDElement::checkMouseUp(const MouseEvent & evt) {
-		for (auto & child : children) {
-			if (!child->checkMouseUp(evt))
+		for (Uint32 i = 0; i < childCount(); i++) {
+			if (!getChild(i)->checkMouseUp(evt))
 				return false;
 		}
 
 		bool isInside = hitTest(evt.position);
-		if (isInside) {
-			preMouseUp(evt);
-			return onMouseUp(evt);
-		}
-
-		return true;
+		preMouseUp(evt, isInside);
+		return onMouseUp(evt, isInside);
 	}
 
 	void HUDElement::resize(const utils::Point2D & newSize) {
@@ -168,12 +231,48 @@ namespace gui {
 		return bIsHidden;
 	}
 
+
+
+	/********************************************************************************
+	 * DivElement
+	 ********************************************************************************/
+
+	DivElement::DivElement(const utils::Point2D & origin, const utils::Point2D & size) :
+		HUDElement(origin, size)
+	{}
+
+	DivElement::DivElement() : DivElement({ 0, 0 }, { 0, 0 }) {}
+
+	DivElement * DivElement::createNew() const {
+		return new DivElement();
+	}
+	void DivElement::tick() {}
+	void DivElement::drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache) {}
+	
+	DivElementPtr DivElement::clone() const {
+		const auto ret = DivElementPtr(createNew());
+		copyProperties(ret);
+		return ret;
+	}
+
 	
 	
 	/********************************************************************************
 	 * CursorElement
 	 ********************************************************************************/
-	
+
+	CursorElement::CursorElement() :
+		previousCursorPosition(0, 0),
+		currentCursorPosition(0, 0),
+		mouseButtonsActive(0),
+		currentCursorType(MouseEvent::C_Pointer),
+		previousCursorType(MouseEvent::C_Pointer)
+	{}
+
+	CursorElement * CursorElement::createNew() const {
+		return new CursorElement();
+	}
+
 	void CursorElement::tick() {
 		if (parent)
 			resize(parent->getBounds().size);
@@ -199,22 +298,53 @@ namespace gui {
 		UTexture2D * cursorTexture = rcache->findIcon(
 			cursorPrefix + cursorSuffix, ResourceCache::ICON_CURSOR_FOLDER);
 
-		hud->DrawTextureSimple(cursorTexture, cursorPosition.X, cursorPosition.Y);
+		hud->DrawTextureSimple(
+			cursorTexture, currentCursorPosition.X, currentCursorPosition.Y);
 	}
 
 	void CursorElement::onMouseMove(const utils::Point2D & position) {
-		cursorPosition = position;
+		setCursorPosition(position);
 	}
 
 	bool CursorElement::onMouseDown(const MouseEvent & evt) {
-		cursorPosition = evt.position;
-		mouseButtonsActive = evt.activeButtons;
+		setCursorPosition(evt.position);
+		mouseButtonsActive |= evt.whichButtons;
 		return true;
 	}
 
-	bool CursorElement::onMouseUp(const MouseEvent & evt) {
-		cursorPosition = evt.position;
-		mouseButtonsActive = evt.activeButtons;
+	bool CursorElement::onMouseUp(const MouseEvent & evt, const bool isInside) {
+		setCursorPosition(evt.position);
+		mouseButtonsActive ^= evt.whichButtons;
 		return true;
+	}
+	
+	void CursorElement::setCursorPosition(const utils::Point2D & pos) {
+		previousCursorPosition = currentCursorPosition;
+		currentCursorPosition = pos;
+		const auto delta = currentCursorPosition - previousCursorPosition;
+
+		// Reposition children.
+		if (childCount() > 0 && !EEq(delta.Length2(), 0)) {
+			for (const auto child : draggingElements) {
+				const auto newPos = child->getBounds().origin + delta;
+				child->reposition(newPos);
+			}
+		}
+	}
+
+	CursorElementPtr CursorElement::clone() const {
+		const auto ret = CursorElementPtr(createNew());
+		copyProperties(ret);
+		return ret;
+	}
+
+	void CursorElement::startDragElement(const DraggableElementPtr & element) {
+		draggingElements.insert(element);
+		appendChild(element);
+	}
+
+	void CursorElement::stopDragElement(const DraggableElementPtr & element) {
+		draggingElements.erase(element);
+		removeChild(element);
 	}
 }

@@ -17,7 +17,7 @@ private:
 
 
 	IControllableCharacter * getOwnedCharacter();
-	utils::Point2D ADDPlayerController::getMousePosition() const;
+	utils::Point2D getMousePosition() const;
 
 protected:
 	virtual void BeginPlay() override;

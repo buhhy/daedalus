@@ -11,11 +11,19 @@ namespace gui {
 	 * QuickuseBarElement
 	 ********************************************************************************/
 
-	QuickuseBarElement::QuickuseBarElement(const Point2D & origin, const Point2D & size) :
-		HUDElement(origin, size), cachedQuickbarSize(0)
+	QuickuseBarElement::QuickuseBarElement(
+		const Point2D & origin, const Point2D & size,
+		const CursorElementPtr & cursorRef
+	) : HUDElement(origin, size), cachedQuickbarSize(0), cursorRef(cursorRef)
 	{}
 	
-	QuickuseBarElement::QuickuseBarElement() : QuickuseBarElement({ 0, 0 }, { 0, 0 }) {}
+	QuickuseBarElement::QuickuseBarElement(const CursorElementPtr & cursorRef) :
+		QuickuseBarElement({ 0, 0 }, { 0, 0 }, cursorRef)
+	{}
+
+	QuickuseBarElement * QuickuseBarElement::createNew() const {
+		return new QuickuseBarElement(cursorRef);
+	}
 
 	void QuickuseBarElement::tick() {
 		// Update size.
@@ -25,13 +33,24 @@ namespace gui {
 			reposition(Point2D(0, parentBounds.size.Y));
 		}
 	}
+	
+	void QuickuseBarElement::copyProperties(const QuickuseBarElementPtr & element) const {
+		HUDElement::copyProperties(element);
+		element->updateQuickbar(model);
+	}
 
 	void QuickuseBarElement::drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache) {}
 		
 	bool QuickuseBarElement::onMouseOver(const Point2D & position) { return true; }
 	bool QuickuseBarElement::onMouseLeave(const Point2D & position) { return true; }
 	bool QuickuseBarElement::onMouseDown(const MouseEvent & evt) { return true; }
-	bool QuickuseBarElement::onMouseUp(const MouseEvent & evt) { return true; }
+	bool QuickuseBarElement::onMouseUp(const MouseEvent & evt, const bool isInside) { return true; }
+
+	QuickuseBarElementPtr QuickuseBarElement::clone() const {
+		const auto ret = QuickuseBarElementPtr(createNew());
+		copyProperties(ret);
+		return ret;
+	}
 
 	void QuickuseBarElement::updateQuickbar(const QuickuseBarPtr & bar) {
 		const double slotSize = 64, slotBorder = 4;
@@ -46,9 +65,9 @@ namespace gui {
 			newSize = model->getMaxSize();
 
 			for (; newSize > cachedQuickbarSize; cachedQuickbarSize++) {
-				appendChild(HUDElementPtr(
+				appendChild(QuickuseItemElementPtr(
 					new QuickuseItemElement({ 0, 0 }, { slotSize, slotSize },
-					(*model)[cachedQuickbarSize])));
+					(*model)[cachedQuickbarSize], cursorRef)));
 				hasChanged = true;
 			}
 		}
@@ -80,11 +99,18 @@ namespace gui {
 	 ********************************************************************************/
 
 	QuickuseItemElement::QuickuseItemElement(
-		const Point2D & origin,
-		const Point2D & size,
-		const IQuickuseCPtr & model
-	) : HUDElement(origin, size), model(model)
-	{}
+		const Point2D & origin, const Point2D & size,
+		const IQuickuseCPtr & model,
+		const CursorElementPtr & cursorRef
+	) : IDraggable({ DraggableParameters::DT_DragMove }, cursorRef), model(model)
+	{
+		reposition(origin);
+		resize(size);
+	}
+
+	QuickuseItemElement * QuickuseItemElement::createNew() const {
+		return new QuickuseItemElement(bounds.origin, bounds.size, model, cursorRef);
+	}
 
 	void QuickuseItemElement::tick() {}
 
@@ -116,7 +142,13 @@ namespace gui {
 	bool QuickuseItemElement::onMouseOver(const Point2D & position) { return true; }
 	bool QuickuseItemElement::onMouseLeave(const Point2D & position) { return true; }
 	bool QuickuseItemElement::onMouseDown(const MouseEvent & evt) { return true; }
-	bool QuickuseItemElement::onMouseUp(const MouseEvent & evt) { return true; }
+	bool QuickuseItemElement::onMouseUp(const MouseEvent & evt, const bool isInside) { return true; }
+
+	QuickuseItemElementPtr QuickuseItemElement::clone() const {
+		const auto ret = QuickuseItemElementPtr(createNew());
+		copyProperties(ret);
+		return ret;
+	}
 
 
 
@@ -124,11 +156,25 @@ namespace gui {
 	 * QuickuseBarElement
 	 ********************************************************************************/
 
-	InventoryElement::InventoryElement(const Point2D & origin, const Point2D & size) :
-		HUDElement(origin, size), cachedInventorySize(0), itemsPerRow(4)
+	InventoryElement::InventoryElement(
+		const Point2D & origin, const Point2D & size,
+		const CursorElementPtr & cursorRef
+	) : HUDElement(origin, size), cachedInventorySize(0),
+		itemsPerRow(4), cursorRef(cursorRef)
 	{}
 	
-	InventoryElement::InventoryElement() : InventoryElement({ 0, 0 }, { 0, 0 }) {}
+	InventoryElement::InventoryElement(const CursorElementPtr & cursorRef) :
+		InventoryElement({ 0, 0 }, { 0, 0 }, cursorRef)
+	{}
+	
+	InventoryElement * InventoryElement::createNew() const {
+		return new InventoryElement(cursorRef);
+	}
+	
+	void InventoryElement::copyProperties(const InventoryElementPtr & element) const {
+		HUDElement::copyProperties(element);
+		element->updateData(model, itemsPerRow);
+	}
 
 	void InventoryElement::tick() {
 		// Update size.
@@ -145,7 +191,7 @@ namespace gui {
 	bool InventoryElement::onMouseOver(const Point2D & position) { return true; }
 	bool InventoryElement::onMouseLeave(const Point2D & position) { return true; }
 	bool InventoryElement::onMouseDown(const MouseEvent & evt) { return true; }
-	bool InventoryElement::onMouseUp(const MouseEvent & evt) { return true; }
+	bool InventoryElement::onMouseUp(const MouseEvent & evt, const bool isInside) { return true; }
 	
 	void InventoryElement::reflowElements() {
 		const double slotSize = 64, slotBorder = 4;
@@ -168,6 +214,12 @@ namespace gui {
 		resize(Point2D(calcOffset(itemsPerRow), calcOffset(rowCount)));
 	}
 
+	InventoryElementPtr InventoryElement::clone() const {
+		const auto ret = InventoryElementPtr(createNew());
+		copyProperties(ret);
+		return ret;
+	}
+
 	void InventoryElement::updateData(const InventoryCPtr & inventory, const Uint32 rowItems) {
 		const double slotSize = 64, slotBorder = 4;
 		bool hasChanged = rowItems != itemsPerRow;
@@ -181,9 +233,9 @@ namespace gui {
 			newSize = model->GetMaxSize();
 
 			for (; newSize > cachedInventorySize; cachedInventorySize++) {
-				appendChild(HUDElementPtr(
+				appendChild(QuickuseItemElementPtr(
 					new QuickuseItemElement({ 0, 0 }, { slotSize, slotSize },
-					(*model)[cachedInventorySize])));
+					(*model)[cachedInventorySize], cursorRef)));
 				hasChanged = true;
 			}
 		}

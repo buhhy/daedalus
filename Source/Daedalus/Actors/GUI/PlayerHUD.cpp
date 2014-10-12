@@ -10,10 +10,10 @@ using namespace gui;
 APlayerHUD::APlayerHUD(const class FPostConstructInitializeProperties & PCIP) :
 	Super(PCIP), cursorPosition(0, 0), bDashboardOpen(false), mouseButtonsActive(0),
 	currentCursorType(MouseEvent::C_Pointer), previousCursorType(MouseEvent::C_Pointer),
-	rootNode(new HUDElement({ 0u, 0u }, { 0u, 0u })),
-	quickbarNode(new QuickuseBarElement()),
-	inventoryNode(new InventoryElement()),
-	cursorNode(new CursorElement())
+	rootNode(new DivElement()), dashboardRootNode(new DivElement()),
+	cursorNode(new CursorElement()),
+	quickbarNode(new QuickuseBarElement(cursorNode)),
+	inventoryNode(new InventoryElement(cursorNode))
 {}
 
 void APlayerHUD::drawDefaultHUDElements(
@@ -25,11 +25,13 @@ void APlayerHUD::drawDefaultHUDElements(
 	const auto screenH = Canvas->SizeY;
 	auto uiFontLatoSmall = resourceCache->findFont("Lato", 12);
 
+	rootNode->resize({ (double) screenW, (double) screenH });
+	dashboardRootNode->resize({ (double) screenW, (double) screenH });
+
 	quickbarNode->updateQuickbar(characterData->getCurrentShortcutSet());
 	inventoryNode->updateData(
 		characterData->getInventory(), characterData->getCurrentShortcutSet()->getMaxSize());
 
-	rootNode->resize({ (double) screenW, (double) screenH });
 	rootNode->runLogic(0);
 	rootNode->drawElementTree(this, resourceCache);
 
@@ -59,29 +61,6 @@ void APlayerHUD::drawDashboardElements(
 	DrawText(FString(TEXT("OPENED")), FLinearColor(1, 1, 1), screenW / 2, screenH / 2);
 }
 
-void APlayerHUD::drawCursor(ADDGameState * gameState) {
-	//const auto resourceCache = gameState->getResourceCacheRef();
-
-	//std::string cursorSuffix;
-	//if (mouseButtonsActive & MouseEvent::BUTTON_PRESS_LEFT)
-	//	cursorSuffix = "-Active";
-	//switch (currentCursorType) {
-	//case C_Hover:
-	//	cursorSuffix = "-Hover";
-	//	break;
-	//case C_Active:
-	//	cursorSuffix = "-Active";
-	//	break;
-	//default:
-	//	break;
-	//}
-
-	//UTexture2D * cursorTexture = resourceCache->findIcon(
-	//	"Pointer" + cursorSuffix, ResourceCache::ICON_CURSOR_FOLDER);
-
-	//DrawTextureSimple(cursorTexture, cursorPosition.X, cursorPosition.Y);
-}
-
 void APlayerHUD::DrawHUD() {
 	Super::DrawHUD();
 
@@ -100,7 +79,6 @@ void APlayerHUD::DrawHUD() {
 		drawDefaultHUDElements(characterData, gameState);
 		if (bDashboardOpen) {
 			drawDashboardElements(characterData, gameState);
-			drawCursor(gameState);
 		}
 	}
 }
@@ -125,12 +103,15 @@ void APlayerHUD::PostInitializeComponents() {
 
 	// Set up GUI.
 	rootNode->appendChild(quickbarNode);
-	rootNode->appendChild(inventoryNode);
-	rootNode->appendChild(cursorNode);
+	rootNode->appendChild(dashboardRootNode);
+	dashboardRootNode->appendChild(inventoryNode);
+	dashboardRootNode->appendChild(cursorNode);
+	setDashboardOpen(false);
 }
 
 void APlayerHUD::setDashboardOpen(const bool isOpen) {
 	bDashboardOpen = isOpen;
+	dashboardRootNode->setHidden(!isOpen);
 }
 
 bool APlayerHUD::isDashboardOpen() const {
@@ -144,10 +125,10 @@ void APlayerHUD::onMouseMove(const Point2D & position) {
 
 void APlayerHUD::onMouseDown(const Uint8 whichBtn) {
 	mouseButtonsActive |= whichBtn;
-	rootNode->checkMouseDown(MouseEvent(cursorPosition, mouseButtonsActive));
+	rootNode->checkMouseDown(MouseEvent(cursorPosition, whichBtn));
 }
 
 void APlayerHUD::onMouseUp(const Uint8 whichBtn) {
 	mouseButtonsActive ^= whichBtn;
-	rootNode->checkMouseUp(MouseEvent(cursorPosition, mouseButtonsActive));
+	rootNode->checkMouseUp(MouseEvent(cursorPosition, whichBtn));
 }

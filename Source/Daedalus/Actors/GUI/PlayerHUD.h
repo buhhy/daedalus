@@ -20,10 +20,11 @@ private:
 	gui::MouseEvent::CursorType currentCursorType;
 	gui::MouseEvent::CursorType previousCursorType;
 
-	gui::HUDElementPtr rootNode;
-	gui::InventoryElementPtr inventoryNode;
-	gui::QuickbarPtr quickbarNode;
+	gui::DivElementPtr rootNode;
+	gui::DivElementPtr dashboardRootNode;
 	gui::CursorElementPtr cursorNode;
+	gui::InventoryElementPtr inventoryNode;
+	gui::QuickuseBarElementPtr quickbarNode;
 
 
 
@@ -31,7 +32,6 @@ private:
 		fauna::CharacterDataPtr & characterData, ADDGameState * gameState);
 	void drawDashboardElements(
 		fauna::CharacterDataPtr & characterData, ADDGameState * gameState);
-	void drawCursor(ADDGameState * gameState);
 
 protected:
 	//TSharedPtr<SInventoryPanel> InventoryUI;
