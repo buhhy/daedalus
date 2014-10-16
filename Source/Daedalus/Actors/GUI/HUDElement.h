@@ -51,7 +51,7 @@ namespace gui {
 
 		utils::Box2D bounds;
 		HUDElementList children;
-		HUDElementPtr parent;
+		HUDElementWPtr parent;
 
 
 
@@ -81,6 +81,9 @@ namespace gui {
 
 		virtual void preMouseDown(const MouseEvent & evt);
 		virtual void preMouseUp(const MouseEvent & evt, const bool isInside);
+
+		virtual void onAttach(const HUDElementPtr & newParent);
+		virtual void onDetach(const HUDElementPtr & oldParent);
 
 	public:
 		HUDElement(const utils::Point2D & origin, const utils::Point2D & size);
@@ -125,7 +128,7 @@ namespace gui {
 		HUDElementPtr removeChild(const Uint32 index);
 		HUDElementPtr getChild(const Uint32 index);
 		HUDElementCPtr getChild(const Uint32 index) const;
-		HUDElementPtr getParent();
+		HUDElementWPtr getParent();
 		utils::Option<Uint32> findChildIndex(const HUDElementPtr & possibleChild) const;
 		Uint32 childCount() const;
 
@@ -180,10 +183,12 @@ namespace gui {
 
 
 
-	// Forward declaration.
+	// Forward declarations.
 	template <typename T>
 	class IDraggable;
 	using DraggableElementPtr = std::shared_ptr<IDraggable<HUDElement>>;
+	class DragHolderElement;
+	using DragHolderElementPtr = std::shared_ptr<DragHolderElement>;
 
 	/**
 	 * Cursor element that also contains any dragged elements. Children elements are assumed
@@ -192,7 +197,7 @@ namespace gui {
 	class CursorElement : public HUDElement {
 	public:
 		using CursorElementPtr = std::shared_ptr<CursorElement>;
-		using DraggableElementList = std::unordered_set<DraggableElementPtr>;
+		using DraggableElementList = std::unordered_set<DragHolderElementPtr>;
 
 	protected:
 		DraggableElementList draggingElements;
@@ -220,8 +225,9 @@ namespace gui {
 
 		CursorElementPtr clone() const;
 
-		void startDragElement(const DraggableElementPtr & element);
-		void stopDragElement(const DraggableElementPtr & element);
+		void startDragElement(const DragHolderElementPtr & element);
+		void stopDragElement(const DragHolderElementPtr & element);
+		const DraggableElementList & getDraggingElements() const;
 	};
 
 	using CursorElementPtr = CursorElement::CursorElementPtr;
@@ -235,6 +241,8 @@ namespace gui {
 	class IDraggable : public T {
 	public:
 		using IDraggablePtr = std::shared_ptr<IDraggable<T>>;
+		using IDraggableCPtr = std::shared_ptr<const IDraggable<T>>;
+		using IDraggableWPtr = std::weak_ptr<IDraggable<T>>;
 
 		struct DraggableParameters {
 			enum DragType {
@@ -253,8 +261,10 @@ namespace gui {
 		HUDElementWPtr originalParent;
 
 	protected:
+		bool bIsDragEnabled;
 		DraggableParameters parameters;
 		CursorElementPtr cursorRef;
+		IDraggableWPtr placeholderRef;
 
 
 
@@ -262,7 +272,7 @@ namespace gui {
 			const DraggableParameters & params,
 			const CursorElementPtr & cursor
 		) : parameters(params), cursorRef(cursor), bIsDragging(false),
-			originalChildIndex(0), originalPosition(0)
+			originalChildIndex(0), originalPosition(0), bIsDragEnabled(true)
 		{}
 		
 		void copyProperties(const HUDElementPtr & element) const {
@@ -276,56 +286,78 @@ namespace gui {
 		}
 
 		/**
-		 * @return
+		 * @return true if the drag should start, false if it shouldn't start
 		 */
 		virtual bool onDragStart(const utils::Point2D & position) { return true; }
 		virtual bool onDragEnd(const utils::Point2D & position) { return true; }
+
+		/**
+		 * Creates a placeholder object that contains a copy of the current element.
+		 */
+		virtual DragHolderElementPtr createPlaceholderCopy() {
+			auto newEl = clone();
+			newEl->setDragEnabled(false);
+			return DragHolderElementPtr(new DragHolderElement(sharedPtr(), newEl, cursorRef));
+		}
 		
 		virtual void preMouseDown(const MouseEvent & evt) override {
-			if (evt.whichButtons & MouseEvent::BUTTON_PRESS_LEFT && !bIsDragging) {
+			if (bIsDragEnabled && !bIsDragging &&
+				evt.whichButtons & MouseEvent::BUTTON_PRESS_LEFT)
+			{
 				bIsDragging = true;
 				if (onDragStart(evt.position)) {
 					if (parameters.dragType == DraggableParameters::DT_DragMove ||
 						parameters.dragType == DraggableParameters::DT_DragCopy)
 					{
-						auto dragged = sharedPtr();
+						DragHolderElementPtr dragHolder = nullptr;
 						if (parameters.dragType == DraggableParameters::DT_DragCopy) {
 							// Create a new copy of the current element being dragged.
-							dragged = clone();
-						}
-						// Store original position & parent.
-						originalPosition = T::getBounds().origin;
-						originalParent = T::getParent();
-
-						if (!originalParent.expired()) {
-							const auto index = T::getParent()->findChildIndex(sharedPtr());
-							if (index.IsValid())
-								originalChildIndex = *index;
-							else
-								originalParent.reset();
+							dragHolder = createPlaceholderCopy();
+						} else {
+							dragHolder = DragHolderElementPtr(new DragHolderElement(
+								sharedPtr(), sharedPtr(), cursorRef));
 						}
 
-						// Reposition dragged element to be absolute to world.
-						dragged->reposition(T::getAbsolutePosition());
-//						cursorRef->startDragElement(dragged);
+						if (dragHolder) {
+							// Store original position & parent.
+							originalPosition = T::getBounds().origin;
+							originalParent = T::getParent();
+
+							const auto lockedParent = originalParent.lock();
+							if (lockedParent) {
+								const auto index = lockedParent->findChildIndex(sharedPtr());
+								if (index.IsValid())
+									originalChildIndex = *index;
+								else
+									originalParent.reset();
+							}
+
+							// Reposition dragged element to be absolute to world.
+							cursorRef->startDragElement(dragHolder);
+						}
 					}
 				}
 			}
 		}
 
 		virtual void preMouseUp(const MouseEvent & evt, const bool isInside) override {
-			if (evt.whichButtons & MouseEvent::BUTTON_PRESS_LEFT && bIsDragging) {
-				bIsDragging = false;
-				if (onDragEnd(evt.position)) {
-					if (parameters.dragType == DraggableParameters::DT_DragMove) {
-						cursorRef->stopDragElement(sharedPtr());
-						if (!originalParent.expired()) {
-							T::reposition(originalPosition);
-							originalParent.lock()->insertChild(sharedPtr(), originalChildIndex);
-						}
-					}
-				}
-			}
+			//if (bIsDragging && evt.whichButtons & MouseEvent::BUTTON_PRESS_LEFT) {
+			//	bIsDragging = false;
+			//	if (onDragEnd(evt.position)) {
+			//		if (parameters.dragType == DraggableParameters::DT_DragMove) {
+			//			cursorRef->stopDragElement(sharedPtr());
+			//			if (!originalParent.expired()) {
+			//				T::reposition(originalPosition);
+			//				originalParent.lock()->insertChild(sharedPtr(), originalChildIndex);
+			//			}
+			//		} else if (parameters.dragType == DraggableParameters::DT_DragCopy) {
+			//			if (!placeholderRef.expired()) {
+			//				placeholderRef.lock()->detach();
+			//				placeholderRef.reset();
+			//			}
+			//		}
+			//	}
+			//}
 		}
 
 	public:
@@ -334,14 +366,84 @@ namespace gui {
 			copyProperties(created);
 			return created;
 		}
-
+		
 		IDraggablePtr sharedPtr() {
 			return std::static_pointer_cast<IDraggable<T>>(T::shared_from_this());
+		}
+
+		IDraggableCPtr sharedPtr() const {
+			return std::static_pointer_cast<IDraggable<T>>(T::shared_from_this());
+		}
+
+		bool isDragEnabled() const {
+			return bIsDragEnabled;
+		}
+
+		void setDragEnabled(const bool enabled) {
+			bIsDragEnabled = enabled;
 		}
 	};
 
 	using DraggableElement = IDraggable<HUDElement>;
 	using DraggableElementPtr = DraggableElement::IDraggablePtr;
+	
+
+	
+	/**
+	 * Represents a clone of an object that is currently dragging.
+	 */
+	class DragHolderElement : public HUDElement {
+	public:
+		using DragHolderElementPtr = std::shared_ptr<DragHolderElement>;
+		using DragHolderElementWPtr = std::weak_ptr<DragHolderElement>;
+
+	protected:
+		DraggableElement::IDraggableWPtr creatorRef;
+		HUDElementPtr placeholderRef;
+		CursorElementPtr cursorRef;
+
+
+
+		virtual DragHolderElement * createNew() const override {
+			return new DragHolderElement(creatorRef, placeholderRef, cursorRef);
+		}
+
+		virtual void tick() override {}
+		virtual void drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache) override {}
+
+	public:
+		/**
+		 * @param creator The original creator source of this drag holder element, the holder
+		 *                element inherits its starting position from this provided element,
+		 *                if this element pointer is expired, then the position is determined
+		 *                from the mouse cursor.
+		 */
+		DragHolderElement(
+			DraggableElement::IDraggableWPtr creator,
+			const HUDElementPtr & placeholder,
+			const CursorElementPtr & cursor
+		) : creatorRef(creator), placeholderRef(placeholder), cursorRef(cursor)
+		{
+			const auto lockedCreator = creator.lock();
+			if (lockedCreator)
+				reposition(lockedCreator->getAbsolutePosition());
+			else
+				reposition(cursorRef->getAbsolutePosition());
+
+			placeholderRef->detach();
+			placeholderRef->reposition({ 0, 0 });
+		}
+		
+		virtual void onAttach(const HUDElementPtr & newParent) override {
+			placeholderRef->attachTo(shared_from_this());
+		}
+
+		HUDElementPtr getContainedElement() {
+			return placeholderRef;
+		}
+	};
+
+	using DragHolderElementPtr = DragHolderElement::DragHolderElementPtr;
 
 
 
@@ -351,12 +453,50 @@ namespace gui {
 		using DroppableElement = IDroppable<HUDElement>;
 		using DroppableElementPtr = std::shared_ptr<DroppableElement>;
 
+		struct DroppableParameters {
+		};
+
 	protected:
+		bool bIsDropEnabled;
+		DroppableParameters parameters;
+		CursorElementPtr cursorRef;
+
+
+
+		IDroppable(
+			const DroppableParameters & params,
+			const CursorElementPtr & cursor
+		) : parameters(params), cursorRef(cursor), bIsDropEnabled(true)
+		{}
+
 		void copyProperties(const HUDElementPtr & element) const {
 			T::copyProperties(element);
 		}
 
 		virtual IDroppable * createNew() const = 0;
+
+		/**
+		 * @return true if the element dropped should be consumed, false otherwise
+		 */
+		virtual bool onDrop(
+			const HUDElementPtr & draggable,
+			const utils::Point2D & position
+		) {
+			return true;
+		}
+		
+		virtual void preMouseDown(const MouseEvent & evt) override {}
+
+		virtual void preMouseUp(const MouseEvent & evt, const bool isInside) override {
+			if (bIsDropEnabled && evt.whichButtons & MouseEvent::BUTTON_PRESS_LEFT) {
+				const auto & elements = cursorRef->getDraggingElements();
+				for (const auto element : elements) {
+					if (onDrop(element->getContainedElement(), evt.position)) {
+						// Stop dragging the element.
+					}
+				}
+			}
+		}
 
 	public:
 		DroppableElementPtr clone() const {
@@ -365,9 +505,17 @@ namespace gui {
 			return created;
 		}
 
-		virtual bool checkMouseMove(const utils::Point2D & position);
-		virtual bool checkMouseDown(const MouseEvent & evt);
-		virtual bool checkMouseUp(const MouseEvent & evt);
+		DroppableElementPtr sharedPtr() {
+			return std::static_pointer_cast<IDroppable<T>>(T::shared_from_this());
+		}
+
+		bool isDropEnabled() const {
+			return bIsDropEnabled;
+		}
+
+		void setDropEnabled(const bool enabled) {
+			bIsDropEnabled = enabled;
+		}
 	};
 
 	using DroppableElement = IDroppable<HUDElement>::DroppableElementPtr;

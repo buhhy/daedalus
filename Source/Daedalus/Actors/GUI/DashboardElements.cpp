@@ -27,8 +27,9 @@ namespace gui {
 
 	void QuickuseBarElement::tick() {
 		// Update size.
-		if (parent) {
-			const auto & parentBounds = parent->getBounds();
+		const auto lockedParent = parent.lock();
+		if (lockedParent) {
+			const auto & parentBounds = lockedParent->getBounds();
 
 			reposition(Point2D(0, parentBounds.size.Y));
 		}
@@ -102,7 +103,7 @@ namespace gui {
 		const Point2D & origin, const Point2D & size,
 		const IQuickuseCPtr & model,
 		const CursorElementPtr & cursorRef
-	) : IDraggable({ DraggableParameters::DT_DragMove }, cursorRef), model(model)
+	) : IDraggable({ DraggableParameters::DT_DragCopy }, cursorRef), model(model)
 	{
 		reposition(origin);
 		resize(size);
@@ -178,10 +179,11 @@ namespace gui {
 
 	void InventoryElement::tick() {
 		// Update size.
-		if (parent) {
+		const auto lockedParent = parent.lock();
+		if (lockedParent) {
 			const double slotSize = 64, slotBorder = 4;
 			const double barHeight = slotSize + slotBorder * 2;
-			const auto & parentBounds = parent->getBounds();
+			const auto & parentBounds = lockedParent->getBounds();
 			reposition(Point2D(0, parentBounds.size.Y - barHeight));
 		}
 	}

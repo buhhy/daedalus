@@ -54,15 +54,18 @@ namespace gui {
 	void HUDElement::preMouseDown(const MouseEvent & evt) {}
 	void HUDElement::preMouseUp(const MouseEvent & evt, const bool isInside) {}
 
+	void HUDElement::onAttach(const HUDElementPtr & newParent) {}
+	void HUDElement::onDetach(const HUDElementPtr & oldParent) {}
+
 	void HUDElement::attachTo(const HUDElementPtr & node) {
-		detach();
 		if (node)
-			parent->appendChild(shared_from_this());
+			node->appendChild(shared_from_this());
 	}
 	
 	void HUDElement::detach() {
-		if (parent)
-			parent->removeChild(shared_from_this());
+		const auto lockedParent = parent.lock();
+		if (lockedParent)
+			lockedParent->removeChild(shared_from_this());
 	}
 
 	void HUDElement::appendChild(const HUDElementPtr & child) {
@@ -73,6 +76,7 @@ namespace gui {
 			child->detach();
 			children.push_back(child);
 			child->parent = shared_from_this();
+			child->onAttach(shared_from_this());
 		}
 	}
 
@@ -84,6 +88,7 @@ namespace gui {
 			child->detach();
 			children.insert(children.cbegin() + index, child);
 			child->parent = shared_from_this();
+			child->onAttach(shared_from_this());
 		}
 	}
 
@@ -102,9 +107,11 @@ namespace gui {
 	HUDElementPtr HUDElement::removeChild(const Uint32 index) {
 		if (index >= childCount())
 			return nullptr;
-		auto removed = *(children.erase(children.begin() + index));
+		auto removed = children[index];
+		children.erase(children.begin() + index);
 		// Detach this child from any existing parents.
-		removed->parent = nullptr;
+		removed->parent.reset();
+		removed->onDetach(shared_from_this());
 		return removed;
 	}
 	
@@ -120,7 +127,7 @@ namespace gui {
 		return children[index];
 	}
 
-	HUDElementPtr HUDElement::getParent() {
+	HUDElementWPtr HUDElement::getParent() {
 		return parent;
 	}
 	
@@ -145,8 +152,9 @@ namespace gui {
 	}
 
 	Point2D HUDElement::getAbsolutePosition() const {
-		if (parent)
-			return parent->getAbsolutePosition() + bounds.origin;
+		const auto lockedParent = parent.lock();
+		if (lockedParent)
+			return lockedParent->getAbsolutePosition() + bounds.origin;
 		return bounds.origin;
 	}
 
@@ -274,8 +282,9 @@ namespace gui {
 	}
 
 	void CursorElement::tick() {
-		if (parent)
-			resize(parent->getBounds().size);
+		const auto lockedParent = parent.lock();
+		if (lockedParent)
+			resize(lockedParent->getBounds().size);
 	}
 
 	void CursorElement::drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache) {
@@ -338,13 +347,17 @@ namespace gui {
 		return ret;
 	}
 
-	void CursorElement::startDragElement(const DraggableElementPtr & element) {
+	void CursorElement::startDragElement(const DragHolderElementPtr & element) {
 		draggingElements.insert(element);
 		appendChild(element);
 	}
 
-	void CursorElement::stopDragElement(const DraggableElementPtr & element) {
+	void CursorElement::stopDragElement(const DragHolderElementPtr & element) {
 		draggingElements.erase(element);
 		removeChild(element);
+	}
+
+	const CursorElement::DraggableElementList & CursorElement::getDraggingElements() const {
+		return draggingElements;
 	}
 }
