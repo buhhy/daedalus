@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Actors/GUI/Draggable.h>
+#include <Actors/GUI/Droppable.h>
 #include <Actors/GUI/HUDElement.h>
 #include <Models/Shortcut.h>
 #include <Models/Fauna/CharacterData.h>

@@ -1,6 +1,5 @@
 #include <Daedalus.h>
 #include <Actors/GUI/DashboardElements.h>
-
 #include <Actors/GUI/PlayerHUD.h>
 
 namespace gui {

@@ -2,7 +2,7 @@
 
 #include "GameFramework/HUD.h"
 
-#include <Actors/GUI/InventoryPanel.h>
+#include <Actors/GUI/CursorElement.h>
 #include <Actors/GUI/DashboardElements.h>
 #include <Models/Fauna/CharacterData.h>
 
