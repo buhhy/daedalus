@@ -160,24 +160,4 @@ namespace gui {
 	using HUDElementPtr = HUDElement::HUDElementPtr;
 	using HUDElementCPtr = HUDElement::HUDElementCPtr;
 	using HUDElementWPtr = HUDElement::HUDElementWPtr;
-
-
-	
-	class DivElement : public HUDElement {
-	public:
-		using DivElementPtr = std::shared_ptr<DivElement>;
-
-	protected:
-		virtual DivElement * createNew() const;
-		virtual void tick() override;
-		virtual void drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache) override;
-
-	public:
-		DivElement(const utils::Point2D & origin, const utils::Point2D & size);
-		DivElement();
-
-		DivElementPtr clone() const;
-	};
-	
-	using DivElementPtr = DivElement::DivElementPtr;
 }

@@ -10,8 +10,9 @@ using namespace gui;
 APlayerHUD::APlayerHUD(const class FPostConstructInitializeProperties & PCIP) :
 	Super(PCIP), cursorPosition(0, 0), bDashboardOpen(false), mouseButtonsActive(0),
 	currentCursorType(MouseEvent::C_Pointer), previousCursorType(MouseEvent::C_Pointer),
-	rootNode(new DivElement()), dashboardRootNode(new DivElement()),
 	cursorNode(new CursorElement()),
+	rootNode(new DocumentRootElement(cursorNode)),
+	dashboardRootNode(new DivElement()),
 	quickbarNode(new QuickuseBarElement(cursorNode)),
 	inventoryNode(new InventoryElement(cursorNode))
 {}

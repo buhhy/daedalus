@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Actors/GUI/HUDElement.h>
+#include <Actors/GUI/CursorElement.h>
 
 namespace gui {
 template <typename T>
@@ -48,7 +49,8 @@ template <typename T>
 				const auto & elements = cursorRef->getDraggingElements();
 				for (const auto element : elements) {
 					if (onDrop(element->getContainedElement(), evt.position)) {
-						// Stop dragging the element.
+						// Element has stopped dragging.
+						cursorRef->stopDragElement(element);
 					}
 				}
 			}
@@ -74,5 +76,6 @@ template <typename T>
 		}
 	};
 
-	using DroppableElement = IDroppable<HUDElement>::DroppableElementPtr;
+	using DroppableElement = IDroppable<HUDElement>;
+	using DroppableElementPtr = DroppableElement::DroppableElementPtr;
 }

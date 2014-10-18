@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Actors/GUI/HUDElement.h>
+
 namespace gui {
 	// Forward declarations.
 	template <typename T>

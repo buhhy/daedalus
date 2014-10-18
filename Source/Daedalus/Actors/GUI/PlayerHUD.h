@@ -2,6 +2,7 @@
 
 #include "GameFramework/HUD.h"
 
+#include <Actors/GUI/BasicElements.h>
 #include <Actors/GUI/CursorElement.h>
 #include <Actors/GUI/DashboardElements.h>
 #include <Models/Fauna/CharacterData.h>
@@ -20,9 +21,9 @@ private:
 	gui::MouseEvent::CursorType currentCursorType;
 	gui::MouseEvent::CursorType previousCursorType;
 
-	gui::DivElementPtr rootNode;
-	gui::DivElementPtr dashboardRootNode;
 	gui::CursorElementPtr cursorNode;
+	gui::DocumentRootElementPtr rootNode;
+	gui::DivElementPtr dashboardRootNode;
 	gui::InventoryElementPtr inventoryNode;
 	gui::QuickuseBarElementPtr quickbarNode;
 

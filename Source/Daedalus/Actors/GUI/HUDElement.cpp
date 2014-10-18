@@ -241,28 +241,4 @@ namespace gui {
 	bool HUDElement::isHidden() const {
 		return bIsHidden;
 	}
-
-
-
-	/********************************************************************************
-	 * DivElement
-	 ********************************************************************************/
-
-	DivElement::DivElement(const utils::Point2D & origin, const utils::Point2D & size) :
-		HUDElement(origin, size)
-	{}
-
-	DivElement::DivElement() : DivElement({ 0, 0 }, { 0, 0 }) {}
-
-	DivElement * DivElement::createNew() const {
-		return new DivElement();
-	}
-	void DivElement::tick() {}
-	void DivElement::drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache) {}
-	
-	DivElementPtr DivElement::clone() const {
-		const auto ret = DivElementPtr(createNew());
-		copyProperties(ret);
-		return ret;
-	}
 }
