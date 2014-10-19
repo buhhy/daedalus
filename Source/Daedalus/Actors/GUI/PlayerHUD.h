@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameFramework/HUD.h"
+#include <GameFramework/HUD.h>
 
 #include <Actors/GUI/BasicElements.h>
 #include <Actors/GUI/CursorElement.h>

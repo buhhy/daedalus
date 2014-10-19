@@ -6,10 +6,13 @@ namespace gui {
 	// Forward declarations.
 	template <typename T>
 	class IDraggable;
+	template <typename T>
+	class IDroppable;
 	class CursorElement;
 	using CursorElementPtr = std::shared_ptr<CursorElement>;
 	using DraggableElementPtr = std::shared_ptr<IDraggable<HUDElement>>;
 	using DraggableElementWPtr = std::weak_ptr<IDraggable<HUDElement>>;
+	using DroppableElementPtr = std::shared_ptr<IDroppable<HUDElement>>;
 	
 
 	
@@ -21,31 +24,46 @@ namespace gui {
 		using DragHolderElementPtr = std::shared_ptr<DragHolderElement>;
 		using DragHolderElementWPtr = std::weak_ptr<DragHolderElement>;
 
+	private:
+		Uint32 originalChildIndex;           // Index of the element in its parent's child list.
+		utils::Point2D originalPosition;
+		HUDElementWPtr originalParentRef;
+
+
+
+		void initializeElement(const utils::Point2D & cursorPosition);
+
 	protected:
-		DraggableElementWPtr creatorRef;
-		HUDElementPtr placeholderRef;
+		// Defines the offset of this element to the cursor element.
+		utils::Point2D offsetPosition;
+		DraggableElementPtr placeholderRef;
 		CursorElementPtr cursorRef;
 
 
 
+		void revert();
 		virtual DragHolderElement * createNew() const override;
 		virtual void tick() override;
 		virtual void drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache);
 
 	public:
-		/**
-		 * @param creator The original creator source of this drag holder element, the holder
-		 *                element inherits its starting position from this provided element,
-		 *                if this element pointer is expired, then the position is determined
-		 *                from the mouse cursor.
-		 */
+		DragHolderElement(const DraggableElementPtr & placeholder, const CursorElementPtr & cursor);
 		DragHolderElement(
-			DraggableElementWPtr creator,
-			const HUDElementPtr & placeholder,
-			const CursorElementPtr & cursor);
+			const DraggableElementPtr & placeholder, const CursorElementPtr & cursor,
+			const utils::Point2D & elementOffsetOverride);
 		
 		virtual void onAttach(const HUDElementPtr & newParent) override;
-		HUDElementPtr getContainedElement();
+
+		/**
+		 * @return True if the dragged element has been reverted, false otherwise.
+		 */
+		bool onDragAccept(const utils::Point2D & cursorPosition);
+		/**
+		 * @return True if the dragged element has been reverted, false otherwise.
+		 */
+		bool onDragReject(const utils::Point2D & cursorPosition);
+		DraggableElementPtr getContainedElement();
+		void onCursorReposition(const utils::Point2D & cursorPosition);
 	};
 
 	using DragHolderElementPtr = DragHolderElement::DragHolderElementPtr;
@@ -80,16 +98,18 @@ namespace gui {
 		virtual bool onMouseDown(const MouseEvent & evt) override;
 		virtual bool onMouseUp(const MouseEvent & evt, const bool isInside) override;
 
-		void setCursorPosition(const utils::Point2D & pos);
-
 	public:
 		CursorElement();
 
 		CursorElementPtr clone() const;
 
-		void startDragElement(const DragHolderElementPtr & element);
-		void stopDragElement(const DragHolderElementPtr & element);
+		void addDragElement(const DragHolderElementPtr & element);
+		void removeDragElement(const DragHolderElementPtr & element);
+		void clearDragElements();
 		const DraggableElementList & getDraggingElements() const;
+
+		void setCursorPosition(const utils::Point2D & pos);
+		const utils::Point2D & getCursorPosition() const;
 	};
 
 	using CursorElementPtr = CursorElement::CursorElementPtr;

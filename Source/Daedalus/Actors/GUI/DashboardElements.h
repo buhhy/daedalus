@@ -46,12 +46,13 @@ namespace gui {
 
 
 
-	class QuickuseItemElement : public DraggableElement {
+	class QuickuseItemElement : public IDroppable<DraggableElement> {
 	public:
 		using QuickuseItemElementPtr = std::shared_ptr<QuickuseItemElement>;
 
 	protected:
-		IQuickuseCPtr model;
+		fauna::QuickuseBarPtr quickuseBarRef;
+		Uint32 elementIndex;
 
 
 
@@ -63,13 +64,19 @@ namespace gui {
 		virtual bool onMouseLeave(const utils::Point2D & position) override;
 		virtual bool onMouseDown(const MouseEvent & evt) override;
 		virtual bool onMouseUp(const MouseEvent & evt, const bool isInside) override;
+		
+		virtual bool onDrop(
+			const HUDElementPtr & draggable, const utils::Point2D & position) override;
 
 	public:
 		QuickuseItemElement(
 			const utils::Point2D & origin, const utils::Point2D & size,
-			const IQuickuseCPtr & model, const CursorElementPtr & cursorRef);
+			const fauna::QuickuseBarPtr quickuseBar, const Uint32 index,
+			const CursorElementPtr & cursorRef);
 		
 		QuickuseItemElementPtr clone() const;
+		Uint32 getElementIndex() const;
+		IQuickusePtr getElementModel();
 	};
 	
 	using QuickuseItemElementPtr = QuickuseItemElement::QuickuseItemElementPtr;
@@ -84,7 +91,7 @@ namespace gui {
 		CursorElementPtr cursorRef;
 
 	protected:
-		fauna::InventoryCPtr model;
+		fauna::InventoryPtr model;
 		Uint32 cachedInventorySize;
 		Uint32 itemsPerRow;
 
@@ -112,8 +119,40 @@ namespace gui {
 		InventoryElementPtr clone() const;
 
 		void updateData(
-			const fauna::InventoryCPtr & inventory, const Uint32 rowItems);
+			const fauna::InventoryPtr & inventory, const Uint32 rowItems);
 	};
 	
 	using InventoryElementPtr = InventoryElement::InventoryElementPtr;
+
+
+
+	class InventoryItemElement : public DraggableElement {
+	public:
+		using InventoryItemElementPtr = std::shared_ptr<InventoryItemElement>;
+
+	protected:
+		fauna::InventorySlotPtr model;
+
+
+
+		virtual InventoryItemElement * createNew() const;
+		virtual void tick() override;
+		virtual void drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache) override;
+		
+		virtual bool onMouseOver(const utils::Point2D & position) override;
+		virtual bool onMouseLeave(const utils::Point2D & position) override;
+		virtual bool onMouseDown(const MouseEvent & evt) override;
+		virtual bool onMouseUp(const MouseEvent & evt, const bool isInside) override;
+
+	public:
+		InventoryItemElement(
+			const utils::Point2D & origin, const utils::Point2D & size,
+			const fauna::InventorySlotPtr & model, const CursorElementPtr & cursorRef);
+		
+		InventoryItemElementPtr clone() const;
+
+		fauna::InventorySlotPtr getModel();
+	};
+	
+	using InventoryItemElementPtr = InventoryItemElement::InventoryItemElementPtr;
 }

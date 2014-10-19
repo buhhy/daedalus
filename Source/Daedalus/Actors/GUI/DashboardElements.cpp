@@ -67,7 +67,7 @@ namespace gui {
 			for (; newSize > cachedQuickbarSize; cachedQuickbarSize++) {
 				appendChild(QuickuseItemElementPtr(
 					new QuickuseItemElement({ 0, 0 }, { slotSize, slotSize },
-					(*model)[cachedQuickbarSize], cursorRef)));
+					model, cachedQuickbarSize, cursorRef)));
 				hasChanged = true;
 			}
 		}
@@ -100,16 +100,18 @@ namespace gui {
 
 	QuickuseItemElement::QuickuseItemElement(
 		const Point2D & origin, const Point2D & size,
-		const IQuickuseCPtr & model,
+		const QuickuseBarPtr quickuseBar, const Uint32 index,
 		const CursorElementPtr & cursorRef
-	) : IDraggable({ DraggableParameters::DT_DragCopy }, cursorRef), model(model)
+	) : IDroppable(DroppableParameters(), cursorRef, DraggableParameters(DraggableParameters::DT_DragMove), cursorRef),
+		quickuseBarRef(quickuseBar), elementIndex(index)
 	{
 		reposition(origin);
 		resize(size);
 	}
 
 	QuickuseItemElement * QuickuseItemElement::createNew() const {
-		return new QuickuseItemElement(bounds.origin, bounds.size, model, cursorRef);
+		return new QuickuseItemElement(
+			bounds.origin, bounds.size, quickuseBarRef, elementIndex, cursorRef);
 	}
 
 	void QuickuseItemElement::tick() {}
@@ -117,6 +119,7 @@ namespace gui {
 	void QuickuseItemElement::drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache) {
 		const auto & size = getBounds().size;
 		const auto position = getAbsolutePosition();
+		const auto model = (*quickuseBarRef)[elementIndex];
 
 		if (model && model->isValid()) {
 			auto icon = rcache->findIcon(model->getIconName());
@@ -144,10 +147,41 @@ namespace gui {
 	bool QuickuseItemElement::onMouseDown(const MouseEvent & evt) { return true; }
 	bool QuickuseItemElement::onMouseUp(const MouseEvent & evt, const bool isInside) { return true; }
 
+	bool QuickuseItemElement::onDrop(const HUDElementPtr & draggable, const Point2D & position) {
+		{
+			auto inventoryItem = std::dynamic_pointer_cast<InventoryItemElement>(draggable);
+			if (inventoryItem) {
+				// If the dropped item is an inventory item, set the quickuse bar element to
+				// the dropped item.
+				quickuseBarRef->addShortcut(inventoryItem->getModel(), elementIndex);
+				return true;
+			}
+		}
+
+		{
+			auto quickuseItem = std::dynamic_pointer_cast<QuickuseItemElement>(draggable);
+			if (quickuseItem) {
+				quickuseBarRef->addShortcut(quickuseItem->getElementModel(), elementIndex);
+				quickuseBarRef->removeShortcut(quickuseItem->getElementIndex());
+				return true;
+			}
+		}
+
+		return false;
+	};
+
 	QuickuseItemElementPtr QuickuseItemElement::clone() const {
 		const auto ret = QuickuseItemElementPtr(createNew());
 		copyProperties(ret);
 		return ret;
+	}
+
+	IQuickusePtr QuickuseItemElement::getElementModel() {
+		return (*quickuseBarRef)[elementIndex];
+	}
+
+	Uint32 QuickuseItemElement::getElementIndex() const {
+		return elementIndex;
 	}
 
 
@@ -221,7 +255,7 @@ namespace gui {
 		return ret;
 	}
 
-	void InventoryElement::updateData(const InventoryCPtr & inventory, const Uint32 rowItems) {
+	void InventoryElement::updateData(const InventoryPtr & inventory, const Uint32 rowItems) {
 		const double slotSize = 64, slotBorder = 4;
 		bool hasChanged = rowItems != itemsPerRow;
 		
@@ -234,8 +268,8 @@ namespace gui {
 			newSize = model->GetMaxSize();
 
 			for (; newSize > cachedInventorySize; cachedInventorySize++) {
-				appendChild(QuickuseItemElementPtr(
-					new QuickuseItemElement({ 0, 0 }, { slotSize, slotSize },
+				appendChild(InventoryItemElementPtr(
+					new InventoryItemElement({ 0, 0 }, { slotSize, slotSize },
 					(*model)[cachedInventorySize], cursorRef)));
 				hasChanged = true;
 			}
@@ -248,5 +282,67 @@ namespace gui {
 
 		if (hasChanged)
 			reflowElements();
+	}
+
+
+
+	/********************************************************************************
+	 * InventoryItemElement
+	 ********************************************************************************/
+
+	InventoryItemElement::InventoryItemElement(
+		const Point2D & origin, const Point2D & size,
+		const InventorySlotPtr & model,
+		const CursorElementPtr & cursorRef
+	) : IDraggable({ DraggableParameters::DT_DragMove }, cursorRef), model(model)
+	{
+		reposition(origin);
+		resize(size);
+	}
+
+	InventoryItemElement * InventoryItemElement::createNew() const {
+		return new InventoryItemElement(bounds.origin, bounds.size, model, cursorRef);
+	}
+
+	void InventoryItemElement::tick() {}
+
+	void InventoryItemElement::drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache) {
+		const auto & size = getBounds().size;
+		const auto position = getAbsolutePosition();
+
+		if (model && model->isValid()) {
+			auto icon = rcache->findIcon(model->getIconName());
+			auto font = rcache->findFont("Lato", 12);
+			const auto count = model->getQuantity();
+			hud->DrawTexture(
+				icon, position.X, position.Y, size.X,
+				size.Y, 0, 0, 1.0, 1.0);
+
+			if (count.IsValid()) {
+				std::stringstream ss;
+				ss << *count;
+				hud->DrawText(FString(UTF8_TO_TCHAR(ss.str().c_str())),
+					FLinearColor(1, 1, 1), position.X + 5, position.Y + 5, font);
+				ss.str(""); ss.clear();
+			}
+		} else {
+			hud->DrawRect(FLinearColor(0.5, 0.5, 0.5), position.X,
+				position.Y, size.X, size.Y);
+		}
+	}
+		
+	bool InventoryItemElement::onMouseOver(const Point2D & position) { return true; }
+	bool InventoryItemElement::onMouseLeave(const Point2D & position) { return true; }
+	bool InventoryItemElement::onMouseDown(const MouseEvent & evt) { return true; }
+	bool InventoryItemElement::onMouseUp(const MouseEvent & evt, const bool isInside) { return true; }
+
+	InventoryItemElementPtr InventoryItemElement::clone() const {
+		const auto ret = InventoryItemElementPtr(createNew());
+		copyProperties(ret);
+		return ret;
+	}
+
+	InventorySlotPtr InventoryItemElement::getModel() {
+		return model;
 	}
 }

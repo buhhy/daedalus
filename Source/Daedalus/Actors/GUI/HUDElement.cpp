@@ -166,6 +166,11 @@ namespace gui {
 		return Box2D(getAbsolutePosition(), getBounds().size);
 	}
 	
+	Point2D HUDElement::convertToRelativePosition(const Point2D & absolutePosition) const {
+		// TODO: account for actual transforms, not just translation
+		return absolutePosition - getAbsolutePosition();
+	}
+	
 	void HUDElement::drawElementTree(APlayerHUD * hud, const ResourceCacheCPtr & rcache) {
 		if (!isHidden()) {
 			drawElement(hud, rcache);
@@ -185,7 +190,8 @@ namespace gui {
 			if (!child->checkMouseMove(position))
 				return false;
 		}
-
+		
+		onMouseMove(position);
 		bool isInside = hitTest(position);
 		if (isInside && !bIsMouseInside) {
 			bIsMouseInside = true;
@@ -193,8 +199,6 @@ namespace gui {
 		} else if (!isInside && bIsMouseInside) {
 			bIsMouseInside = false;
 			return onMouseLeave(position);
-		} else {
-			onMouseMove(position);
 		}
 
 		return true;

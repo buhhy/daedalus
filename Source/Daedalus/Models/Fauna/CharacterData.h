@@ -135,7 +135,7 @@ namespace fauna {
 		}
 
 		void addShortcut(const IQuickusePtr & shortcut, const Uint32 index);
-		void removeShortcut(const IQuickusePtr & shortcut, const Uint32 index);
+		void removeShortcut(const Uint32 index);
 		void quickuse(const CharacterDataPtr & charData, const Uint32 index);
 		/**
 		 * Removes shortcuts that have become invalid.
@@ -217,6 +217,7 @@ namespace fauna {
 		bool addItemsToInventory(const items::ItemDataPtr & item, const Uint32 count = 1);
 
 		InventoryCPtr getInventory() const;
+		InventoryPtr getInventory();
 
 		Uint32 nextHeldItem();
 		Uint32 prevHeldItem();
@@ -230,7 +231,7 @@ namespace fauna {
 		void quickuse(const Uint32 index);
 
 		void addToCurrentShortcutSet(const IQuickusePtr & shortcut, const Uint32 index);
-		void removeFromCurrentShortcutSet(const IQuickusePtr & shortcut, const Uint32 index);
+		void removeFromCurrentShortcutSet(const Uint32 index);
 
 
 		// Player basic stats

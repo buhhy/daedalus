@@ -5,6 +5,7 @@ using namespace utils;
 using namespace items;
 
 namespace fauna {
+
 	/********************************************************************************
 	 * InventorySlot
 	 ********************************************************************************/
@@ -181,7 +182,7 @@ namespace fauna {
 			shortcuts[index] = shortcut;
 	}
 
-	void QuickuseBar::removeShortcut(const IQuickusePtr & shortcut, const Uint32 index) {
+	void QuickuseBar::removeShortcut(const Uint32 index) {
 		if (index < shortcuts.size())
 			shortcuts[index] = NULL;
 	}
@@ -277,6 +278,10 @@ namespace fauna {
 		return inventoryRef;
 	}
 
+	InventoryPtr CharacterData::getInventory() {
+		return inventoryRef;
+	}
+
 	Uint32 CharacterData::nextHeldItem() {
 		CurrentHeldItemIndex++;
 		if (CurrentHeldItemIndex >= inventoryRef->GetMaxSize())
@@ -315,11 +320,8 @@ namespace fauna {
 		currentShortcutBarRef->addShortcut(shortcut, index);
 	}
 
-	void CharacterData::removeFromCurrentShortcutSet(
-		const IQuickusePtr & shortcut,
-		const Uint32 index
-	) {
-		currentShortcutBarRef->removeShortcut(shortcut, index);
+	void CharacterData::removeFromCurrentShortcutSet(const Uint32 index) {
+		currentShortcutBarRef->removeShortcut(index);
 	}
 
 

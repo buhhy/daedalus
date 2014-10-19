@@ -149,6 +149,10 @@ namespace gui {
 		 * applying transforms beyond translation.
 		 */
 		utils::Box2D getAbsoluteBounds() const;
+		/**
+		 * Converts an absolute position to relative position.
+		 */
+		utils::Point2D convertToRelativePosition(const utils::Point2D & absolutePosition) const;
 
 
 		// Property management

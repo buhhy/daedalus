@@ -54,8 +54,10 @@ namespace gui {
 		const Point2D & position
 	) {
 		// By default, the element should be dropped off where the mouse stopped dragging.
-		draggable->reposition(draggable->getAbsolutePosition());
-		appendChild(draggable);
-		return true;
+		//draggable->reposition(draggable->getAbsolutePosition());
+		//appendChild(draggable);
+
+		// By default, the element should be returned to its original position.
+		return false;
 	}
 }
