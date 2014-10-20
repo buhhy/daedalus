@@ -100,6 +100,7 @@ namespace fauna {
 		bool AddItems(const items::ItemDataPtr & item, const Uint32 count = 1);
 		bool RemoveItems(const items::ItemDataPtr & item, const Uint32 count = 1);
 		bool RemoveItems(const Uint32 index, const Uint32 count = 1);
+		void swapItems(const Uint32 index1, const Uint32 index2);
 
 		const InventorySlotCPtr operator [] (const Uint32 index) const {
 			if (index >= items.size())

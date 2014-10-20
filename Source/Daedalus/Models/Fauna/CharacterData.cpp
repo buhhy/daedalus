@@ -149,7 +149,17 @@ namespace fauna {
 	
 	bool Inventory::RemoveItems(const Uint32 index, const Uint32 count) {
 		AssertValidInventory();
+		// TODO: this doesn't work
 		return (*this)[index]->RemoveItems(count);
+	}
+
+	void Inventory::swapItems(const Uint32 index1, const Uint32 index2) {
+		if (index1 >= maxSize || index2 >= maxSize)
+			return;
+
+		const auto swap = items[index1];
+		items[index1] = items[index2];
+		items[index2] = swap;
 	}
 	
 	Option<Uint32> Inventory::GetNextFreeSlot() const {

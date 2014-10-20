@@ -153,7 +153,7 @@ namespace gui {
 			if (inventoryItem) {
 				// If the dropped item is an inventory item, set the quickuse bar element to
 				// the dropped item.
-				quickuseBarRef->addShortcut(inventoryItem->getModel(), elementIndex);
+				quickuseBarRef->addShortcut(inventoryItem->getElementModel(), elementIndex);
 				return true;
 			}
 		}
@@ -270,7 +270,7 @@ namespace gui {
 			for (; newSize > cachedInventorySize; cachedInventorySize++) {
 				appendChild(InventoryItemElementPtr(
 					new InventoryItemElement({ 0, 0 }, { slotSize, slotSize },
-					(*model)[cachedInventorySize], cursorRef)));
+					model, cachedInventorySize, cursorRef)));
 				hasChanged = true;
 			}
 		}
@@ -292,16 +292,18 @@ namespace gui {
 
 	InventoryItemElement::InventoryItemElement(
 		const Point2D & origin, const Point2D & size,
-		const InventorySlotPtr & model,
+		const InventoryPtr & inventory, const Uint32 index,
 		const CursorElementPtr & cursorRef
-	) : IDraggable({ DraggableParameters::DT_DragMove }, cursorRef), model(model)
+	) : IDroppable(DroppableParameters(), cursorRef, DraggableParameters(DraggableParameters::DT_DragCopy), cursorRef),
+		inventoryRef(inventory), elementIndex(index)
 	{
 		reposition(origin);
 		resize(size);
 	}
 
 	InventoryItemElement * InventoryItemElement::createNew() const {
-		return new InventoryItemElement(bounds.origin, bounds.size, model, cursorRef);
+		return new InventoryItemElement(
+			bounds.origin, bounds.size, inventoryRef, elementIndex, cursorRef);
 	}
 
 	void InventoryItemElement::tick() {}
@@ -309,6 +311,7 @@ namespace gui {
 	void InventoryItemElement::drawElement(APlayerHUD * hud, const ResourceCacheCPtr & rcache) {
 		const auto & size = getBounds().size;
 		const auto position = getAbsolutePosition();
+		const auto model = getElementModel();
 
 		if (model && model->isValid()) {
 			auto icon = rcache->findIcon(model->getIconName());
@@ -342,7 +345,28 @@ namespace gui {
 		return ret;
 	}
 
-	InventorySlotPtr InventoryItemElement::getModel() {
-		return model;
+	bool InventoryItemElement::onDrop(
+		const HUDElementPtr & draggable,
+		const Point2D & position
+	) {
+		{
+			auto inventoryItem = std::dynamic_pointer_cast<InventoryItemElement>(draggable);
+			if (inventoryItem) {
+				// If the dropped item is an inventory item, set the quickuse bar element to
+				// the dropped item.
+				inventoryRef->swapItems(inventoryItem->getElementIndex(), elementIndex);
+				return true;
+			}
+		}
+
+		return false;
+	};
+
+	InventorySlotPtr InventoryItemElement::getElementModel() {
+		return (*inventoryRef)[elementIndex];
+	}
+
+	Uint32 InventoryItemElement::getElementIndex() const {
+		return elementIndex;
 	}
 }

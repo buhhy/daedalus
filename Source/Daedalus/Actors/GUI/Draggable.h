@@ -44,12 +44,6 @@ namespace gui {
 		using IDraggableCPtr = std::shared_ptr<const IDraggable<T>>;
 		using IDraggableWPtr = std::weak_ptr<IDraggable<T>>;
 
-	private:
-		bool bIsDragging;
-		Uint32 originalChildIndex;           // Index of the element in its parent's child list.
-		utils::Point2D originalPosition;
-		HUDElementWPtr originalParent;
-
 	protected:
 		bool bIsDragEnabled;
 		DraggableParameters parameters;
@@ -63,15 +57,13 @@ namespace gui {
 			const DraggableParameters & params,
 			const CursorElementPtr & cursor,
 			const A & ... passthru
-		) : T(passthru...), parameters(params), cursorRef(cursor), bIsDragging(false),
-			originalChildIndex(0), originalPosition(0), bIsDragEnabled(true)
+		) : T(passthru...), parameters(params), cursorRef(cursor)
 		{}
 
 		IDraggable(
 			const DraggableParameters & params,
 			const CursorElementPtr & cursor
-		) : parameters(params), cursorRef(cursor), bIsDragging(false),
-			originalChildIndex(0), originalPosition(0), bIsDragEnabled(true)
+		) : parameters(params), cursorRef(cursor)
 		{}
 		
 		void copyProperties(const HUDElementPtr & element) const {
@@ -88,14 +80,12 @@ namespace gui {
 		 * @return true if the drag should start, false if it shouldn't start
 		 */
 		virtual bool onDragStart(const utils::Point2D & position) { return true; }
-		//virtual bool onDragEnd(const utils::Point2D & position) { return true; }
 
 		/**
 		 * Creates a placeholder object that contains a copy of the current element.
 		 */
 		virtual DragHolderElementPtr createPlaceholderCopy() {
 			auto newEl = clone();
-			newEl->setDragEnabled(false);
 			return DragHolderElementPtr(
 				new DragHolderElement(
 					newEl, cursorRef, getAbsolutePosition() - cursorRef->getCursorPosition()));
@@ -103,10 +93,7 @@ namespace gui {
 		
 		virtual void preMouseDown(const MouseEvent & evt) override {
 			T::preMouseDown(evt);
-			if (bIsDragEnabled && !bIsDragging &&
-				evt.whichButtons & MouseEvent::BUTTON_PRESS_LEFT)
-			{
-				bIsDragging = true;
+			if (bIsDragEnabled && evt.whichButtons & MouseEvent::BUTTON_PRESS_LEFT) {
 				if (onDragStart(evt.position)) {
 					if (parameters.dragType == DraggableParameters::DT_DragMove ||
 						parameters.dragType == DraggableParameters::DT_DragCopy)
@@ -121,19 +108,6 @@ namespace gui {
 						}
 
 						if (dragHolder) {
-							// Store original position & parent.
-							originalPosition = T::getBounds().origin;
-							originalParent = T::getParent();
-
-							const auto lockedParent = originalParent.lock();
-							if (lockedParent) {
-								const auto index = lockedParent->findChildIndex(shared_from_this());
-								if (index.IsValid())
-									originalChildIndex = *index;
-								else
-									originalParent.reset();
-							}
-
 							// Reposition dragged element to be absolute to world.
 							cursorRef->addDragElement(dragHolder);
 						}

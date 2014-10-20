@@ -126,12 +126,13 @@ namespace gui {
 
 
 
-	class InventoryItemElement : public DraggableElement {
+	class InventoryItemElement : public IDroppable<DraggableElement> {
 	public:
 		using InventoryItemElementPtr = std::shared_ptr<InventoryItemElement>;
 
 	protected:
-		fauna::InventorySlotPtr model;
+		fauna::InventoryPtr inventoryRef;
+		Uint32 elementIndex;
 
 
 
@@ -143,15 +144,20 @@ namespace gui {
 		virtual bool onMouseLeave(const utils::Point2D & position) override;
 		virtual bool onMouseDown(const MouseEvent & evt) override;
 		virtual bool onMouseUp(const MouseEvent & evt, const bool isInside) override;
+		
+		virtual bool onDrop(
+			const HUDElementPtr & draggable, const utils::Point2D & position) override;
 
 	public:
 		InventoryItemElement(
 			const utils::Point2D & origin, const utils::Point2D & size,
-			const fauna::InventorySlotPtr & model, const CursorElementPtr & cursorRef);
+			const fauna::InventoryPtr & inventory, const Uint32 index,
+			const CursorElementPtr & cursorRef);
 		
 		InventoryItemElementPtr clone() const;
-
-		fauna::InventorySlotPtr getModel();
+		
+		Uint32 getElementIndex() const;
+		fauna::InventorySlotPtr getElementModel();
 	};
 	
 	using InventoryItemElementPtr = InventoryItemElement::InventoryItemElementPtr;

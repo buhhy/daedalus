@@ -38,6 +38,7 @@ namespace gui {
 			// On rejection, return element to original position if parent exists.
 			lockedParent->insertChild(placeholderRef, originalChildIndex);
 			placeholderRef->reposition(originalPosition);
+			placeholderRef->setDragEnabled(true);
 		} else {
 			// Otherwise, delete element.
 			placeholderRef->detach();
@@ -75,6 +76,7 @@ namespace gui {
 	
 	void DragHolderElement::onAttach(const HUDElementPtr & newParent) {
 		placeholderRef->attachTo(shared_from_this());
+		placeholderRef->setDragEnabled(false);
 	}
 
 	bool DragHolderElement::onDragAccept(const Point2D & cursorPosition) {
